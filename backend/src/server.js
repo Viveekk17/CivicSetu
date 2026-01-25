@@ -14,7 +14,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Frontend URL from environment
   credentials: true
 }));
 app.use(express.json());

@@ -1,10 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faSun, faMoon, faBell, faCoins } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { getStoredUser } from '../../services/authService';
 
 const Header = ({ onMenuClick }) => {
   const { theme, toggleTheme } = useTheme();
+  const [user, setUser] = useState(getStoredUser());
+
+  // Listen for credit updates
+  useEffect(() => {
+    const handleCreditsUpdate = (event) => {
+      // Refresh user from localStorage
+      const updatedUser = getStoredUser();
+      setUser(updatedUser);
+    };
+
+    window.addEventListener('creditsUpdated', handleCreditsUpdate);
+
+    return () => {
+      window.removeEventListener('creditsUpdated', handleCreditsUpdate);
+    };
+  }, []);
 
   return (
     <header 
@@ -30,10 +47,10 @@ const Header = ({ onMenuClick }) => {
           <FontAwesomeIcon icon={faBars} size="lg" />
         </button>
 
-        {/* Page Title (Dynamic optional, for now static welcome) */}
+        {/* Page Title */}
         <div className="hidden md:block">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            Welcome back, <span className="title-gradient">John!</span>
+            Welcome back, <span className="title-gradient">{user?.name || 'User'}!</span>
           </h2>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Here's your environmental impact today.</p>
         </div>
@@ -47,7 +64,7 @@ const Header = ({ onMenuClick }) => {
                border: '1px solid var(--border-light)' 
              }}>
           <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
-          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>2,450 Credits</span>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.credits?.toLocaleString() || 0} Credits</span>
         </div>
 
         {/* Theme Toggle */}

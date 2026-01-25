@@ -3,18 +3,60 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faUser, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { register } from '../services/authService';
 
 const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
 
-  const handleRegister = (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    // Don't clear error here - let it persist until next submission
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Extra safety to prevent event bubbling
+    
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    // Basic client-side validation
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('All fields are required.');
       setLoading(false);
-      navigate('/login');
-    }, 1500);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await register(formData);
+      
+      if (response.success) {
+        // Success! Navigate to dashboard (already logged in)
+        navigate('/');
+      } else {
+        setError(response.message || 'Registration failed');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,12 +85,23 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-600">Full Name</label>
             <div className="relative">
               <FontAwesomeIcon icon={faUser} className="absolute left-4 top-3.5 text-gray-400" />
               <input 
                 type="text" 
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
                 placeholder="John Doe"
               />
@@ -61,6 +114,10 @@ const Register = () => {
               <FontAwesomeIcon icon={faEnvelope} className="absolute left-4 top-3.5 text-gray-400" />
               <input 
                 type="email" 
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
                 placeholder="name@example.com"
               />
@@ -73,13 +130,19 @@ const Register = () => {
               <FontAwesomeIcon icon={faLock} className="absolute left-4 top-3.5 text-gray-400" />
               <input 
                 type="password" 
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                minLength={6}
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
-                placeholder="Create a password"
+                placeholder="Create a password (min 6 characters)"
               />
             </div>
           </div>
 
           <button 
+            type="submit"
             disabled={loading}
             className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 group transition-all mt-4"
             style={{ background: 'var(--gradient-primary)' }}

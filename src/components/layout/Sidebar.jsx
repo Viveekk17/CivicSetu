@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHome, 
@@ -18,17 +18,53 @@ import { motion } from 'framer-motion';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Get user from localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   const menuItems = [
     { path: '/', name: 'Dashboard', icon: faHome },
     { path: '/upload', name: 'Upload Photo', icon: faCamera },
-    { path: '/redeem', name: 'Plant Trees', icon: faTree, badge: 'HOT' },
+    { path: '/redeem', name: 'Redeem', icon: faTree, badge: 'HOT' },
     { path: '/submissions', name: 'My Submissions', icon: faList },
     { path: '/analytics', name: 'Analytics', icon: faChartLine },
     { path: '/ngos', name: 'NGO Dashboard', icon: faHandHoldingHeart },
     { path: '/community', name: 'Community', icon: faUsers },
     { path: '/blockchain', name: 'Blockchain', icon: faLink },
   ];
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const names = name.split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const getRole = (credits) => {
+    if (credits >= 10000) return 'Eco Champion 🏆';
+    if (credits >= 5000) return 'Eco Hero 🌟';
+    if (credits >= 1000) return 'Eco Warrior ⚔️';
+    return 'Eco Beginner 🌱';
+  };
+
+  const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Close sidebar if on mobile
+    if (window.innerWidth < 768) onClose();
+    
+    // Redirect to login
+    navigate('/login');
+  };
 
   return (
     <>
@@ -105,19 +141,48 @@ const Sidebar = ({ isOpen, onClose }) => {
           ))}
         </nav>
 
-        {/* User Profile Snippet / Bottom Actions */}
-        <div className="p-4 border-t border-gray-100 m-4 bg-gray-50 rounded-2xl"
-             style={{ backgroundColor: 'var(--bg-body)' }}>
+        {/* User Profile Section */}
+        <div 
+          className="p-4 m-4 rounded-2xl border-2"
+          style={{ 
+            backgroundColor: 'var(--bg-hover)', 
+            borderColor: 'var(--border-light)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+          }}
+        >
           <div className="flex items-center gap-3 mb-3">
-             <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
-               <span className="font-bold">JD</span>
+             <div 
+               className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md"
+               style={{ background: 'var(--gradient-primary)' }}
+             >
+               <span>{getInitials(user?.name)}</span>
              </div>
-             <div>
-               <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>John Doe</p>
-               <p className="text-xs text-gray-500">Eco Warrior</p>
+             <div className="flex-1 min-w-0">
+               <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                 {user?.name || 'Guest User'}
+               </p>
+               <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
+                 {getRole(user?.credits || 0)}
+               </p>
              </div>
           </div>
-          <button className="w-full py-2 flex items-center justify-center gap-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all border-2"
+            style={{ 
+              color: '#ffffff',
+              borderColor: '#ef4444',
+              backgroundColor: '#ef4444'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626';
+              e.currentTarget.style.borderColor = '#dc2626';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444';
+              e.currentTarget.style.borderColor = '#ef4444';
+            }}
+          >
             <FontAwesomeIcon icon={faSignOutAlt} />
             Logout
           </button>

@@ -3,19 +3,47 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { login } from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
-  const handleLogin = (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    // Don't clear error here - let it persist until next submission
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Extra safety to prevent event bubbling
+    
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const response = await login(formData);
+      
+      if (response.success) {
+        // Success! Navigate to dashboard
+        navigate('/');
+      } else {
+        setError(response.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error('Login error:', err); // Log for debugging
+      setError(err.message || 'Invalid email or password. Please try again.');
+    } finally {
       setLoading(false);
-      navigate('/');
-    }, 1500);
+    }
   };
 
   return (
@@ -44,13 +72,23 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-600">Email Address</label>
             <div className="relative">
               <FontAwesomeIcon icon={faEnvelope} className="absolute left-4 top-3.5 text-gray-400" />
               <input 
                 type="email" 
-                defaultValue="demo@ecotrace.ai"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
                 placeholder="name@example.com"
               />
@@ -66,7 +104,10 @@ const Login = () => {
               <FontAwesomeIcon icon={faLock} className="absolute left-4 top-3.5 text-gray-400" />
               <input 
                 type="password" 
-                defaultValue="password123"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
                 placeholder="••••••••"
               />
@@ -74,6 +115,7 @@ const Login = () => {
           </div>
 
           <button 
+            type="submit"
             disabled={loading}
             className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 group transition-all"
             style={{ background: 'var(--gradient-primary)' }}

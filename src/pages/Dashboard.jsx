@@ -1,11 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { faCoins, faCheckCircle, faTree } from '@fortawesome/free-solid-svg-icons';
 import StatsCard from '../components/common/StatsCard';
 import AQIWidget from '../components/widgets/AQIWidget';
 import ActivityFeed from '../components/widgets/ActivityFeed';
+import { getDashboardStats } from '../services/analyticsService';
+import { getStoredUser } from '../services/authService';
 
 const Dashboard = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const user = getStoredUser();
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await getDashboardStats();
+      
+      if (response.success) {
+        setStats(response.data);
+        
+        // Sync localStorage credits with database value
+        const currentUser = getStoredUser();
+        if (currentUser && response.data.stats.currentBalance !== currentUser.credits) {
+          const updatedUser = {
+            ...currentUser,
+            credits: response.data.stats.currentBalance
+          };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          // Dispatch event to update header
+          window.dispatchEvent(new CustomEvent('creditsUpdated', {
+            detail: { credits: response.data.stats.currentBalance }
+          }));
+        }
+      } else {
+        setError('Failed to load dashboard data');
+      }
+    } catch (err) {
+      console.error('Dashboard error:', err);
+      setError(err.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -21,6 +65,34 @@ const Dashboard = () => {
     visible: { y: 0, opacity: 1 }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p style={{ color: 'var(--text-secondary)' }}>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchDashboardData}
+            className="px-6 py-2 rounded-lg text-white"
+            style={{ background: 'var(--gradient-primary)' }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div 
       className="space-y-6"
@@ -33,28 +105,28 @@ const Dashboard = () => {
         <motion.div variants={itemVariants}>
           <StatsCard 
             title="Carbon Credits" 
-            value="2,450" 
+            value={stats.stats.currentBalance.toLocaleString()} 
             icon={faCoins} 
-            color="#FBBF24" // Amber
-            trend={12} 
+            color="#FBBF24"
+            trend={stats.stats.currentBalance > 0 ? 15 : 0} 
           />
         </motion.div>
         <motion.div variants={itemVariants}>
           <StatsCard 
             title="Verified Photos" 
-            value="148" 
+            value={stats.stats.verifiedSubmissions.toString()} 
             icon={faCheckCircle} 
-            color="#3B82F6" // Blue
-            trend={8} 
+            color="#3B82F6"
+            trend={stats.stats.totalSubmissions > 0 ? Math.round((stats.stats.verifiedSubmissions / stats.stats.totalSubmissions) * 100) : 0} 
           />
         </motion.div>
         <motion.div variants={itemVariants}>
           <StatsCard 
-            title="Trees Planted" 
-            value="24" 
+            title="Total Submissions" 
+            value={stats.stats.totalSubmissions.toString()} 
             icon={faTree} 
-            color="#10B981" // Green
-            trend={25} 
+            color="#10B981"
+            trend={stats.stats.totalSubmissions > 5 ? 25 : 10} 
           />
         </motion.div>
       </div>
@@ -99,7 +171,7 @@ const Dashboard = () => {
 
         {/* Activity Feed - Takes 1 col */}
         <motion.div className="lg:col-span-1" variants={itemVariants}>
-          <ActivityFeed />
+          <ActivityFeed activities={stats.recentActivity} />
         </motion.div>
       </div>
       

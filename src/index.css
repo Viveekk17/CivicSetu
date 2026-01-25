@@ -1,0 +1,213 @@
+/* Global CSS with Variables */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Common Defaults */
+  --font-family: 'Inter', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Light Theme (Default) */
+  /* Primary Colors - Eco Green */
+  --primary: #10B981;        /* Emerald Green */
+  --primary-dark: #059669;
+  --primary-light: #34D399;
+  --primary-lighter: #D1FAE5;
+  
+  /* Secondary Colors */
+  --secondary: #3B82F6;      /* Blue */
+  --secondary-dark: #2563EB;
+  --secondary-light: #60A5FA;
+  
+  /* Accent Colors */
+  --accent: #8B5CF6;         /* Purple */
+  --accent-dark: #7C3AED;
+  --accent-light: #A78BFA;
+  
+  /* Background Colors */
+  --bg-body: #F9FAFB;        /* Light gray background */
+  --bg-surface: #FFFFFF;     /* White cards/surfaces */
+  --bg-elevated: #FFFFFF;    /* Elevated surfaces */
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  
+  /* Text Colors */
+  --text-primary: #111827;   /* Almost black */
+  --text-secondary: #6B7280; /* Gray */
+  --text-tertiary: #9CA3AF;  /* Light gray */
+  --text-inverse: #FFFFFF;   /* White text for dark backgrounds */
+  
+  /* Border Colors */
+  --border-light: #E5E7EB;
+  --border-medium: #D1D5DB;
+  --border-dark: #9CA3AF;
+  
+  /* Status Colors */
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-danger: #EF4444;
+  --status-info: #3B82F6;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-secondary: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  --gradient-accent: linear-gradient(135deg, #10B981 0%, #8B5CF6 100%);
+  --gradient-warm: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+}
+
+/* Dark Theme */
+[data-theme='dark'] {
+  /* Primary Colors - Google Blue (sleek modern aesthetic) */
+  --primary: #4285F4;        /* Google Blue */
+  --primary-dark: #1967D2;   /* Darker Google Blue */
+  --primary-light: #669DF6;  /* Lighter Google Blue */
+  --primary-lighter: #D2E3FC; /* Very light blue for hover */
+  
+  /* Secondary Colors */
+  --secondary: #60A5FA;
+  --secondary-dark: #3B82F6;
+  --secondary-light: #93C5FD;
+  
+  /* Accent Colors */
+  --accent: #A78BFA;
+  --accent-dark: #8B5CF6;
+  --accent-light: #C4B5FD;
+  
+  /* Background Colors */
+  --bg-body: #0F172A;        /* Dark blue-gray */
+  --bg-surface: #1E293B;     /* Lighter dark blue-gray */
+  --bg-elevated: #334155;    /* Even lighter for modals/dropdowns */
+  --bg-glass: rgba(30, 41, 59, 0.8);
+  
+  /* Text Colors */
+  --text-primary: #F1F5F9;   /* Almost white */
+  --text-secondary: #CBD5E1; /* Light gray */
+  --text-tertiary: #94A3B8;  /* Medium gray */
+  --text-inverse: #0F172A;   /* Dark text for light backgrounds */
+  
+  /* Border Colors */
+  --border-light: #334155;
+  --border-medium: #475569;
+  --border-dark: #64748B;
+  
+  /* Status Colors (slightly brighter for dark bg) */
+  --status-success: #34D399;
+  --status-warning: #FBBF24;
+  --status-danger: #F87171;
+  --status-info: #60A5FA;
+  
+  /* Shadows (stronger for visibility on dark bg) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+
+  /* Gradients - Google Blue themed */
+  --gradient-primary: linear-gradient(135deg, #4285F4 0%, #1967D2 100%);
+  --gradient-secondary: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+  --gradient-accent: linear-gradient(135deg, #4285F4 0%, #A78BFA 100%);
+  --gradient-warm: linear-gradient(135deg, #FBBF24 0%, #F87171 100%);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  outline: none;
+}
+
+/* Utility Classes */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  box-shadow: 0 4px 14px 0 rgba(0,0,0,0.1);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

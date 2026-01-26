@@ -342,8 +342,6 @@ const Submissions = () => {
                     {selectedSubmission.photos.map((photo, index) => (
                       <img
                         key={index}
-                      <img
-                        key={index}
                         src={photo.startsWith('http') ? photo : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${photo}`}
                         alt={`Photo ${index + 1}`}
                         className="w-full h-48 object-cover rounded-lg border"

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Submission = require('../models/Submission');
 const Transaction = require('../models/Transaction');
@@ -123,3 +124,252 @@ exports.getAQI = async (req, res) => {
     });
   }
 };
+
+// @desc    Get detailed analytics for analytics page
+// @route   GET /api/analytics/detailed?period=24h|7days|1month|1year
+// @access  Private
+exports.getDetailedAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    const period = req.query.period || '1year';
+
+    // Get all submissions
+    const allSubmissions = await Submission.find({ user: userId });
+    const totalSubmissions = allSubmissions.length;
+    const verifiedSubmissions = allSubmissions.filter(s => s.status === 'verified').length;
+    const pendingSubmissions = allSubmissions.filter(s => s.status === 'pending').length;
+    const rejectedSubmissions = allSubmissions.filter(s => s.status === 'rejected').length;
+
+    // Calculate verification rate
+    const verificationRate = totalSubmissions > 0 
+      ? Math.round((verifiedSubmissions / totalSubmissions) * 100) 
+      : 0;
+
+    // Get credits data
+    const creditsEarned = await Transaction.aggregate([
+      { $match: { user: user._id, type: 'earned' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    const creditsRedeemed = await Transaction.aggregate([
+      { $match: { user: user._id, type: 'redeemed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    // Determine time range and grouping based on period
+    const now = new Date();
+    let startDate;
+    let groupBy;
+
+    switch (period) {
+      case '24h':
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        groupBy = {
+          hour: { $hour: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' },
+          month: { $month: '$createdAt' },
+          year: { $year: '$createdAt' }
+        };
+        break;
+      case '7days':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        groupBy = {
+          day: { $dayOfMonth: '$createdAt' },
+          month: { $month: '$createdAt' },
+          year: { $year: '$createdAt' }
+        };
+        break;
+      case '1month':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        groupBy = {
+          day: { $dayOfMonth: '$createdAt' },
+          month: { $month: '$createdAt' },
+          year: { $year: '$createdAt' }
+        };
+        break;
+      case '1year':
+      default:
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+        groupBy = {
+          month: { $month: '$createdAt' },
+          year: { $year: '$createdAt' }
+        };
+        break;
+    }
+
+    // Get credits trend based on period
+    const creditsTrend = await Transaction.aggregate([
+      { 
+        $match: { 
+          user: user._id, 
+          createdAt: { $gte: startDate },
+          type: 'earned'
+        } 
+      },
+      {
+        $group: {
+          _id: groupBy,
+          total: { $sum: '$amount' }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.hour': 1 } }
+    ]);
+
+    // Get monthly activity - all time
+    console.log('Fetching monthly activity for user:', userId);
+    const monthlyActivity = await Submission.aggregate([
+      { 
+        $match: { 
+          user: new mongoose.Types.ObjectId(userId)
+        } 
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' }
+          },
+          count: { $sum: 1 },
+          verified: {
+            $sum: { $cond: [{ $eq: ['$status', 'verified'] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+    
+    console.log('Monthly Activity Result:', monthlyActivity);
+    console.log('Monthly Activity Count:', monthlyActivity.length);
+
+    // Calculate environmental impact
+    const totalWeight = allSubmissions.reduce((sum, s) => sum + (s.weight || 0), 0);
+    const co2Saved = Math.round(totalWeight * 0.5); // 1kg waste = 0.5kg CO2 saved (approximate)
+    const treesEquivalent = Math.round(co2Saved / 20); // 1 tree absorbs ~20kg CO2/year
+    const wasteCollected = Math.round(totalWeight);
+
+    res.json({
+      success: true,
+      data: {
+        stats: {
+          totalSubmissions,
+          verifiedSubmissions,
+          pendingSubmissions,
+          rejectedSubmissions,
+          verificationRate,
+          totalCreditsEarned: creditsEarned[0]?.total || 0,
+          totalCreditsRedeemed: creditsRedeemed[0]?.total || 0,
+          currentBalance: user.credits
+        },
+        creditsTrend,
+        period,
+        monthlyActivity,
+        environmentalImpact: {
+          co2Saved,
+          treesEquivalent,
+          wasteCollected
+        },
+        submissionsByStatus: {
+          verified: verifiedSubmissions,
+          pending: pendingSubmissions,
+          rejected: rejectedSubmissions
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get submissions breakdown by category
+// @route   GET /api/analytics/categories
+// @access  Private
+exports.getSubmissionsByCategory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const categoryBreakdown = await Submission.aggregate([
+      { $match: { user: userId } },
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 },
+          totalCredits: { $sum: '$creditsAwarded' },
+          verified: {
+            $sum: { $cond: [{ $eq: ['$status', 'verified'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    // Calculate percentages
+    const total = categoryBreakdown.reduce((sum, cat) => sum + cat.count, 0);
+    const categoriesWithPercentage = categoryBreakdown.map(cat => ({
+      type: cat._id,
+      count: cat.count,
+      totalCredits: cat.totalCredits,
+      verified: cat.verified,
+      percentage: total > 0 ? Math.round((cat.count / total) * 100) : 0
+    }));
+
+    res.json({
+      success: true,
+      data: categoriesWithPercentage
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get progress timeline
+// @route   GET /api/analytics/timeline
+// @access  Private
+exports.getProgressTimeline = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get last 12 months
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+    const timeline = await Submission.aggregate([
+      { 
+        $match: { 
+          user: userId, 
+          createdAt: { $gte: twelveMonthsAgo }
+        } 
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' }
+          },
+          submissions: { $sum: 1 },
+          creditsEarned: { $sum: '$creditsAwarded' }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    res.json({
+      success: true,
+      data: timeline
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+

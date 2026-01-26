@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Upload from './pages/Upload';
 import Redeem from './pages/Redeem';
 import Submissions from './pages/Submissions';
+import Analytics from './pages/Analytics';
 import Placeholder from './pages/Placeholder';
 
 const App = () => {
@@ -26,7 +27,7 @@ const App = () => {
         <Route path="upload" element={<Upload />} />
         <Route path="redeem" element={<Redeem />} />
         <Route path="submissions" element={<Submissions />} />
-        <Route path="analytics" element={<Placeholder title="Analytics" />} />
+        <Route path="analytics" element={<Analytics />} />
         <Route path="ngos" element={<Placeholder title="NGO Dashboard" />} />
         <Route path="community" element={<Placeholder title="Community" />} />
         <Route path="blockchain" element={<Placeholder title="Blockchain" />} />

@@ -8,6 +8,7 @@
 :root {
   /* Common Defaults */
   --font-family: 'Inter', sans-serif;
+  --font-size-base: 16px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -96,8 +97,8 @@
   --bg-glass: rgba(30, 41, 59, 0.8);
   
   /* Text Colors */
-  --text-primary: #F1F5F9;   /* Almost white */
-  --text-secondary: #CBD5E1; /* Light gray */
+  --text-primary: #FFFFFF;   /* Pure white for better visibility */
+  --text-secondary: #E2E8F0; /* Lighter gray for better contrast */
   --text-tertiary: #94A3B8;  /* Medium gray */
   --text-inverse: #0F172A;   /* Dark text for light backgrounds */
   

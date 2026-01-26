@@ -96,7 +96,7 @@ const Submissions = () => {
       <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
           My Submissions
         </h1>
         
@@ -238,9 +238,13 @@ const Submissions = () => {
                           <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
                             {item.photos && item.photos[0] ? (
                               <img 
-                                src={item.photos[0].startsWith('http') ? item.photos[0] : `http://localhost:5000${item.photos[0]}`}
+                                src={item.photos[0].startsWith('http') ? item.photos[0] : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${item.photos[0]}`}
                                 alt={item.type}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.parentElement.innerHTML = '<div class="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><svg class="text-emerald-500" style="width: 1.5rem; height: 1.5rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
+                                }}
                               />
                             ) : (
                               <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -249,11 +253,11 @@ const Submissions = () => {
                             )}
                           </div>
                           <div>
-                            <div className="font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
+                            <div className="font-semibold text-base capitalize" style={{ color: 'var(--text-primary)' }}>
                               {item.type || 'Submission'}
                             </div>
                             {item.description && (
-                              <div className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
+                              <div className="text-sm mt-0.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
                                 {item.description}
                               </div>
                             )}
@@ -333,15 +337,21 @@ const Submissions = () => {
               {/* Photos */}
               {selectedSubmission.photos && selectedSubmission.photos.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Photos</h3>
+                  <h3 className="font-bold mb-3 text-lg" style={{ color: 'var(--text-primary)' }}>Photos</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {selectedSubmission.photos.map((photo, index) => (
                       <img
                         key={index}
-                        src={photo.startsWith('http') ? photo : `http://localhost:5000${photo}`}
+                      <img
+                        key={index}
+                        src={photo.startsWith('http') ? photo : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${photo}`}
                         alt={`Photo ${index + 1}`}
                         className="w-full h-48 object-cover rounded-lg border"
                         style={{ borderColor: 'var(--border-light)' }}
+                        onError={(e) => {
+                          console.error('Image failed to load:', photo);
+                          e.target.style.display = 'none';
+                        }}
                       />
                     ))}
                   </div>

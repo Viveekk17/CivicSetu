@@ -58,39 +58,55 @@ exports.createSubmission = async (req, res) => {
       });
     }
 
-    // Get photo paths
-    const photos = req.files.map(file => `/uploads/${file.filename}`);
+    // Get local photo paths (uploaded to uploads/ folder)
+    const localPhotoPaths = req.files.map(file => file.path);
+    const photoRelativePaths = req.files.map(file => `/uploads/${file.filename}`);
 
-    // Create submission
+    // AI verification using local files
+    const verification = await verifySubmission(type, photoRelativePaths, weight || 1);
+
+    // Only upload to Cloudinary if verification is successful
+    let cloudinaryUrls = [];
+    if (verification.verified) {
+      const { uploadMultipleToCloudinary } = require('../utils/cloudinary');
+      
+      // Upload to Cloudinary and delete local files
+      cloudinaryUrls = await uploadMultipleToCloudinary(localPhotoPaths, 'ecotrace/submissions');
+      console.log(`✅ Uploaded ${cloudinaryUrls.length} photos to Cloudinary`);
+    } else {
+      // If rejected, still delete local files
+      const fs = require('fs').promises;
+      for (const filePath of localPhotoPaths) {
+        try {
+          await fs.unlink(filePath);
+          console.log(`🗑️  Deleted rejected photo: ${filePath}`);
+        } catch (err) {
+          console.error(`Failed to delete ${filePath}:`, err);
+        }
+      }
+    }
+
+    // Create submission with Cloudinary URLs (or empty array if rejected)
     const submission = await Submission.create({
       user: req.user.id,
-      type,
-      photos,
+      type: verification.category || type, // Use AI-detected category
+      photos: cloudinaryUrls.length > 0 ? cloudinaryUrls : [],
       weight: weight || 1,
       location: JSON.parse(location),
       description,
-      status: 'pending'
+      status: verification.verified ? 'verified' : 'rejected',
+      creditsAwarded: verification.credits,
+      verificationDetails: {
+        verifiedAt: new Date(),
+        verrifiedBy: 'AI',
+        confidence: verification.confidence,
+        notes: verification.notes,
+        co2Saved: verification.co2Saved,
+        trashWeight: verification.trashWeight,
+        category: verification.category,
+        suggestedDescription: verification.suggestedDescription
+      }
     });
-
-    // AI verification using Replit API
-    const verification = await verifySubmission(type, photos, weight || 1);
-
-    // Update submission with verification results
-    submission.status = verification.verified ? 'verified' : 'rejected';
-    submission.creditsAwarded = verification.credits;
-    submission.type = verification.category || type; // Use AI-detected category
-    submission.verificationDetails = {
-      verifiedAt: new Date(),
-      verifiedBy: 'AI',
-      confidence: verification.confidence,
-      notes: verification.notes,
-      co2Saved: verification.co2Saved,
-      trashWeight: verification.trashWeight,
-      category: verification.category,
-      suggestedDescription: verification.suggestedDescription
-    };
-
-    await submission.save();
 
     // If verified, award credits to user
     if (verification.verified) {
@@ -112,7 +128,9 @@ exports.createSubmission = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Submission created and verified successfully',
+      message: verification.verified 
+        ? 'Submission verified and uploaded to cloud storage' 
+        : 'Submission rejected by AI verification',
       data: submission
     });
   } catch (error) {

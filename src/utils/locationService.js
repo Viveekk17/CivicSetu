@@ -56,16 +56,39 @@ export const reverseGeocode = async (lat, lng) => {
     
     const data = await response.json();
     
+    // Debug: Log raw API response
+    console.log('📍 Location API Response (Nominatim):', data);
+    
     // Extract readable location
     const address = data.address || {};
-    const locationParts = [
-      address.road || address.neighbourhood,
-      address.suburb || address.city_district,
-      address.city || address.town || address.village,
-      address.state
-    ].filter(Boolean);
     
-    return locationParts.join(', ') || data.display_name;
+    const locationParts = [];
+    
+    // 1. Specific (Street/Building/Neighborhood)
+    const specific = address.building || address.road || address.neighbourhood || address.residential || address.hamlet;
+    if (specific) locationParts.push(specific);
+    
+    // 2. Locality (Suburb/Village/Town)
+    // "Alandi", "Lohegaon", etc usually appear here
+    const locality = address.suburb || address.village || address.town;
+    if (locality) locationParts.push(locality);
+
+    // 3. City/District (Pune)
+    // If we have a locality, we also want the city/district context
+    const cityOrDistrict = address.city || address.city_district || address.district || address.county || address.state_district;
+    
+    // Avoid duplicating if locality name is same as city (rare but possible, e.g. "Pune" suburb in "Pune" city)
+    if (cityOrDistrict && cityOrDistrict !== locality) {
+      locationParts.push(cityOrDistrict);
+    }
+    
+    // 4. State
+    if (address.state) locationParts.push(address.state);
+    
+    // Filter distinct parts roughly
+    const distinctParts = [...new Set(locationParts)];
+    
+    return distinctParts.join(', ') || data.display_name;
   } catch (error) {
     console.error('Reverse geocoding error:', error);
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`; // Fallback to coordinates

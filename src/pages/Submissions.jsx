@@ -28,9 +28,9 @@ const Submissions = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await getSubmissions();
-      
+
       if (response.success) {
         setSubmissions(response.data.submissions || []);
       } else {
@@ -65,7 +65,7 @@ const Submissions = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'verified':
         return 'text-green-600 dark:text-green-400 dark:bg-green-900/30 border-green-600 dark:border-green-500';
       case 'pending':
@@ -78,7 +78,7 @@ const Submissions = () => {
   };
 
   const getStatusIcon = (status) => {
-    switch(status) {
+    switch (status) {
       case 'verified': return faCheckCircle;
       case 'pending': return faClock;
       case 'rejected': return faTimesCircle;
@@ -94,209 +94,205 @@ const Submissions = () => {
   return (
     <>
       <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          My Submissions
-        </h1>
-        
-        <div className="flex gap-4 w-full md:w-auto">
-          {/* Search */}
-          <div className="relative flex-1 md:flex-none">
-            <FontAwesomeIcon 
-              icon={faSearch} 
-              className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" 
-            />
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:border-emerald-500 w-full" 
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                borderColor: 'var(--border-light)',
-                color: 'var(--text-primary)'
-              }}
-            />
-          </div>
-          
-          {/* Filter Dropdown */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowFilterMenu(!showFilterMenu)}
-              className="px-4 py-2 border rounded-lg flex items-center gap-2 hover:opacity-80 transition-all"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                borderColor: 'var(--border-light)',
-                color: 'var(--text-secondary)'
-              }}
-            >
-              <FontAwesomeIcon icon={faFilter} />
-              Filter
-            </button>
-            
-            {showFilterMenu && (
-              <div 
-                className="absolute right-0 mt-2 w-48 py-2 rounded-lg shadow-lg z-10 border"
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            My Submissions
+          </h1>
+
+          <div className="flex gap-4 w-full md:w-auto">
+            {/* Search */}
+            <div className="relative flex-1 md:flex-none">
+              <FontAwesomeIcon
+                icon={faSearch}
+                className="absolute left-3 top-3 text-gray-400 dark:text-gray-500"
+              />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:border-emerald-500 w-full"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
-                  borderColor: 'var(--border-light)'
+                  borderColor: 'var(--border-light)',
+                  color: 'var(--text-primary)'
+                }}
+              />
+            </div>
+
+            {/* Filter Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilterMenu(!showFilterMenu)}
+                className="px-4 py-2 border rounded-lg flex items-center gap-2 hover:opacity-80 transition-all"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-light)',
+                  color: 'var(--text-secondary)'
                 }}
               >
-                <button
-                  onClick={() => { setStatusFilter('all'); setShowFilterMenu(false); }}
-                  className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    statusFilter === 'all' ? 'font-bold' : ''
-                  }`}
-                  style={{ color: 'var(--text-primary)' }}
+                <FontAwesomeIcon icon={faFilter} />
+                Filter
+              </button>
+
+              {showFilterMenu && (
+                <div
+                  className="absolute right-0 mt-2 w-48 py-2 rounded-lg shadow-lg z-10 border"
+                  style={{
+                    backgroundColor: 'var(--bg-surface)',
+                    borderColor: 'var(--border-light)'
+                  }}
                 >
-                  All
-                </button>
-                <button
-                  onClick={() => { setStatusFilter('verified'); setShowFilterMenu(false); }}
-                  className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    statusFilter === 'verified' ? 'font-bold' : ''
-                  }`}
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  ✓ Verified
-                </button>
-                <button
-                  onClick={() => { setStatusFilter('pending'); setShowFilterMenu(false); }}
-                  className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    statusFilter === 'pending' ? 'font-bold' : ''
-                  }`}
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  ⏱ Pending
-                </button>
-                <button
-                  onClick={() => { setStatusFilter('rejected'); setShowFilterMenu(false); }}
-                  className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    statusFilter === 'rejected' ? 'font-bold' : ''
-                  }`}
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  ✗ Rejected
-                </button>
+                  <button
+                    onClick={() => { setStatusFilter('all'); setShowFilterMenu(false); }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${statusFilter === 'all' ? 'font-bold' : ''
+                      }`}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => { setStatusFilter('verified'); setShowFilterMenu(false); }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${statusFilter === 'verified' ? 'font-bold' : ''
+                      }`}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    ✓ Verified
+                  </button>
+                  <button
+                    onClick={() => { setStatusFilter('pending'); setShowFilterMenu(false); }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${statusFilter === 'pending' ? 'font-bold' : ''
+                      }`}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    ⏱ Pending
+                  </button>
+                  <button
+                    onClick={() => { setStatusFilter('rejected'); setShowFilterMenu(false); }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${statusFilter === 'rejected' ? 'font-bold' : ''
+                      }`}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    ✗ Rejected
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <FontAwesomeIcon icon={faSpinner} spin className="text-4xl" style={{ color: 'var(--primary)' }} />
+          </div>
+        )}
+
+        {/* Submissions Table */}
+        {!loading && (
+          <div className="card overflow-hidden">
+            {filteredSubmissions.length === 0 ? (
+              <div className="text-center py-20">
+                <FontAwesomeIcon icon={faImage} className="text-6xl mb-4 opacity-20" style={{ color: 'var(--text-tertiary)' }} />
+                <p className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  {submissions.length === 0 ? 'No submissions yet' : 'No results found'}
+                </p>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  {submissions.length === 0 ? 'Upload your first photo to get started!' : 'Try adjusting your filters'}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="border-b" style={{ backgroundColor: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}>
+                    <tr>
+                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Activity</th>
+                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Date</th>
+                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Location</th>
+                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Status</th>
+                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Credits</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                    {filteredSubmissions.map((item) => (
+                      <tr
+                        key={item._id}
+                        onClick={() => setSelectedSubmission(item)}
+                        className="transition-colors cursor-pointer"
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            {/* Photo thumbnail */}
+                            <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
+                              {item.photos && item.photos[0] ? (
+                                <img
+                                  src={item.photos[0].startsWith('http') ? item.photos[0] : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${item.photos[0]}`}
+                                  alt={item.type}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.parentElement.innerHTML = '<div class="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><svg class="text-emerald-500" style="width: 1.5rem; height: 1.5rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                  <FontAwesomeIcon icon={faImage} className="text-emerald-500" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-base capitalize" style={{ color: 'var(--text-primary)' }}>
+                                {item.type || 'Submission'}
+                              </div>
+                              {item.description && (
+                                <div className="text-sm mt-0.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                            <FontAwesomeIcon icon={faCalendar} className="text-xs" />
+                            <span className="text-sm">{formatDate(item.createdAt)}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xs" />
+                            <span className="text-sm">{item.location?.name || 'Unknown'}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border-2 ${getStatusColor(item.status)}`}>
+                            <FontAwesomeIcon icon={getStatusIcon(item.status)} />
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                            +{item.creditsAwarded || 0}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400">
-          {error}
-        </div>
-      )}
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-20">
-          <FontAwesomeIcon icon={faSpinner} spin className="text-4xl" style={{ color: 'var(--primary)' }} />
-        </div>
-      )}
-
-      {/* Submissions Table */}
-      {!loading && (
-        <div className="card overflow-hidden">
-          {filteredSubmissions.length === 0 ? (
-            <div className="text-center py-20">
-              <FontAwesomeIcon icon={faImage} className="text-6xl mb-4 opacity-20" style={{ color: 'var(--text-tertiary)' }} />
-              <p className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                {submissions.length === 0 ? 'No submissions yet' : 'No results found'}
-              </p>
-              <p style={{ color: 'var(--text-secondary)' }}>
-                {submissions.length === 0 ? 'Upload your first photo to get started!' : 'Try adjusting your filters'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="border-b" style={{ backgroundColor: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}>
-                  <tr>
-                    <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Activity</th>
-                    <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Date</th>
-                    <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Location</th>
-                    <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Status</th>
-                    <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Credits</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
-                  {filteredSubmissions.map((item) => (
-                    <tr 
-                      key={item._id} 
-                      onClick={() => setSelectedSubmission(item)}
-                      className="transition-colors cursor-pointer"
-                    >
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          {/* Photo thumbnail */}
-                          <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
-                            {item.photos && item.photos[0] ? (
-                              <img 
-                                src={item.photos[0].startsWith('http') ? item.photos[0] : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${item.photos[0]}`}
-                                alt={item.type}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.parentElement.innerHTML = '<div class="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><svg class="text-emerald-500" style="width: 1.5rem; height: 1.5rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                                <FontAwesomeIcon icon={faImage} className="text-emerald-500" />
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-base capitalize" style={{ color: 'var(--text-primary)' }}>
-                              {item.type || 'Submission'}
-                            </div>
-                            {item.description && (
-                              <div className="text-sm mt-0.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
-                                {item.description}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                          <FontAwesomeIcon icon={faCalendar} className="text-xs" />
-                          <span className="text-sm">{formatDate(item.createdAt)}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                          <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xs" />
-                          <span className="text-sm">{item.location?.name || 'Unknown'}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border-2 ${getStatusColor(item.status)}`}>
-                          <FontAwesomeIcon icon={getStatusIcon(item.status)} />
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                          +{item.creditsAwarded || 0}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-      </div>
-      
       {/* Details Modal - Outside of space-y container */}
       <AnimatePresence>
         {selectedSubmission && (
@@ -340,8 +336,6 @@ const Submissions = () => {
                   <h3 className="font-bold mb-3 text-lg" style={{ color: 'var(--text-primary)' }}>Photos</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {selectedSubmission.photos.map((photo, index) => (
-                      <img
-                        key={index}
                       <img
                         key={index}
                         src={photo.startsWith('http') ? photo : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${photo}`}

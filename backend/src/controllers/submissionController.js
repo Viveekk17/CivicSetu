@@ -63,7 +63,8 @@ exports.createSubmission = async (req, res) => {
     const photoRelativePaths = req.files.map(file => `/uploads/${file.filename}`);
 
     // AI verification using local files
-    const verification = await verifySubmission(type, photoRelativePaths, weight || 1);
+    // Use localPhotoPaths (which comes from multer's file.path) to ensure correct path resolution
+    const verification = await verifySubmission(type, localPhotoPaths, weight || 1);
 
     // Only upload to Cloudinary if verification is successful
     let cloudinaryUrls = [];

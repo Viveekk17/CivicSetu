@@ -238,7 +238,7 @@ const Submissions = () => {
                           <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
                             {item.photos && item.photos[0] ? (
                               <img 
-                                src={`http://localhost:5000${item.photos[0]}`}
+                                src={item.photos[0].startsWith('http') ? item.photos[0] : `http://localhost:5000${item.photos[0]}`}
                                 alt={item.type}
                                 className="w-full h-full object-cover"
                               />
@@ -338,7 +338,7 @@ const Submissions = () => {
                     {selectedSubmission.photos.map((photo, index) => (
                       <img
                         key={index}
-                        src={`http://localhost:5000${photo}`}
+                        src={photo.startsWith('http') ? photo : `http://localhost:5000${photo}`}
                         alt={`Photo ${index + 1}`}
                         className="w-full h-48 object-cover rounded-lg border"
                         style={{ borderColor: 'var(--border-light)' }}

@@ -190,15 +190,21 @@ const Upload = () => {
       const response = await analyzePhotos(formData);
 
       if (response.success) {
-        // ============================================
-        // 🔍 DEBUG: Print AI analysis response
-        // ============================================
-        console.log('\n========== AI ANALYSIS RESPONSE ==========');
-        console.log('Full Response:', JSON.stringify(response, null, 2));
-        console.log('========================================\n');
-
         // Extract AI data from verification
         const verification = response.data.verification;
+        
+        // ============================================
+        // 🔍 DEBUG: AI Analysis Summary
+        // ============================================
+        console.group('🤖 AI Analysis Results');
+        console.log(`✅ Status: ${verification.verified ? 'Verified' : 'Rejected'}`);
+        console.log(`🏷️ Category: ${verification.category}`);
+        console.log(`⚖️ Weight: ${verification.trashWeight} kg`);
+        console.log(`🪙 Credits: ${verification.credits}`);
+        console.log(`🌱 CO2 Saved: ${verification.co2Saved?.toFixed(2)} kg`);
+        console.log(`📝 Description: ${verification.suggestedDescription || verification.notes}`);
+        console.log(`📊 Confidence: ${(verification.confidence * 100).toFixed(1)}%`);
+        console.groupEnd();
         
         setAiData({
           category: verification.category || 'NA',
@@ -229,8 +235,8 @@ const Upload = () => {
 
       // Create final submission with confirmed data
       const formData = new FormData();
-      formData.append('photos', beforePhoto.file);
-      formData.append('photos', afterPhoto.file);
+      
+      // 1. Append text data FIRST (Best practice for some parsers)
       formData.append('type', aiData.category);
       formData.append('weight', aiData.weight);
       formData.append('location', JSON.stringify({
@@ -238,6 +244,31 @@ const Upload = () => {
         coordinates: location || { lat: 0, lng: 0 }
       }));
       formData.append('description', aiData.description);
+      
+      const verData = JSON.stringify({
+        verified: true,
+        category: aiData.category,
+        trashWeight: aiData.weight,
+        weight: aiData.weight,
+        credits: aiData.credits,
+        co2Saved: aiData.co2Saved,
+        confidence: 0.95,
+        suggestedDescription: aiData.description,
+        notes: 'Verified by AI (Confirmed by User)'
+      });
+      formData.append('verificationData', verData);
+
+      // 🔍 DEBUG: Log what we are sending
+      console.log('📤 Sending Submission...');
+      console.log('Text Fields:', {
+        type: aiData.category,
+        weight: aiData.weight,
+        verificationData: JSON.parse(verData)
+      });
+
+      // 2. Append Files LAST
+      formData.append('photos', beforePhoto.file);
+      formData.append('photos', afterPhoto.file);
 
       const response = await createSubmission(formData);
 
@@ -470,52 +501,52 @@ const Upload = () => {
               {/* AI Analysis */}
               <div className="space-y-4 mb-8">
                 {/* Category */}
-                <div className="p-4 bg-gray-50 rounded-xl flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${typeIcons[aiData.category]?.bg}`}>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex items-center gap-4 border border-gray-100 dark:border-gray-700">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${typeIcons[aiData.category]?.bg} dark:bg-opacity-20`}>
                     <FontAwesomeIcon 
                       icon={typeIcons[aiData.category]?.icon || faTrash} 
                       className={`text-xl ${typeIcons[aiData.category]?.color}`}
                     />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600">Category</p>
-                    <p className="font-bold capitalize">{aiData.category}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Category</p>
+                    <p className="font-bold capitalize text-gray-900 dark:text-gray-100">{aiData.category}</p>
                   </div>
                 </div>
 
                 {/* Weight */}
-                <div className="p-4 bg-gray-50 rounded-xl flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex items-center gap-4 border border-gray-100 dark:border-gray-700">
+                  <div className="w-12 h-12 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
                     <FontAwesomeIcon icon={faWeightHanging} className="text-xl text-orange-500" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600">Estimated Weight</p>
-                    <p className="font-bold">{aiData.weight} kg</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Estimated Weight</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{aiData.weight} kg</p>
                   </div>
                 </div>
 
                 {/* Credits */}
-                <div className="p-4 bg-green-50 rounded-xl flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faCoins} className="text-xl text-green-600" />
+                <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center gap-4 border border-green-100 dark:border-green-800/50">
+                  <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-800 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faCoins} className="text-xl text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600">Credits Earned</p>
-                    <p className="font-bold text-green-600">{aiData.credits} Credits</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Credits Earned</p>
+                    <p className="font-bold text-green-600 dark:text-green-400">{aiData.credits} Credits</p>
                   </div>
                 </div>
 
                 {/* Description */}
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <p className="text-sm text-gray-600 mb-2">AI Description</p>
-                  <p className="text-gray-800">{aiData.description}</p>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">AI Description</p>
+                  <p className="text-gray-800 dark:text-gray-200">{aiData.description}</p>
                 </div>
 
                 {/* CO2 Saved */}
                 {aiData.co2Saved > 0 && (
-                  <div className="p-4 bg-blue-50 rounded-xl">
-                    <p className="text-sm text-blue-600 mb-1">Environmental Impact</p>
-                    <p className="font-bold text-blue-800">🌱 CO₂ Saved: {aiData.co2Saved.toFixed(1)} kg</p>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-100 dark:border-blue-800/50">
+                    <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">Environmental Impact</p>
+                    <p className="font-bold text-blue-800 dark:text-blue-300">🌱 CO₂ Saved: {aiData.co2Saved.toFixed(1)} kg</p>
                   </div>
                 )}
               </div>

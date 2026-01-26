@@ -57,7 +57,7 @@ export const reverseGeocode = async (lat, lng) => {
     const data = await response.json();
     
     // Debug: Log raw API response
-    console.log('📍 Location API Response (Nominatim):', data);
+    console.log('📍 Location Coordinates:', data.lat," ", data.lon);
     
     // Extract readable location
     const address = data.address || {};

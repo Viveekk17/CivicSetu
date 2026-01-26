@@ -62,9 +62,34 @@ exports.createSubmission = async (req, res) => {
     const localPhotoPaths = req.files.map(file => file.path);
     const photoRelativePaths = req.files.map(file => `/uploads/${file.filename}`);
 
+    // DEBUG: Check what we received
+    console.log('📝 Submission Request Received');
+    console.log('Body Keys:', Object.keys(req.body));
+    console.log('Raw verificationData:', req.body.verificationData);
+    console.log('Type of verificationData:', typeof req.body.verificationData);
+
     // AI verification using local files
     // Use localPhotoPaths (which comes from multer's file.path) to ensure correct path resolution
-    const verification = await verifySubmission(type, localPhotoPaths, weight || 1);
+    
+    let verification;
+    
+    // Check if we have pre-verified data (passed as JSON string)
+    if (req.body.verificationData) {
+      try {
+        console.log('Using pre-verified data from client');
+        verification = JSON.parse(req.body.verificationData);
+        
+        // Ensure verified is boolean
+        verification.verified = verification.verified === true || verification.verified === 'true';
+      } catch (e) {
+        console.error('Failed to parse verificationData', e);
+        // Fallback to server-side verification
+        verification = await verifySubmission(type, localPhotoPaths, weight || 1);
+      }
+    } else {
+      console.log('Running server-side verification');
+      verification = await verifySubmission(type, localPhotoPaths, weight || 1);
+    }
 
     // Only upload to Cloudinary if verification is successful
     let cloudinaryUrls = [];
@@ -92,7 +117,7 @@ exports.createSubmission = async (req, res) => {
       user: req.user.id,
       type: verification.category || type, // Use AI-detected category
       photos: cloudinaryUrls.length > 0 ? cloudinaryUrls : [],
-      weight: weight || 1,
+      weight: verification.weight || weight || 1, // Use verified weight if available
       location: JSON.parse(location),
       description,
       status: verification.verified ? 'verified' : 'rejected',

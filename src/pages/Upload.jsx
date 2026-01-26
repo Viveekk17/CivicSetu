@@ -202,7 +202,18 @@ const Upload = () => {
         
         // Check if AI detected fraud
         if (verification.isFraud || verification.category === 'fraud' || (verification.notes && verification.notes.toLowerCase().includes('fraud')) || (verification.notes && verification.notes.toLowerCase().includes('ai generated'))) {
-          setError('❌ Fraud images are not accepted. Please upload genuine before and after photos of your environmental cleanup work.');
+          const fraudMessage = '❌ Fraud images are not accepted. Please upload genuine before and after photos of your environmental cleanup work.';
+          setError(fraudMessage);
+          
+          // Trigger fraud detection notification
+          window.dispatchEvent(new CustomEvent('newNotification', {
+            detail: {
+              type: 'error',
+              title: 'Fraud Detected',
+              message: 'AI detected that the uploaded images may be fake or AI-generated. Please upload genuine photos of your cleanup work.'
+            }
+          }));
+          
           return;
         }
         
@@ -220,14 +231,43 @@ const Upload = () => {
         // Check if error is fraud-related
         const errorMsg = response.message || 'Analysis failed';
         if (errorMsg.toLowerCase().includes('fraud') || errorMsg.toLowerCase().includes('ai generated') || errorMsg.toLowerCase().includes('fake')) {
-          setError('❌ Fraud images are not accepted. Please upload genuine before and after photos of your environmental cleanup work.');
+          const fraudMessage = '❌ Fraud images are not accepted. Please upload genuine before and after photos of your environmental cleanup work.';
+          setError(fraudMessage);
+          
+          // Trigger fraud detection notification
+          window.dispatchEvent(new CustomEvent('newNotification', {
+            detail: {
+              type: 'error',
+              title: 'Fraud Detected',
+              message: 'AI detected that the uploaded images may be fake or AI-generated. Please upload genuine photos of your cleanup work.'
+            }
+          }));
         } else {
           setError(errorMsg);
+          
+          // Trigger general error notification
+          window.dispatchEvent(new CustomEvent('newNotification', {
+            detail: {
+              type: 'error',
+              title: 'Analysis Failed',
+              message: errorMsg
+            }
+          }));
         }
       }
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(err.message || 'Failed to analyze images');
+      const errorMessage = err.message || 'Failed to analyze images';
+      setError(errorMessage);
+      
+      // Trigger error notification
+      window.dispatchEvent(new CustomEvent('newNotification', {
+        detail: {
+          type: 'error',
+          title: 'Analysis Error',
+          message: errorMessage
+        }
+      }));
     } finally {
       setAnalyzing(false);
     }
@@ -261,9 +301,18 @@ const Upload = () => {
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
-        // Dispatch custom event to update header credits
+        // Dispatch custom event to update header credits and notification
         window.dispatchEvent(new CustomEvent('creditsUpdated', {
-          detail: { credits: updatedUser.credits }
+          detail: { credits: response.data.creditsAwarded }
+        }));
+        
+        // Add success notification
+        window.dispatchEvent(new CustomEvent('newNotification', {
+          detail: {
+            type: 'success',
+            title: 'Submission Verified!',
+            message: `Your ${aiData.category} cleanup has been verified. You earned ${response.data.creditsAwarded} credits and saved ${aiData.co2Saved?.toFixed(1)} kg of CO₂!`
+          }
         }));
         
         // Show success
@@ -274,6 +323,15 @@ const Upload = () => {
         });
       } else {
         setError(response.message || 'Submission failed');
+        
+        // Add error notification
+        window.dispatchEvent(new CustomEvent('newNotification', {
+          detail: {
+            type: 'error',
+            title: 'Submission Failed',
+            message: response.message || 'Failed to submit your cleanup photos. Please try again.'
+          }
+        }));
       }
     } catch (err) {
       console.error('Submission error:', err);

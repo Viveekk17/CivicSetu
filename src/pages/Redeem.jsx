@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTree, faLayerGroup, faPaw, faGlobeAmericas, faCoins, faSpinner, faTimes, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faTree, faLayerGroup, faPaw, faGlobeAmericas, faCoins, faSpinner, faTimes, faCheckCircle, faBus, faBolt, faGift } from '@fortawesome/free-solid-svg-icons';
 import { getTrees, redeemTree } from '../services/treeService';
 import { getStoredUser } from '../services/authService';
 
@@ -22,10 +22,10 @@ const Redeem = () => {
   const [redeemSuccess, setRedeemSuccess] = useState(null);
 
   const tabs = [
-    { id: 'trees', label: 'Trees', icon: faTree },
-    { id: 'bundles', label: 'Bundles', icon: faLayerGroup },
-    { id: 'wildlife', label: 'Wildlife', icon: faPaw },
-    { id: 'offset', label: 'Carbon Offset', icon: faGlobeAmericas },
+    { id: 'transport', label: 'Transport', icon: faBus },
+    { id: 'utilities', label: 'Utilities', icon: faBolt },
+    { id: 'goodies', label: 'Goodies', icon: faGift },
+    { id: 'environment', label: 'Environment', icon: faTree },
   ];
 
   // Fetch trees on mount
@@ -35,8 +35,15 @@ const Redeem = () => {
 
   // Filter trees when activeTab changes
   useEffect(() => {
-    const filtered = trees.filter(tree => tree.category === activeTab);
-    setFilteredTrees(filtered);
+    if (activeTab === 'environment') {
+      const filtered = trees.filter(tree => 
+        ['trees', 'bundles', 'wildlife', 'offset'].includes(tree.category)
+      );
+      setFilteredTrees(filtered);
+    } else {
+      const filtered = trees.filter(tree => tree.category === activeTab);
+      setFilteredTrees(filtered);
+    }
   }, [activeTab, trees]);
 
   // Listen for credit updates
@@ -124,9 +131,37 @@ const Redeem = () => {
       trees: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300',
       bundles: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300',
       wildlife: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300',
-      offset: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
+      offset: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
+      transport: 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300',
+      utilities: 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300',
+      goodies: 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'
     };
     return colors[category] || colors.trees;
+  };
+
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'transport': return faBus;
+      case 'utilities': return faBolt;
+      case 'goodies': return faGift;
+      case 'wildlife': return faPaw;
+      case 'offset': return faGlobeAmericas;
+      case 'bundles': return faLayerGroup;
+      default: return faTree;
+    }
+  };
+
+  const getIconStyle = (category) => {
+    const styles = {
+      trees: 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400',
+      bundles: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+      wildlife: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400',
+      offset: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
+      transport: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400',
+      utilities: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400',
+      goodies: 'bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400'
+    };
+    return styles[category] || styles.trees;
   };
 
   return (
@@ -244,8 +279,8 @@ const Redeem = () => {
                   </div>
 
                   {/* Icon/Image */}
-                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                    <FontAwesomeIcon icon={faTree} className="text-3xl text-green-600 dark:text-green-400" />
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${getIconStyle(item.category)}`}>
+                    <FontAwesomeIcon icon={getCategoryIcon(item.category)} className="text-3xl" />
                   </div>
 
                   {/* Name & Description */}
@@ -257,14 +292,12 @@ const Redeem = () => {
                   </p>
 
                   {/* Impact */}
-                  {item.impact?.co2Offset > 0 && (
-                    <div className="mb-4 p-2 rounded-lg text-center text-sm" style={{ backgroundColor: 'var(--bg-hover)' }}>
-                      <div style={{ color: 'var(--text-tertiary)' }}>CO₂ Offset:</div>
-                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                        {item.impact.co2Offset} kg
-                      </div>
+                  <div className="mb-4 p-2 rounded-lg text-center text-sm" style={{ backgroundColor: 'var(--bg-hover)' }}>
+                    <div style={{ color: 'var(--text-tertiary)' }}>CO₂ Offset:</div>
+                    <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {item.impact?.co2Offset || 0} kg
                     </div>
-                  )}
+                  </div>
 
                   {/* Divider */}
                   <hr className="my-4" style={{ borderColor: 'var(--border-light)' }} />

@@ -14,9 +14,14 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
   },
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true // Allow null/undefined values to exist alongside unique constraint
+  },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
+    required: false, // Optional for Google Auth / Firebase Auth users
     minlength: 6,
     select: false // Don't return password by default
   },
@@ -28,11 +33,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '/uploads/default-avatar.png'
   },
-  role: {
-    type: String,
-    enum: ['user', 'admin', 'ngo'],
-    default: 'user'
-  }
+  inventory: [{
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tree'
+    },
+    name: String,
+    category: String,
+    acquiredAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });

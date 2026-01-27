@@ -466,8 +466,8 @@ const Upload = () => {
             exit={{ opacity: 0, y: -20 }}
           >
             <div className="card p-8">
-              <h2 className="text-3xl font-bold mb-2">Environmental Impact Upload</h2>
-              <p className="text-gray-500 mb-8">Capture or upload before & after photos to verify your impact</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Environmental Impact Upload</h2>
+              <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>Capture or upload before & after photos to verify your impact</p>
 
               {/* Location Display */}
               <div className="mb-8 p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-light)' }}>
@@ -536,8 +536,8 @@ const Upload = () => {
             exit={{ opacity: 0, y: -20 }}
           >
             <div className="card p-8">
-              <h2 className="text-3xl font-bold mb-2">AI Verification Results</h2>
-              <p className="text-gray-500 mb-8">Review the AI-generated analysis before submitting</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>AI Verification Results</h2>
+              <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>Review the AI-generated analysis before submitting</p>
 
               {/* Photos Preview */}
               <div className="grid grid-cols-2 gap-4 mb-8">
@@ -554,7 +554,7 @@ const Upload = () => {
               {/* AI Analysis */}
               <div className="space-y-4 mb-8">
                 {/* Category */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex items-center gap-4 border border-gray-100 dark:border-gray-700">
+                <div className="p-4 rounded-xl flex items-center gap-4 border" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${typeIcons[aiData.category]?.bg} dark:bg-opacity-20`}>
                     <FontAwesomeIcon 
                       icon={typeIcons[aiData.category]?.icon || faTrash} 
@@ -562,19 +562,20 @@ const Upload = () => {
                     />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Category</p>
-                    <p className="font-bold capitalize text-gray-900 dark:text-gray-100">{aiData.category}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Category</p>
+                    <p className="font-bold capitalize" style={{ color: 'var(--text-primary)' }}>{aiData.category}</p>
                   </div>
                 </div>
 
                 {/* Weight */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex items-center gap-4 border border-gray-100 dark:border-gray-700">
+                {/* Weight */}
+                <div className="p-4 rounded-xl flex items-center gap-4 border" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
                   <div className="w-12 h-12 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
                     <FontAwesomeIcon icon={faWeightHanging} className="text-xl text-orange-500" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Estimated Weight</p>
-                    <p className="font-bold text-gray-900 dark:text-gray-100">{aiData.weight} kg</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Weight</p>
+                    <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{aiData.weight} kg</p>
                   </div>
                 </div>
 
@@ -590,9 +591,10 @@ const Upload = () => {
                 </div>
 
                 {/* Description */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">AI Description</p>
-                  <p className="text-gray-800 dark:text-gray-200">{aiData.description}</p>
+                {/* Description */}
+                <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
+                  <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>AI Description</p>
+                  <p style={{ color: 'var(--text-primary)' }}>{aiData.description}</p>
                 </div>
 
                 {/* CO2 Saved */}
@@ -640,11 +642,11 @@ const PhotoUploadCard = ({ title, photo, onRemove, onCamera, onFileSelect, color
 
   return (
     <div>
-      <h3 className="font-bold mb-3 text-gray-700">{title}</h3>
+      <h3 className="font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>{title}</h3>
       {!photo ? (
-        <div className={`border-2 border-dashed ${colors.border} rounded-xl p-6 h-64 flex flex-col items-center justify-center gap-4`}>
+        <div className={`border-2 border-dashed rounded-xl p-6 h-64 flex flex-col items-center justify-center gap-4`} style={{ borderColor: 'var(--border-medium)' }}>
           <FontAwesomeIcon icon={faImage} className={`text-4xl ${colors.icon}`} />
-          <p className="text-gray-600 text-center">Click below to upload or capture</p>
+          <p className="text-center" style={{ color: 'var(--text-tertiary)' }}>Click below to upload or capture</p>
           <div className="flex gap-3">
             {isCameraAvailable() && (
               <button

@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faUser, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { register } from '../services/authService';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
+import { register, googleLogin } from '../services/authService';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -54,6 +55,23 @@ const Register = () => {
       }
     } catch (err) {
       setError(err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await googleLogin();
+      if (response && response.success) {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Google Login error:', err);
+      setError(err.message || 'Google Login failed');
     } finally {
       setLoading(false);
     }
@@ -155,6 +173,25 @@ const Register = () => {
                 <FontAwesomeIcon icon={faArrowRight} className="group-hover:translate-x-1 transition-transform" />
               </>
             )}
+          </button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or sign up with</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-white border border-gray-300 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2 transition-all"
+          >
+            <FontAwesomeIcon icon={faGoogle} className="text-red-500" />
+            Sign up with Google
           </button>
         </form>
 

@@ -11,10 +11,11 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 
 // Public routes
-router.get('/leaderboard', getLeaderboard);
+// Public routes
 router.get('/aqi', getAQI);
 
 // Protected routes
+router.get('/leaderboard', protect, getLeaderboard);
 router.get('/dashboard', protect, getDashboardStats);
 router.get('/detailed', protect, getDetailedAnalytics);
 router.get('/categories', protect, getSubmissionsByCategory);

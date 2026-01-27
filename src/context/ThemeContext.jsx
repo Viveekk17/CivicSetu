@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('dark'); // 'light' or 'dark' - default to dark
+  const [theme, setTheme] = useState('light'); // 'light' or 'dark' - default to light
 
   useEffect(() => {
     // Check local storage or system preference
@@ -13,7 +13,7 @@ export const ThemeProvider = ({ children }) => {
     } else {
       // Check system preference, default to dark if no preference
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(prefersDark ? 'dark' : 'light'); // Always default to dark
+      setTheme(prefersDark ? 'dark' : 'light'); // Default to system preference or light
     }
   }, []);
 

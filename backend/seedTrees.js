@@ -5,6 +5,69 @@ const Tree = require('./src/models/Tree');
 dotenv.config();
 
 const trees = [
+  // --- Transport ---
+  {
+    name: 'Metro Pass',
+    cost: 500,
+    description: 'Weekly metro pass for eco-friendly commuting.',
+    category: 'transport',
+    impact: { co2Offset: 15, description: 'Saves approx. 15kg CO₂ vs driving' },
+    available: true
+  },
+  {
+    name: 'Green Commuter Pass',
+    cost: 1000,
+    description: 'Monthly unlimited pass for city public transport.',
+    category: 'transport',
+    impact: { co2Offset: 60, description: 'Saves approx. 60kg CO₂/month' },
+    available: true
+  },
+  {
+    name: 'FASTag Credits',
+    cost: 200,
+    description: '₹200 recharge for your FASTag.',
+    category: 'transport',
+    impact: { co2Offset: 0, description: 'Efficient travel support' },
+    available: true
+  },
+
+  // --- Utilities ---
+  {
+    name: 'Electricity Discount',
+    cost: 300,
+    description: '10% discount on your next green energy bill.',
+    category: 'utilities',
+    impact: { co2Offset: 0, description: 'Promotes energy efficiency' },
+    available: true
+  },
+  {
+    name: 'Water Bill Discount',
+    cost: 300,
+    description: '10% discount on water bill for efficient users.',
+    category: 'utilities',
+    impact: { co2Offset: 0, description: 'Encourages water conservation' },
+    available: true
+  },
+
+  // --- Goodies ---
+  {
+    name: 'Eco T-shirt',
+    cost: 800,
+    description: '100% Organic Cotton T-shirt with EcoTrace logo.',
+    category: 'goodies',
+    impact: { co2Offset: 5, description: 'Sustainable material production' },
+    available: true
+  },
+  {
+    name: 'Metal Water Bottle',
+    cost: 600,
+    description: 'Durable reusable bottle to reduce plastic use.',
+    category: 'goodies',
+    impact: { co2Offset: 10, description: 'Prevents single-use plastic waste' },
+    available: true
+  },
+
+  // --- Environment (Original Trees) ---
   {
     name: 'Oak Tree',
     cost: 500,
@@ -23,7 +86,7 @@ const trees = [
     category: 'trees',
     impact: {
       co2Offset: 40,
-      description: 'Absorbs 40kg of CO₂ annually and protects coastlines'
+      description: 'Absorbs 40kg of CO₂ & protects coastlines'
     },
     available: true
   },

@@ -31,6 +31,36 @@ exports.getDashboardStats = async (req, res) => {
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
 
+    // Calculate Real Impact Data
+    // 1. Waste Cleaned: Sum of weight from verified submissions
+    const wasteStats = await Submission.aggregate([
+      { $match: { user: user._id, status: 'verified' } },
+      { $group: { _id: null, totalWeight: { $sum: '$weight' } } }
+    ]);
+    const wasteCollected = wasteStats[0]?.totalWeight || 0;
+
+    // 2. Trees Planted: Count of redeemed transactions linked to trees
+    // We fetch transactions to get both count and potentially impact from specific tree types
+    const treeTransactions = await Transaction.find({ 
+      user: userId, 
+      type: 'redeemed',
+      'metadata.treeId': { $exists: true } 
+    }).populate('metadata.treeId');
+
+    const treesPlanted = treeTransactions.length;
+
+    // 3. CO2 Saved: Mixed calculation
+    // From Waste: 1kg waste ≈ 0.5kg CO2
+    const co2FromWaste = wasteCollected * 0.5;
+    
+    // From Trees: Sum of specific tree impacts (or default estimate if not available)
+    const co2FromTrees = treeTransactions.reduce((sum, tx) => {
+      const treeImpact = tx.metadata.treeId?.impact?.co2Offset || 20; // Default 20kg if no specific data
+      return sum + treeImpact;
+    }, 0);
+
+    const totalCo2Saved = Math.round(co2FromWaste + co2FromTrees);
+
     // Recent activity - Get all transactions
     const recentActivity = await Transaction.find({ user: userId })
       .sort({ createdAt: -1 })
@@ -51,7 +81,12 @@ exports.getDashboardStats = async (req, res) => {
           pendingSubmissions: totalSubmissions - verifiedSubmissions,
           totalCreditsEarned: creditsEarned[0]?.total || 0,
           totalCreditsRedeemed: creditsRedeemed[0]?.total || 0,
-          currentBalance: user.credits
+          currentBalance: user.credits,
+          impact: {
+            co2Saved: totalCo2Saved,
+            trees: treesPlanted,
+            waste: wasteCollected
+          }
         },
         recentActivity
       }
@@ -70,10 +105,43 @@ exports.getDashboardStats = async (req, res) => {
 // @access  Public
 exports.getLeaderboard = async (req, res) => {
   try {
-    const topUsers = await User.find()
+    const userId = req.user?.id;
+
+    // Get top 10 users using lean() for better performance and modifiability
+    let topUsers = await User.find()
       .select('name credits')
       .sort({ credits: -1 })
-      .limit(10);
+      .limit(10)
+      .lean();
+
+    // Add rank property to top users
+    topUsers = topUsers.map((user, index) => ({
+      ...user,
+      rank: index + 1
+    }));
+
+    // If authenticated user is not in top 10, find their rank and add them
+    if (userId) {
+      const userInTop10 = topUsers.find(u => u._id.toString() === userId);
+      
+      if (!userInTop10) {
+        const currentUser = await User.findById(userId).select('name credits').lean();
+        
+        if (currentUser) {
+          // Calculate rank: count users with more credits
+          const higherRankCount = await User.countDocuments({ 
+            credits: { $gt: currentUser.credits } 
+          });
+          
+          const rank = higherRankCount + 1;
+          
+          topUsers.push({
+            ...currentUser,
+            rank: rank
+          });
+        }
+      }
+    }
 
     res.json({
       success: true,

@@ -14,3 +14,13 @@ export const getTree = async (id) => {
 export const redeemTree = async (id) => {
   return await api.post(`/trees/${id}/redeem`);
 };
+
+// Get user inventory
+export const getInventory = async () => {
+  return await api.get('/trees/inventory');
+};
+
+// Use an inventory item
+export const useItem = async (itemId) => {
+  return await api.post(`/trees/inventory/${itemId}/use`);
+};

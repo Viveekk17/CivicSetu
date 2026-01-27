@@ -69,19 +69,18 @@ const LeaderboardWidget = () => {
       <div className="flex items-center gap-3 mb-6">
         <div 
           className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: 'var(--gradient-primary)' }}
         >
-          <FontAwesomeIcon icon={faTrophy} className="text-white text-lg" />
+          <FontAwesomeIcon icon={faTrophy} className="text-yellow-500 text-2xl" />
         </div>
         <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Global Leaderboard
+          City Leaderboard
         </h3>
       </div>
 
       <div className="space-y-3">
         <AnimatePresence>
           {leaderboard.map((user, index) => {
-            const rank = index + 1;
+            const rank = user.rank || index + 1;
             const isCurrentUser = user._id === currentUser?.id;
 
             return (

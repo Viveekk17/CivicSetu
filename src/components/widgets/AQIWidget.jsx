@@ -91,7 +91,7 @@ const AQIWidget = () => {
       if (concentration >= bp.conc_low && concentration <= bp.conc_high) {
         const aqi =
           ((bp.aqi_high - bp.aqi_low) / (bp.conc_high - bp.conc_low)) *
-            (concentration - bp.conc_low) +
+          (concentration - bp.conc_low) +
           bp.aqi_low;
         return Math.round(aqi);
       }
@@ -143,7 +143,7 @@ const AQIWidget = () => {
       setLocationName(`${city || "Unknown"}, ${country || ""}`);
 
       // 2. Get Air Pollution Data from OpenWeatherMap
-      const apiUrl = `http://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+      const apiUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
 
       console.log("Fetching from OpenWeatherMap:", apiUrl);
 
@@ -272,7 +272,7 @@ const AQIWidget = () => {
   return (
     <div className="flex items-center justify-center w-full h-full min-h-[220px]">
       {/* Large Circle Container */}
-      <div 
+      <div
         className="relative w-48 h-48 rounded-full flex flex-col items-center justify-center shadow-2xl"
         style={{
           background: `conic-gradient(from 180deg, 
@@ -288,11 +288,11 @@ const AQIWidget = () => {
         }}
       >
         {/* Inner Circle (The actual card content) */}
-        <div 
+        <div
           className="w-full h-full rounded-full flex flex-col items-center justify-center relative z-10 px-4"
-          style={{ 
+          style={{
             backgroundColor: cardBg,
-            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.05)' 
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.05)'
           }}
         >
           {/* 1. Location (City Only) */}
@@ -326,9 +326,9 @@ const AQIWidget = () => {
 
           {/* 3. AQI Value */}
           <div className="text-center relative my-1 leading-none">
-            <span 
+            <span
               className="text-4xl font-black block tracking-tighter"
-              style={{ 
+              style={{
                 background: `linear-gradient(135deg, ${aqiInfo.hex}, ${aqiInfo.hex}cc)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -341,10 +341,10 @@ const AQIWidget = () => {
           </div>
 
           {/* 4. Condition */}
-          <div 
+          <div
             className="mt-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
-            style={{ 
-              backgroundColor: `${aqiInfo.hex}15`, 
+            style={{
+              backgroundColor: `${aqiInfo.hex}15`,
               color: aqiInfo.hex,
             }}
           >
@@ -361,9 +361,9 @@ const AQIWidget = () => {
             <FontAwesomeIcon icon={faSyncAlt} className="text-[12px]" />
           </button>
         </div>
-        
+
         {/* Decorative Glow based on AQI color - behind circle */}
-        <div 
+        <div
           className="absolute inset-0 rounded-full opacity-30 blur-2xl z-0 transition-colors duration-500"
           style={{ backgroundColor: aqiInfo.hex }}
         ></div>

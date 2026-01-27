@@ -198,9 +198,9 @@ const Submissions = () => {
 
         {/* Submissions Table */}
         {!loading && (
-          <div className="card overflow-hidden">
+          <div className="space-y-4">
             {filteredSubmissions.length === 0 ? (
-              <div className="text-center py-20">
+              <div className="text-center py-20 card">
                 <FontAwesomeIcon icon={faImage} className="text-6xl mb-4 opacity-20" style={{ color: 'var(--text-tertiary)' }} />
                 <p className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
                   {submissions.length === 0 ? 'No submissions yet' : 'No results found'}
@@ -210,84 +210,143 @@ const Submissions = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="border-b" style={{ backgroundColor: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}>
-                    <tr>
-                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Activity</th>
-                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Date</th>
-                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Location</th>
-                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Status</th>
-                      <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Credits</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
-                    {filteredSubmissions.map((item) => (
-                      <tr
-                        key={item._id}
-                        onClick={() => setSelectedSubmission(item)}
-                        className="transition-colors cursor-pointer"
-                      >
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            {/* Photo thumbnail */}
-                            <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
-                              {item.photos && item.photos[0] ? (
-                                <img
-                                  src={item.photos[0].startsWith('http') ? item.photos[0] : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${item.photos[0]}`}
-                                  alt={item.type}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = '<div class="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><svg class="text-emerald-500" style="width: 1.5rem; height: 1.5rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                                  <FontAwesomeIcon icon={faImage} className="text-emerald-500" />
+              <>
+                {/* Desktop Table View */}
+                <div className="card overflow-hidden hidden md:block">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="border-b" style={{ backgroundColor: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}>
+                        <tr>
+                          <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Activity</th>
+                          <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Date</th>
+                          <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Location</th>
+                          <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Status</th>
+                          <th className="p-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>Credits</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                        {filteredSubmissions.map((item) => (
+                          <tr
+                            key={item._id}
+                            onClick={() => setSelectedSubmission(item)}
+                            className="transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+                          >
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                {/* Photo thumbnail */}
+                                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
+                                  {item.photos && item.photos[0] ? (
+                                    <img
+                                      src={item.photos[0].startsWith('http') ? item.photos[0] : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${item.photos[0]}`}
+                                      alt={item.type}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.parentElement.innerHTML = '<div class="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><svg class="text-emerald-500" style="width: 1.5rem; height: 1.5rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg></div>';
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                      <FontAwesomeIcon icon={faImage} className="text-emerald-500" />
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-base capitalize" style={{ color: 'var(--text-primary)' }}>
-                                {item.type || 'Submission'}
+                                <div>
+                                  <div className="font-semibold text-base capitalize" style={{ color: 'var(--text-primary)' }}>
+                                    {item.type || 'Submission'}
+                                  </div>
+                                  {item.description && (
+                                    <div className="text-sm mt-0.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
+                                      {item.description}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              {item.description && (
-                                <div className="text-sm mt-0.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
-                                  {item.description}
-                                </div>
-                              )}
-                            </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                <FontAwesomeIcon icon={faCalendar} className="text-xs" />
+                                <span className="text-sm">{formatDate(item.createdAt)}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xs" />
+                                <span className="text-sm">{item.location?.name || 'Unknown'}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border-2 ${getStatusColor(item.status)}`}>
+                                <FontAwesomeIcon icon={getStatusIcon(item.status)} />
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                +{item.creditsAwarded || 0}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                  {filteredSubmissions.map((item) => (
+                    <div
+                      key={item._id}
+                      onClick={() => setSelectedSubmission(item)}
+                      className="card p-4 active:scale-[0.98] transition-transform"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border-light)' }}>
+                            {item.photos && item.photos[0] ? (
+                              <img
+                                src={item.photos[0].startsWith('http') ? item.photos[0] : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${item.photos[0]}`}
+                                alt={item.type}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                <FontAwesomeIcon icon={faImage} className="text-emerald-500" />
+                              </div>
+                            )}
                           </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                            <FontAwesomeIcon icon={faCalendar} className="text-xs" />
-                            <span className="text-sm">{formatDate(item.createdAt)}</span>
+                          <div>
+                            <h3 className="font-bold text-base capitalize" style={{ color: 'var(--text-primary)' }}>
+                              {item.type || 'Submission'}
+                            </h3>
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getStatusColor(item.status)}`}>
+                              {item.status}
+                            </span>
                           </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-xs" />
-                            <span className="text-sm">{item.location?.name || 'Unknown'}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border-2 ${getStatusColor(item.status)}`}>
-                            <FontAwesomeIcon icon={getStatusIcon(item.status)} />
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-emerald-600 dark:text-emerald-400">
                             +{item.creditsAwarded || 0}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>credits</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <div className="flex items-center gap-1.5">
+                          <FontAwesomeIcon icon={faCalendar} />
+                          {formatDate(item.createdAt)}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <FontAwesomeIcon icon={faMapMarkerAlt} />
+                          <span className="truncate">{item.location?.name || 'Unknown'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -308,7 +367,7 @@ const Submissions = () => {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="card p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="card p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -353,7 +412,7 @@ const Submissions = () => {
               )}
 
               {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-hover)' }}>
                   <div className="flex items-center gap-2 mb-2" style={{ color: 'var(--text-tertiary)' }}>
                     <FontAwesomeIcon icon={faMapMarkerAlt} />

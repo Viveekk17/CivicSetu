@@ -133,44 +133,37 @@ const Dashboard = () => {
 
       {/* Main Content Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* AQI & Map Section - Takes 2 cols */}
-        <motion.div className="lg:col-span-2 space-y-6" variants={itemVariants}>
-          <AQIWidget />
-          
-          {/* Quick Actions / Banner */}
-          <div className="card p-8 relative overflow-hidden" style={{ background: 'var(--gradient-primary)' }}>
-             <div className="relative z-10 max-w-lg">
-               <h2 className="text-2xl font-bold mb-2" style={{ color: '#FFFFFF' }}>Ready to make an impact?</h2>
-               <p className="mb-6" style={{ color: '#FFFFFF', opacity: 0.9 }}>Upload your latest cleanup photos or plant a tree to earn more credits today.</p>
-               <div className="flex gap-4">
+        {/* Column 1: Quick Actions Banner - Reduced Height */}
+        <motion.div className="lg:col-span-1" variants={itemVariants}>
+          <div className="card p-6 relative overflow-hidden flex flex-col justify-center h-[240px]" style={{ background: 'var(--gradient-primary)' }}>
+             <div className="relative z-10">
+               <h2 className="text-xl font-bold mb-1" style={{ color: '#FFFFFF' }}>Ready to impact?</h2>
+               <p className="mb-4 text-xs" style={{ color: '#FFFFFF', opacity: 0.9 }}>Upload photos or redeem credits.</p>
+               <div className="flex flex-col gap-2">
                  <button 
-                   className="px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                   style={{ 
-                     backgroundColor: 'var(--bg-surface)', 
-                     color: 'var(--primary)' 
-                   }}
+                   className="w-full px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all bg-white text-emerald-600 border-none"
                  >
-                   Upload
+                   Upload Now
                  </button>
                  <button 
-                   className="px-6 py-3 rounded-xl font-bold transition-all border"
-                   style={{ 
-                     backgroundColor: 'rgba(255,255,255,0.2)', 
-                     color: '#FFFFFF',
-                     borderColor: 'rgba(255,255,255,0.3)'
-                   }}
+                   className="w-full px-4 py-2 rounded-lg font-bold text-sm transition-all border border-white/30 text-white hover:bg-white/10"
                  >
-                   Redeem
+                   Redeem Rewards
                  </button>
                </div>
              </div>
              {/* Decorative Circle */}
-             <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
+             <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
           </div>
         </motion.div>
 
-        {/* Activity Feed - Takes 1 col */}
-        <motion.div className="lg:col-span-1" variants={itemVariants}>
+        {/* Column 2: AQI Widget - Compact Height */}
+        <motion.div className="lg:col-span-1 h-[240px]" variants={itemVariants}>
+          <AQIWidget />
+        </motion.div>
+
+        {/* Column 3: Activity Feed - Tall / Full Height */}
+        <motion.div className="lg:col-span-1 h-full min-h-[240px]" variants={itemVariants}>
           <ActivityFeed activities={stats.recentActivity} />
         </motion.div>
       </div>

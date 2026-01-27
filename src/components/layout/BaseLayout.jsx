@@ -10,15 +10,19 @@ const BaseLayout = () => {
     <div className="min-h-screen flex bg-gray-50 transition-colors duration-300"
          style={{ backgroundColor: 'var(--bg-body)' }}>
       
-      {/* Sidebar */}
+      {/* Sidebar - Hidden by default, toggle with hamburger */}
       <Sidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
       />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-64 transition-all duration-300">
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
+      {/* Main Content - Adjusts for sidebar on desktop */}
+      <div 
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          isSidebarOpen ? 'md:ml-64' : 'ml-0'
+        }`}
+      >
+        <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} />
         
         <main className="flex-1 p-6 overflow-y-auto">
           <Outlet />

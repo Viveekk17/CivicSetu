@@ -1,36 +1,102 @@
 import api from './api';
 
-// Register new user
+import { auth, googleProvider } from '../config/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInWithPopup,
+  signOut,
+  updateProfile
+} from 'firebase/auth';
+
+// Register new user (Firebase -> Backend Sync)
 export const register = async (userData) => {
-  const response = await api.post('/auth/register', userData);
-  
-  // Store token and user data
-  if (response.success && response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+  try {
+    const { email, password, name } = userData;
+    // 1. Create user in Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // 2. Update profile (name)
+    await updateProfile(user, { displayName: name });
+
+    // 3. Get ID Token
+    const token = await user.getIdToken();
+
+    // 4. Sync with Backend
+    const response = await api.post('/auth/firebase', { token });
+    
+    // Store token and user data
+    if (response.success) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
+    return response;
+  } catch (error) {
+    console.error("Registration Error:", error);
+    throw error;
   }
-  
-  return response;
 };
 
-// Login user
+// Login user (Firebase -> Backend Sync)
 export const login = async (credentials) => {
-  const response = await api.post('/auth/login', credentials);
-  
-  // Store token and user data
-  if (response.success && response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+  try {
+    const { email, password } = credentials;
+    // 1. Sign in with Firebase
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // 2. Get ID Token
+    const token = await user.getIdToken();
+
+    // 3. Sync with Backend
+    const response = await api.post('/auth/firebase', { token });
+    
+    // Store token and user data
+    if (response.success) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
+    return response;
+  } catch (error) {
+    console.error("Login Error:", error);
+    throw error;
   }
-  
-  return response;
+};
+
+// Google Login
+export const googleLogin = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const token = await user.getIdToken();
+
+    const response = await api.post('/auth/firebase', { token });
+
+    if (response.success) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    throw error;
+  }
 };
 
 // Logout user
-export const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = '/login';
+export const logout = async () => {
+  try {
+    await signOut(auth);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  } catch (error) {
+    console.error("Logout Error:", error);
+  }
 };
 
 // Get current user

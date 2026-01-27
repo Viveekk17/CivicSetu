@@ -110,6 +110,76 @@ exports.login = async (req, res) => {
   }
 };
 
+// @desc    Login/Register with Firebase
+// @route   POST /api/auth/firebase
+// @access  Public
+exports.firebaseLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a firebase token'
+      });
+    }
+
+    // Verify token
+    const admin = require('../config/firebase');
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const { uid, email, name, picture } = decodedToken;
+
+    // Check if user exists
+    let user = await User.findOne({ firebaseUid: uid });
+    
+    if (!user) {
+       // Check by email to link legacy accounts
+       user = await User.findOne({ email });
+       
+       if (user) {
+         // Link existing user
+         user.firebaseUid = uid;
+         // Update profile if needed
+         if (!user.profilePicture && picture) user.profilePicture = picture;
+         await user.save();
+       } else {
+         // Create new user
+         user = await User.create({
+           name: name || email.split('@')[0],
+           email,
+           firebaseUid: uid,
+           profilePicture: picture || '/uploads/default-avatar.png',
+           role: 'user', // Default role
+           credits: 0
+         });
+       }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          credits: user.credits,
+          role: user.role,
+          profilePicture: user.profilePicture
+        },
+        token // Return the same firebase token or nothing (client has it)
+      }
+    });
+
+  } catch (error) {
+    console.error('Firebase Login Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private

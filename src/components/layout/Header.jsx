@@ -1,32 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { getStoredUser } from '../../services/authService';
 
-const Header = ({ onMenuClick }) => {
+const Header = ({ onMenuClick, isSidebarOpen }) => {
   const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState(getStoredUser());
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const notificationRef = useRef(null);
+  const userMenuRef = useRef(null);
 
-  // Close notifications when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
     };
 
-    if (showNotifications) {
+    if (showNotifications || showUserMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showNotifications]);
+  }, [showNotifications, showUserMenu]);
 
   // Listen for credit updates and notifications
   useEffect(() => {
@@ -112,26 +117,30 @@ const Header = ({ onMenuClick }) => {
       }}
     >
       <div className="flex items-center gap-4">
-        {/* Mobile Menu Button */}
-        <button 
-          onClick={onMenuClick}
-          className="md:hidden p-2 rounded-lg transition-colors"
-          style={{ 
-            color: 'var(--text-secondary)',
-            backgroundColor: 'transparent'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-lighter)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          <FontAwesomeIcon icon={faBars} size="lg" />
-        </button>
+        {/* Hamburger Menu Button - Only visible when sidebar is closed */}
+        {/* Hamburger Menu Button - Only visible when sidebar is closed */}
+        {!isSidebarOpen && (
+          <button 
+            onClick={onMenuClick}
+            className="p-2 rounded-lg transition-colors"
+            style={{ 
+              color: 'var(--text-secondary)',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-lighter)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            aria-label="Open menu"
+          >
+            <FontAwesomeIcon icon={faBars} size="lg" />
+          </button>
+        )}
 
-        {/* Page Title */}
+        {/* Page Title - Always visible */}
         <div className="hidden md:block">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            Welcome back, <span className="title-gradient">{user?.name || 'User'}!</span>
+          <span className="title-gradient">{user?.name || 'User'}!</span>
           </h2>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Here's your environmental impact today.</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Here's your environmental impact.</p>
         </div>
       </div>
 
@@ -269,9 +278,110 @@ const Header = ({ onMenuClick }) => {
             </div>
           )}
         </div>
+
+        {/* User Profile Dropdown */}
+        <div className="relative" ref={userMenuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="p-2 rounded-full flex items-center gap-2 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-lighter)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            aria-label="User menu"
+          >
+            <div 
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
+              style={{ background: 'var(--gradient-primary)' }}
+            >
+              <span>{getInitials(user?.name)}</span>
+            </div>
+            <span className="hidden md:block font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+              {user?.name || 'User'}
+            </span>
+          </button>
+
+          {/* User Dropdown */}
+          {showUserMenu && (
+            <div 
+              className="absolute right-0 mt-2 w-64 rounded-xl shadow-xl overflow-hidden"
+              style={{ 
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-light)'
+              }}
+            >
+              {/* User Info */}
+              <div className="p-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md"
+                    style={{ background: 'var(--gradient-primary)' }}
+                  >
+                    <span>{getInitials(user?.name)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                      {user?.name || 'Guest User'}
+                    </p>
+                    <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
+                      {getRole(user?.credits || 0)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
+                  <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {user?.credits?.toLocaleString() || 0} Credits
+                  </span>
+                </div>
+              </div>
+
+              {/* Logout Button */}
+              <div className="p-3">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full py-2.5 flex items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all"
+                  style={{ 
+                    color: '#ffffff',
+                    backgroundColor: '#ef4444'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#dc2626';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ef4444';
+                  }}
+                >
+                  <FontAwesomeIcon icon={faSignOutAlt} />
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
+};
+
+// Helper functions
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const names = name.split(' ');
+  if (names.length === 1) return names[0].charAt(0).toUpperCase();
+  return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+};
+
+const getRole = (credits) => {
+  if (credits >= 10000) return 'Eco Champion 🏆';
+  if (credits >= 5000) return 'Eco Hero 🌟';
+  if (credits >= 1000) return 'Eco Warrior ⚔️';
+  return 'Eco Beginner 🌱';
+};
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = '/login';
 };
 
 // Helper function to format time

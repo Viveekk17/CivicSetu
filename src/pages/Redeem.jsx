@@ -165,7 +165,7 @@ const Redeem = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-hidden">
       {/* Success Message */}
       <AnimatePresence>
         {redeemSuccess && (
@@ -209,14 +209,14 @@ const Redeem = () => {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center p-8 rounded-2xl relative overflow-hidden" style={{ background: 'var(--gradient-primary)' }}>
-        <div className="relative z-10 text-white">
-          <h1 className="text-3xl font-bold mb-2">Redeem & Restore Nature</h1>
-          <p className="opacity-80 max-w-lg">Use your earned credits to make a real-world impact. Every item supports environmental restoration.</p>
+      <div className="flex flex-col md:flex-row justify-between items-center p-6 md:p-8 rounded-2xl relative overflow-hidden" style={{ background: 'var(--gradient-primary)' }}>
+        <div className="relative z-10 text-white w-full md:w-auto text-center md:text-left">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Redeem & Restore Nature</h1>
+          <p className="opacity-80 max-w-lg text-sm md:text-base mx-auto md:mx-0">Use your earned credits to make a real-world impact. Every item supports environmental restoration.</p>
         </div>
-        <div className="mt-4 md:mt-0 relative z-10 text-right text-white">
+        <div className="mt-6 md:mt-0 relative z-10 text-center md:text-right text-white w-full md:w-auto border-t border-white/20 pt-4 md:border-0 md:pt-0">
           <p className="text-sm opacity-70">Available Balance</p>
-          <div className="text-4xl font-bold flex items-center gap-2">
+          <div className="text-3xl md:text-4xl font-bold flex items-center justify-center md:justify-end gap-2">
             <FontAwesomeIcon icon={faCoins} className="text-yellow-300" />
             {user?.credits ? user.credits.toLocaleString() : 0}
           </div>
@@ -226,12 +226,12 @@ const Redeem = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-3 overflow-x-auto pb-2 px-1 pt-1">
+      <div className="flex gap-3 overflow-x-auto pb-4 pt-1 w-full scrollbar-hide">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
+            className={`px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-2 text-sm md:text-base ${
               activeTab === tab.id
                 ? 'shadow-lg scale-105'
                 : 'opacity-70 hover:opacity-100'
@@ -344,26 +344,26 @@ const Redeem = () => {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="card p-8 max-w-md w-full"
+              className="card p-6 md:p-8 max-w-md w-full mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+              <h2 className="text-xl md:text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Confirm Redemption
               </h2>
 
               <div className="mb-6">
-                <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                  <FontAwesomeIcon icon={faTree} className="text-4xl text-green-600 dark:text-green-400" />
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                  <FontAwesomeIcon icon={faTree} className="text-3xl md:text-4xl text-green-600 dark:text-green-400" />
                 </div>
-                <h3 className="text-xl font-bold text-center mb-2" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-lg md:text-xl font-bold text-center mb-2" style={{ color: 'var(--text-primary)' }}>
                   {selectedTree.name}
                 </h3>
-                <p className="text-center mb-4" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-sm md:text-base text-center mb-4" style={{ color: 'var(--text-secondary)' }}>
                   {selectedTree.description}
                 </p>
               </div>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-6 text-sm md:text-base">
                 <div className="flex justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-hover)' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Cost</span>
                   <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -384,11 +384,11 @@ const Redeem = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-3 md:gap-4 flex-col-reverse md:flex-row">
                 <button
                   onClick={handleCloseModal}
                   disabled={redeeming}
-                  className="flex-1 py-3 rounded-xl font-bold border-2 transition-all"
+                  className="flex-1 py-3 rounded-xl font-bold border-2 transition-all text-sm md:text-base"
                   style={{
                     borderColor: 'var(--border-light)',
                     color: 'var(--text-secondary)',
@@ -400,13 +400,13 @@ const Redeem = () => {
                 <button
                   onClick={handleConfirmRedeem}
                   disabled={redeeming}
-                  className="flex-1 py-3 rounded-xl font-bold text-white transition-all disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl font-bold text-white transition-all disabled:opacity-50 text-sm md:text-base"
                   style={{ background: 'var(--gradient-primary)' }}
                 >
                   {redeeming ? (
                     <>
                       <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
-                      Redeeming...
+                      Processing...
                     </>
                   ) : (
                     'Confirm'

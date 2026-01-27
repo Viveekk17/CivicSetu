@@ -183,7 +183,8 @@ const Analytics = () => {
     visible: { y: 0, opacity: 1 }
   };
 
-  if (loading) {
+  // Only show full page loader on initial load
+  if (loading && !analyticsData) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -217,23 +218,31 @@ const Analytics = () => {
 
   return (
     <motion.div 
-      className="space-y-6"
+      className={`space-y-6 overflow-hidden transition-opacity duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-          Analytics Dashboard
-        </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Track your environmental impact and performance metrics
-        </p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+            Analytics Dashboard
+          </h1>
+          <p className="text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
+            Track your environmental impact and performance metrics
+          </p>
+        </div>
+        {loading && analyticsData && (
+          <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full animate-pulse">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+            Updating...
+          </div>
+        )}
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <motion.div variants={itemVariants}>
           <StatsCard 
             title="Total Submissions" 
@@ -269,33 +278,35 @@ const Analytics = () => {
       </div>
 
       {/* Credits Trend with Dropdown Filter - Full Width */}
-      <motion.div variants={itemVariants} className="card p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+      <motion.div variants={itemVariants} className="card p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
             Credits Earned Over Time
           </h3>
           
           {/* Time Period Dropdown */}
-          <select
-            value={timePeriod}
-            onChange={(e) => setTimePeriod(e.target.value)}
-            className="px-4 py-2 rounded-lg font-medium text-sm border-2 transition-all cursor-pointer"
-            style={{
-              background: 'var(--bg-surface)',
-              color: 'var(--text-primary)',
-              borderColor: 'var(--primary)',
-            }}
-          >
-            <option value="24h">Last 24 Hours</option>
-            <option value="7days">Last 7 Days</option>
-            <option value="1month">Last Month</option>
-            <option value="1year">Last Year</option>
-          </select>
+          <div className="w-full sm:w-auto">
+            <select
+              value={timePeriod}
+              onChange={(e) => setTimePeriod(e.target.value)}
+              className="w-full sm:w-auto px-4 py-2 rounded-lg font-medium text-sm border-2 transition-all cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500/20"
+              style={{
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--primary)',
+              }}
+            >
+              <option value="24h">Last 24 Hours</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="1month">Last Month</option>
+              <option value="1year">Last Year</option>
+            </select>
+          </div>
         </div>
         
         {/* Chart or Empty State */}
         {creditsData.labels.length > 0 ? (
-          <div style={{ height: '300px' }}>
+          <div style={{ height: '300px' }} className="w-full">
             <LineChart 
               data={creditsData.data}
               labels={creditsData.labels}

@@ -76,9 +76,9 @@ const ActivityFeed = ({ activities = [] }) => {
     );
   }
 
-  // Show only top 5 most recent activities
-  const recentActivities = activities.slice(0, 5);
-  const hasMore = activities.length > 5;
+  // Show only top 10 most recent activities
+  const recentActivities = activities.slice(0, 10);
+  const hasMore = activities.length > 10;
 
   return (
     <>

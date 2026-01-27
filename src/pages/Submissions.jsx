@@ -67,13 +67,13 @@ const Submissions = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'verified':
-        return 'text-green-600 dark:text-green-400 dark:bg-green-900/30 border-green-600 dark:border-green-500';
+        return 'text-green-600 dark:text-green-500 border-green-600 dark:border-green-500';
       case 'pending':
-        return 'text-yellow-600 dark:text-yellow-400 dark:bg-yellow-900/30 border-yellow-600 dark:border-yellow-500';
+        return 'text-yellow-600 dark:text-yellow-500 border-yellow-600 dark:border-yellow-500';
       case 'rejected':
-        return 'text-red-600 dark:text-red-400 dark:bg-red-900/30 border-red-600 dark:border-red-500';
+        return 'text-red-600 dark:text-red-500 border-red-600 dark:border-red-500';
       default:
-        return 'text-gray-600 dark:text-gray-400 dark:bg-gray-800 border-gray-600 dark:border-gray-500';
+        return 'dark:bg-transparent border-gray-600 dark:border-gray-500';
     }
   };
 
@@ -302,7 +302,7 @@ const Submissions = () => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedSubmission(null)}
-            style={{ margin: 0 }}
+            style={{ margin: 0, backdropFilter: 'blur(5px)' }}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}

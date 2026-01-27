@@ -33,11 +33,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '/uploads/default-avatar.png'
   },
-  role: {
-    type: String,
-    enum: ['user', 'admin', 'ngo'],
-    default: 'user'
-  }
+  inventory: [{
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tree'
+    },
+    name: String,
+    category: String,
+    acquiredAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });

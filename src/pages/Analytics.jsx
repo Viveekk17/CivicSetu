@@ -18,13 +18,12 @@ const Analytics = () => {
 
   useEffect(() => {
     fetchAnalytics();
-  }, []); // Fetch once on mount, then filter client-side
+  }, [timePeriod]); 
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      // Fetch all granular data at once (hourly aggregation covers all periods)
-      const response = await getDetailedAnalytics('24h'); // Get most granular data
+      const response = await getDetailedAnalytics(timePeriod);
       
       if (response.success) {
         setAnalyticsData(response.data);
@@ -39,7 +38,7 @@ const Analytics = () => {
     }
   };
 
-  // Process data for charts - client-side filtering from all data
+  // Process data for charts
   const prepareCreditsData = () => {
     if (!analyticsData?.creditsTrend) return { labels: [], data: [] };
     
@@ -48,10 +47,17 @@ const Analytics = () => {
     const data = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    // Create a map of all data (hourly granularity from backend)
+    // Create a map of all data
     const dataMap = new Map();
     analyticsData.creditsTrend.forEach(item => {
-      const key = `${item._id.year}-${item._id.month}-${item._id.day}-${item._id.hour || 0}`;
+      let key;
+      if (timePeriod === '24h') {
+        key = `${item._id.year}-${item._id.month}-${item._id.day}-${item._id.hour}`;
+      } else if (timePeriod === '1year') {
+        key = `${item._id.year}-${item._id.month}`;
+      } else {
+        key = `${item._id.year}-${item._id.month}-${item._id.day}`;
+      }
       dataMap.set(key, item.total);
     });
 
@@ -74,13 +80,8 @@ const Analytics = () => {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         labels.push(`${date.getDate()} ${monthNames[date.getMonth()]}`);
         
-        // Sum all hours for this day
-        let dayTotal = 0;
-        for (let hour = 0; hour < 24; hour++) {
-          const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${hour}`;
-          dayTotal += dataMap.get(key) || 0;
-        }
-        data.push(dayTotal);
+        const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        data.push(dataMap.get(key) || 0);
       }
     } else if (timePeriod === '1month') {
       // Last 30 days - aggregate by day
@@ -88,30 +89,17 @@ const Analytics = () => {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         labels.push(`${date.getDate()} ${monthNames[date.getMonth()]}`);
         
-        // Sum all hours for this day
-        let dayTotal = 0;
-        for (let hour = 0; hour < 24; hour++) {
-          const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${hour}`;
-          dayTotal += dataMap.get(key) || 0;
-        }
-        data.push(dayTotal);
+        const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        data.push(dataMap.get(key) || 0);
       }
     } else if (timePeriod === '1year') {
       // Last 12 months - aggregate by month
       for (let i = 11; i >= 0; i--) {
-        const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        labels.push(monthNames[monthDate.getMonth()]);
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(monthNames[date.getMonth()]);
         
-        // Sum all days in this month
-        let monthTotal = 0;
-        const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
-        for (let day = 1; day <= daysInMonth; day++) {
-          for (let hour = 0; hour < 24; hour++) {
-            const key = `${monthDate.getFullYear()}-${monthDate.getMonth() + 1}-${day}-${hour}`;
-            monthTotal += dataMap.get(key) || 0;
-          }
-        }
-        data.push(monthTotal);
+        const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        data.push(dataMap.get(key) || 0);
       }
     }
 
@@ -237,7 +225,7 @@ const Analytics = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-          📊 Analytics Dashboard
+          Analytics Dashboard
         </h1>
         <p style={{ color: 'var(--text-secondary)' }}>
           Track your environmental impact and performance metrics

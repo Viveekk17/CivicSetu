@@ -289,14 +289,14 @@ const AQIWidget = () => {
       >
         {/* Inner Circle (The actual card content) */}
         <div 
-          className="w-full h-full rounded-full flex flex-col items-center justify-center relative z-10"
+          className="w-full h-full rounded-full flex flex-col items-center justify-center relative z-10 px-4"
           style={{ 
             backgroundColor: cardBg,
             boxShadow: 'inset 0 0 20px rgba(0,0,0,0.05)' 
           }}
         >
           {/* 1. Location (City Only) */}
-          <div className="flex items-center gap-1 mb-0.5">
+          <div className="flex items-center gap-1 mb-2">
             <FontAwesomeIcon
               icon={faMapMarkerAlt}
               className="text-[10px]"
@@ -308,26 +308,26 @@ const AQIWidget = () => {
           </div>
 
           {/* 2. PM2.5 and PM10 */}
-          <div className="flex gap-2 mb-1">
+          <div className="flex gap-3 mb-1">
             <div className="text-center">
-              <div className="text-[8px] font-bold uppercase tracking-wider opacity-60">PM2.5</div>
-              <div className="text-xs font-bold">
+              <div className="text-[9px] font-bold uppercase tracking-wider opacity-60">PM2.5</div>
+              <div className="text-sm font-bold">
                 {components?.pm2_5 ? Math.round(components.pm2_5) : '--'}
               </div>
             </div>
-            <div className="w-px bg-gray-300 dark:bg-gray-700 h-5 self-center"></div>
+            <div className="w-px bg-gray-300 dark:bg-gray-700 h-6 self-center"></div>
             <div className="text-center">
-              <div className="text-[8px] font-bold uppercase tracking-wider opacity-60">PM10</div>
-              <div className="text-xs font-bold">
+              <div className="text-[9px] font-bold uppercase tracking-wider opacity-60">PM10</div>
+              <div className="text-sm font-bold">
                 {components?.pm10 ? Math.round(components.pm10) : '--'}
               </div>
             </div>
           </div>
 
           {/* 3. AQI Value */}
-          <div className="text-center relative -mt-0.5 leading-none">
+          <div className="text-center relative my-1 leading-none">
             <span 
-              className="text-5xl font-black block tracking-tighter"
+              className="text-4xl font-black block tracking-tighter"
               style={{ 
                 background: `linear-gradient(135deg, ${aqiInfo.hex}, ${aqiInfo.hex}cc)`,
                 WebkitBackgroundClip: 'text',
@@ -337,12 +337,12 @@ const AQIWidget = () => {
             >
               {aqi !== null ? aqi : '--'}
             </span>
-            <span className="text-[8px] uppercase tracking-[0.3em] opacity-50 font-semibold display-block mt-0.5">AQI</span>
+            <span className="text-[9px] uppercase tracking-[0.3em] opacity-50 font-semibold block mt-1">AQI</span>
           </div>
 
           {/* 4. Condition */}
           <div 
-            className="mt-1.5 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide"
+            className="mt-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
             style={{ 
               backgroundColor: `${aqiInfo.hex}15`, 
               color: aqiInfo.hex,
@@ -354,11 +354,11 @@ const AQIWidget = () => {
           {/* 5. Refresh Button */}
           <button
             onClick={fetchLocationAndAQI}
-            className="mt-2 p-1.5 rounded-full transition-all hover:bg-gray-100 dark:hover:bg-gray-800 hover:scale-110 active:scale-95"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all hover:bg-gray-100 dark:hover:bg-gray-800 hover:scale-110 active:scale-95"
             style={{ color: subTextColor, opacity: 0.7 }}
             title="Refresh Data"
           >
-            <FontAwesomeIcon icon={faSyncAlt} className="text-[10px]" />
+            <FontAwesomeIcon icon={faSyncAlt} className="text-[12px]" />
           </button>
         </div>
         

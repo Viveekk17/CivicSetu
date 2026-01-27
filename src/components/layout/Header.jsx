@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { getStoredUser } from '../../services/authService';
+import { getInventory, useItem } from '../../services/treeService';
 
 const Header = ({ onMenuClick, isSidebarOpen }) => {
   const { theme, toggleTheme } = useTheme();
@@ -10,8 +11,13 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showBag, setShowBag] = useState(false);
+  const [inventory, setInventory] = useState([]);
+  const [usingItem, setUsingItem] = useState(null);
+  
   const notificationRef = useRef(null);
   const userMenuRef = useRef(null);
+  const bagRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -22,16 +28,37 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
       }
+      if (bagRef.current && !bagRef.current.contains(event.target)) {
+        setShowBag(false);
+      }
     };
 
-    if (showNotifications || showUserMenu) {
+    if (showNotifications || showUserMenu || showBag) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showNotifications, showUserMenu]);
+  }, [showNotifications, showUserMenu, showBag]);
+
+  // Fetch inventory
+  const fetchInventory = async () => {
+    try {
+      const response = await getInventory();
+      if (response.success) {
+        setInventory(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch inventory:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchInventory();
+    }
+  }, [user?.credits]); // Refetch when credits change (likely due to redemption/upload)
 
   // Listen for credit updates and notifications
   useEffect(() => {
@@ -50,7 +77,11 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
           timestamp: new Date().toISOString(),
           read: false
         });
+
       }
+      
+      // Refresh inventory too
+      fetchInventory();
     };
 
     const handleNewNotification = (event) => {
@@ -103,6 +134,43 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
   const clearAllNotifications = () => {
     setNotifications([]);
     localStorage.removeItem('notifications');
+  };
+
+  const handleUseItem = async (itemId, itemName) => {
+    try {
+      setUsingItem(itemId);
+      const response = await useItem(itemId);
+      
+      if (response.success) {
+        // Update local inventory state
+        setInventory(response.data);
+        
+        // Add success notification
+        addNotification({
+          id: Date.now(),
+          type: 'success',
+          title: 'Item Used',
+          message: `Successfully used ${itemName}`,
+          timestamp: new Date().toISOString(),
+          read: false
+        });
+        
+        // Dispatch event to refresh activity feed if needed
+        window.dispatchEvent(new CustomEvent('creditsUpdated', { detail: {} }));
+      }
+    } catch (err) {
+      console.error('Failed to use item:', err);
+      addNotification({
+        id: Date.now(),
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to use item',
+        timestamp: new Date().toISOString(),
+        read: false
+      });
+    } finally {
+      setUsingItem(null);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -171,6 +239,97 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             className="transform transition-transform group-hover:rotate-12" 
           />
         </button>
+
+
+
+        {/* Inventory Bag */}
+        <div className="relative" ref={bagRef}>
+          <button 
+            onClick={() => setShowBag(!showBag)}
+            className="p-3 rounded-full relative transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-lighter)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            <FontAwesomeIcon icon={faShoppingBag} />
+            {inventory.length > 0 && (
+              <span className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                {inventory.length}
+              </span>
+            )}
+          </button>
+
+          {/* Bag Dropdown */}
+          {showBag && (
+            <div 
+              className="absolute right-0 mt-2 w-80 rounded-xl shadow-xl overflow-hidden z-30"
+              style={{ 
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-light)',
+                maxHeight: '400px'
+              }}
+            >
+              <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-light)' }}>
+                <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>My Bag</h3>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{inventory.length} items</span>
+              </div>
+
+              <div className="overflow-y-auto p-2" style={{ maxHeight: '320px' }}>
+                {inventory.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <FontAwesomeIcon icon={faShoppingBag} className="text-4xl mb-3 opacity-20" style={{ color: 'var(--text-tertiary)' }} />
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Your bag is empty</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>Redeem items to see them here</p>
+                  </div>
+                ) : (
+                  inventory.map((item) => (
+                    <div
+                      key={item._id}
+                      className="p-3 mb-2 rounded-lg border flex items-center gap-3 transition-colors hover:bg-opacity-50"
+                      style={{ 
+                        borderColor: 'var(--border-light)',
+                        backgroundColor: 'var(--bg-body)'
+                      }}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        item.category === 'transport' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
+                        item.category === 'utilities' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' :
+                        'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400'
+                      }`}>
+                        <FontAwesomeIcon 
+                          icon={
+                            item.category === 'transport' ? faBus :
+                            item.category === 'utilities' ? faBolt :
+                            faGift
+                          }
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                          {item.name}
+                        </p>
+                        <p className="text-xs capitalize" style={{ color: 'var(--text-secondary)' }}>
+                          {item.category}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleUseItem(item._id, item.name)}
+                        disabled={usingItem === item._id}
+                        className="px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
+                        style={{ 
+                          background: 'var(--gradient-primary)',
+                          opacity: usingItem === item._id ? 0.7 : 1
+                        }}
+                      >
+                        {usingItem === item._id ? '...' : 'Use'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Notifications */}
         <div className="relative" ref={notificationRef}>

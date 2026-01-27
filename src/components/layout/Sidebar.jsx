@@ -79,7 +79,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           >
             <FontAwesomeIcon icon={faBars} size="lg" />
           </button>
-          <h1 className="text-2xl font-bold tracking-tight title-gradient">EcoTraceAI</h1>
+          <h1 className="text-2xl font-bold tracking-tight title-gradient">CivicSetu</h1>
         </div>
 
         {/* Navigation - Text Only */}

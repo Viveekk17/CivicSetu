@@ -43,7 +43,8 @@ exports.register = async (req, res) => {
           name: user.name,
           email: user.email,
           credits: user.credits,
-          role: user.role
+          role: user.role,
+          impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
         },
         token
       }
@@ -66,7 +67,7 @@ exports.login = async (req, res) => {
 
     // Check for user
     const user = await User.findOne({ email }).select('+password');
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -76,7 +77,7 @@ exports.login = async (req, res) => {
 
     // Check password
     const isMatch = await user.comparePassword(password);
-    
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -96,7 +97,8 @@ exports.login = async (req, res) => {
           name: user.name,
           email: user.email,
           credits: user.credits,
-          role: user.role
+          role: user.role,
+          impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
         },
         token
       }
@@ -131,28 +133,28 @@ exports.firebaseLogin = async (req, res) => {
 
     // Check if user exists
     let user = await User.findOne({ firebaseUid: uid });
-    
+
     if (!user) {
-       // Check by email to link legacy accounts
-       user = await User.findOne({ email });
-       
-       if (user) {
-         // Link existing user
-         user.firebaseUid = uid;
-         // Update profile if needed
-         if (!user.profilePicture && picture) user.profilePicture = picture;
-         await user.save();
-       } else {
-         // Create new user
-         user = await User.create({
-           name: name || email.split('@')[0],
-           email,
-           firebaseUid: uid,
-           profilePicture: picture || '/uploads/default-avatar.png',
-           role: 'user', // Default role
-           credits: 0
-         });
-       }
+      // Check by email to link legacy accounts
+      user = await User.findOne({ email });
+
+      if (user) {
+        // Link existing user
+        user.firebaseUid = uid;
+        // Update profile if needed
+        if (!user.profilePicture && picture) user.profilePicture = picture;
+        await user.save();
+      } else {
+        // Create new user
+        user = await User.create({
+          name: name || email.split('@')[0],
+          email,
+          firebaseUid: uid,
+          profilePicture: picture || '/uploads/default-avatar.png',
+          role: 'user', // Default role
+          credits: 0
+        });
+      }
     }
 
     res.status(200).json({
@@ -164,7 +166,8 @@ exports.firebaseLogin = async (req, res) => {
           email: user.email,
           credits: user.credits,
           role: user.role,
-          profilePicture: user.profilePicture
+          profilePicture: user.profilePicture,
+          impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
         },
         token // Return the same firebase token or nothing (client has it)
       }

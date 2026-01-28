@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
+import { useLanguage } from '../context/LanguageContext';
 import { login, googleLogin } from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -86,94 +89,97 @@ const Login = () => {
           <div className="mx-auto mb-4 flex justify-center">
             <img src="/logo.png" alt="CivicSetu" className="h-24 object-contain drop-shadow-lg" />
           </div>
-          <h1 className="text-3xl font-bold mb-2 title-gradient">Welcome Back</h1>
-          <p className="text-gray-500">Sign in to continue your civic journey</p>
+          <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+            {t.login_welcome}
+          </h2>
+          <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+            {t.login_subtitle}
+          </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm font-medium border border-red-100">
+            {error}
+          </div>
+        )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-600">Email Address</label>
+        <form onSubmit={handleLogin} className="scale-100 origin-top">
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+              {t.login_email}
+            </label>
             <div className="relative">
-              <FontAwesomeIcon icon={faEnvelope} className="absolute left-4 top-3.5 text-gray-400" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <FontAwesomeIcon icon={faEnvelope} />
+              </span>
               <input
                 type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
+                name="email" // Added name attribute for formData
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                value={formData.email} // Changed to formData.email
+                onChange={handleChange} // Changed to handleChange
                 placeholder="name@example.com"
+                style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                required
               />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-semibold text-gray-600">Password</label>
-              <a href="#" className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Forgot password?</a>
-            </div>
+          <div className="mb-6">
+            <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+              {t.login_password}
+            </label>
             <div className="relative">
-              <FontAwesomeIcon icon={faLock} className="absolute left-4 top-3.5 text-gray-400" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <FontAwesomeIcon icon={faLock} />
+              </span>
               <input
                 type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all bg-white bg-opacity-50"
+                name="password" // Added name attribute for formData
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                value={formData.password} // Changed to formData.password
+                onChange={handleChange} // Changed to handleChange
                 placeholder="••••••••"
+                style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                required
               />
             </div>
           </div>
-
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 group transition-all"
+            className="w-full py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all mb-4 text-white"
             style={{ background: 'var(--gradient-primary)' }}
-          >
-            {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            ) : (
-              <>
-                Sign In
-                <FontAwesomeIcon icon={faArrowRight} className="group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
-          </button>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl font-bold text-gray-700 bg-white border border-gray-300 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2 transition-all"
           >
-            <FontAwesomeIcon icon={faGoogle} className="text-red-500" />
-            Sign in with Google
+            {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : t.login_button}
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-            Create account
-          </Link>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 text-gray-500 bg-white" style={{ backgroundColor: 'var(--bg-surface)' }}>{t.login_or_continue_with}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full py-3.5 rounded-xl font-bold border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center justify-center gap-2 mb-6"
+          disabled={loading}
+          style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-body)' }}
+        >
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
+          {t.login_google}
+        </button>
+
+        <div className="text-center">
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            {t.login_no_account} {' '}
+            <Link to="/register" className="font-bold hover:underline" style={{ color: 'var(--primary-color)' }}>
+              {t.login_register}
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>
@@ -181,3 +187,4 @@ const Login = () => {
 };
 
 export default Login;
+

@@ -12,12 +12,12 @@ const Redeem = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(getStoredUser());
-  
+
   // Confirmation modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedTree, setSelectedTree] = useState(null);
   const [redeeming, setRedeeming] = useState(false);
-  
+
   // Success state
   const [redeemSuccess, setRedeemSuccess] = useState(null);
 
@@ -36,7 +36,7 @@ const Redeem = () => {
   // Filter trees when activeTab changes
   useEffect(() => {
     if (activeTab === 'environment') {
-      const filtered = trees.filter(tree => 
+      const filtered = trees.filter(tree =>
         ['trees', 'bundles', 'wildlife', 'offset'].includes(tree.category)
       );
       setFilteredTrees(filtered);
@@ -59,7 +59,7 @@ const Redeem = () => {
     try {
       setLoading(true);
       const response = await getTrees();
-      
+
       if (response.success) {
         setTrees(response.data);
       } else {
@@ -93,11 +93,12 @@ const Redeem = () => {
       const response = await redeemTree(selectedTree._id);
 
       if (response.success) {
-        // Update local user credits
-        const updatedUser = {
+        // Update local user data fully (including new impact stats)
+        const updatedUser = response.data.user || {
           ...user,
           credits: response.data.newBalance
         };
+
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
 
@@ -231,11 +232,10 @@ const Redeem = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-2 text-sm md:text-base ${
-              activeTab === tab.id
+            className={`px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-2 text-sm md:text-base ${activeTab === tab.id
                 ? 'shadow-lg scale-105'
                 : 'opacity-70 hover:opacity-100'
-            }`}
+              }`}
             style={{
               backgroundColor: activeTab === tab.id ? 'var(--bg-surface)' : 'transparent',
               color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-secondary)',

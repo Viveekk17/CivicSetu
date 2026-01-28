@@ -207,10 +207,20 @@ exports.createSubmission = async (req, res) => {
 
     // If verified, award credits to user (Primary Uploader)
     if (verification.verified) {
-      // 1. Award to Uploader
-      await User.findByIdAndUpdate(req.user.id, {
-        $inc: { credits: finalCreditsPerPerson }
-      });
+      // 1. Award to Uploader and track environmental impact
+      const user = await User.findById(req.user.id);
+
+      // Increment credits
+      user.credits += finalCreditsPerPerson;
+
+      // Track pollution saved from this activity
+      if (verification.trashWeight) {
+        user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
+        user.impact.pollutionSaved += verification.trashWeight;
+        console.log(`✅ Added ${verification.trashWeight}kg to pollution saved. Total: ${user.impact.pollutionSaved}kg`);
+      }
+
+      await user.save();
 
       await Transaction.create({
         user: req.user.id,

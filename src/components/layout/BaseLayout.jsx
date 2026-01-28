@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import NotificationToast from '../common/NotificationToast';
 
-import { isAuthenticated } from '../../services/authService';
+import { isAuthenticated, refreshUserProfile } from '../../services/authService';
 
 const BaseLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,6 +13,9 @@ const BaseLayout = () => {
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login');
+    } else {
+      // Refresh user profile to ensure sync (credits, impact, etc.)
+      refreshUserProfile();
     }
   }, [navigate]);
 

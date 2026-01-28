@@ -59,8 +59,15 @@ export const login = async (credentials) => {
 
     // Store token and user data
     if (response.success) {
+      console.log('✅ Login successful, storing token and user data');
+      console.log('Token (first 20 chars):', token.substring(0, 20) + '...');
+      console.log('User:', response.data.user);
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      // Verify storage immediately
+      const storedToken = localStorage.getItem('token');
+      console.log('✅ Verified token is in localStorage:', !!storedToken);
     }
 
     return response;
@@ -117,4 +124,23 @@ export const isAuthenticated = () => {
 export const getStoredUser = () => {
   const user = localStorage.getItem('user');
   return user ? JSON.parse(user) : null;
+};
+
+// Refresh user profile from backend
+export const refreshUserProfile = async () => {
+  try {
+    const response = await api.get('/auth/me');
+    if (response.success) {
+      const user = response.data;
+      localStorage.setItem('user', JSON.stringify(user));
+      // Dispatch event to update components listening to changes (like Header)
+      window.dispatchEvent(new CustomEvent('creditsUpdated', {
+        detail: { credits: user.credits }
+      }));
+      return user;
+    }
+  } catch (error) {
+    console.error('Failed to refresh user profile:', error);
+  }
+  return null;
 };

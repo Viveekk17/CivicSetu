@@ -15,10 +15,12 @@ import {
   faBars
 } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { motion } from 'framer-motion';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
@@ -31,14 +33,14 @@ const Sidebar = ({ isOpen, onClose }) => {
   }, []);
 
   const menuItems = [
-    { path: '/', name: 'Dashboard', badge: null },
-    { path: '/upload', name: 'Add Activity', badge: null },
-    { path: '/redeem', name: 'Redeem', badge: 'HOT' },
-    { path: '/submissions', name: 'My Submissions', badge: null },
-    { path: '/analytics', name: 'Analytics', badge: null },
-    { path: '/ngos', name: 'NGO Dashboard', badge: null },
-    { path: '/community', name: 'Community', badge: null },
-    { path: '/blockchain', name: 'Blockchain', badge: null },
+    { path: '/', name: t.nav_dashboard, badge: null },
+    { path: '/upload', name: t.nav_upload, badge: null },
+    { path: '/redeem', name: t.nav_redeem, badge: 'HOT' },
+    { path: '/submissions', name: t.nav_submissions, badge: null },
+    { path: '/analytics', name: t.nav_analytics, badge: null },
+    { path: '/ngos', name: t.nav_ngos, badge: null },
+    { path: '/community', name: t.nav_community, badge: null },
+    { path: '/blockchain', name: t.nav_blockchain, badge: null },
   ];
 
   // No more profile functions needed in sidebar

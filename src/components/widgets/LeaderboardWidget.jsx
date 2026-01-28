@@ -67,13 +67,13 @@ const LeaderboardWidget = () => {
   return (
     <div className="card p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div 
+        <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
         >
           <FontAwesomeIcon icon={faTrophy} className="text-yellow-500 text-2xl" />
         </div>
         <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          City Leaderboard
+          Environmental Leaderboard
         </h3>
       </div>
 
@@ -91,18 +91,18 @@ const LeaderboardWidget = () => {
                 transition={{ delay: index * 0.05 }}
                 className="flex items-center gap-4 p-4 rounded-xl transition-all"
                 style={{
-                  background: isCurrentUser 
-                    ? 'var(--gradient-primary)' 
+                  background: isCurrentUser
+                    ? 'var(--gradient-primary)'
                     : 'var(--bg-hover)',
-                  border: isCurrentUser 
-                    ? '2px solid var(--primary)' 
+                  border: isCurrentUser
+                    ? '2px solid var(--primary)'
                     : '2px solid transparent',
                 }}
               >
                 {/* Rank */}
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0"
-                  style={{ 
+                  style={{
                     backgroundColor: rank <= 3 ? '#FEF3C7' : 'rgba(0,0,0,0.1)',
                     color: isCurrentUser ? '#fff' : (rank <= 3 ? '#D97706' : 'var(--text-secondary)')
                   }}
@@ -111,9 +111,9 @@ const LeaderboardWidget = () => {
                 </div>
 
                 {/* Avatar */}
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0"
-                  style={{ 
+                  style={{
                     background: isCurrentUser ? 'rgba(255,255,255,0.3)' : 'var(--gradient-primary)',
                     color: '#fff'
                   }}
@@ -123,7 +123,7 @@ const LeaderboardWidget = () => {
 
                 {/* Name */}
                 <div className="flex-1 min-w-0">
-                  <p 
+                  <p
                     className="font-bold truncate"
                     style={{ color: isCurrentUser ? '#fff' : 'var(--text-primary)' }}
                   >
@@ -134,20 +134,40 @@ const LeaderboardWidget = () => {
                   </p>
                 </div>
 
-                {/* Credits */}
+                {/* Environmental Metrics */}
                 <div className="text-right flex-shrink-0">
-                  <p 
-                    className="font-bold text-lg"
-                    style={{ color: isCurrentUser ? '#fff' : 'var(--primary)' }}
-                  >
-                    {user.credits.toLocaleString()}
-                  </p>
-                  <p 
-                    className="text-xs"
-                    style={{ color: isCurrentUser ? 'rgba(255,255,255,0.8)' : 'var(--text-tertiary)' }}
-                  >
-                    credits
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    {/* Pollution Saved */}
+                    <div className="flex items-center justify-end gap-1">
+                      <p
+                        className="font-bold text-sm"
+                        style={{ color: isCurrentUser ? '#fff' : 'var(--primary)' }}
+                      >
+                        {(user.impact?.pollutionSaved || user.pollutionSaved || 0).toFixed(1)} kg
+                      </p>
+                      <span
+                        className="text-xs"
+                        style={{ color: isCurrentUser ? 'rgba(255,255,255,0.8)' : 'var(--text-tertiary)' }}
+                      >
+                        ♻️
+                      </span>
+                    </div>
+                    {/* Trees Planted */}
+                    <div className="flex items-center justify-end gap-1">
+                      <p
+                        className="font-bold text-sm"
+                        style={{ color: isCurrentUser ? '#fff' : '#10B981' }}
+                      >
+                        {user.impact?.treesPlanted || user.treesPlanted || 0}
+                      </p>
+                      <span
+                        className="text-xs"
+                        style={{ color: isCurrentUser ? 'rgba(255,255,255,0.8)' : 'var(--text-tertiary)' }}
+                      >
+                        🌳
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             );

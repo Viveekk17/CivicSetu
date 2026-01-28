@@ -9,9 +9,11 @@ import ActivityFeed from '../components/widgets/ActivityFeed';
 import LeaderboardWidget from '../components/widgets/LeaderboardWidget';
 import { getDashboardStats } from '../services/analyticsService';
 import { getStoredUser } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -118,7 +120,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div variants={itemVariants}>
           <StatsCard
-            title="Carbon Credits"
+            title={t.dash_credits}
             value={stats.stats.currentBalance.toLocaleString()}
             icon={faCoins}
             color="#FBBF24"
@@ -131,7 +133,7 @@ const Dashboard = () => {
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-blue-500" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
                 <FontAwesomeIcon icon={faEarthAmericas} />
               </div>
-              <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Environmental Impact</h3>
+              <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t.dash_impact}</h3>
             </div>
 
             <div className="grid grid-cols-3 gap-2 z-10">
@@ -141,7 +143,7 @@ const Dashboard = () => {
                 <div className="font-bold text-lg leading-none" style={{ color: 'var(--text-primary)' }}>
                   {stats.stats.impact?.co2Saved || 0}
                 </div>
-                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>kg CO2</div>
+                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>{t.dash_co2}</div>
               </div>
 
               {/* Trees */}
@@ -159,7 +161,7 @@ const Dashboard = () => {
                 <div className="font-bold text-lg leading-none" style={{ color: 'var(--text-primary)' }}>
                   {stats.stats.impact?.waste || 0}
                 </div>
-                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>kg Waste</div>
+                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>{t.dash_waste}</div>
               </div>
             </div>
 
@@ -169,7 +171,7 @@ const Dashboard = () => {
         </motion.div>
         <motion.div variants={itemVariants}>
           <StatsCard
-            title="Total Submissions"
+            title={t.dash_activities}
             value={stats.stats.totalSubmissions.toString()}
             icon={faTree}
             color="#10B981"

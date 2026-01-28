@@ -9,7 +9,8 @@ import {
   faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import { analyzePhotos, createSubmission } from '../services/submissionService';
-import { getStoredUser, searchUsers } from '../services/authService'; // Updated import
+import { getStoredUser, searchUsers } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
 import { startCamera, stopCamera, capturePhoto, isCameraAvailable } from '../utils/cameraService';
 import { getCurrentLocation, reverseGeocode, isGeolocationAvailable } from '../utils/locationService';
 import { checkDuplicateImage } from '../services/submissionService';
@@ -18,7 +19,8 @@ import SparkMD5 from 'spark-md5';
 
 const Upload = () => {
   const navigate = useNavigate();
-  const routeLocation = useLocation(); // Renamed to avoid using 'location' state
+  const { t } = useLanguage();
+  const routeLocation = useLocation();
 
   // Custom hook to resume draft from navigation state
   useEffect(() => {
@@ -665,13 +667,13 @@ const Upload = () => {
             exit={{ opacity: 0, y: -20 }}
           >
             <div className="card p-8">
-              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Environmental Impact Upload</h2>
-              <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>Capture or upload before & after photos to verify your impact</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{t.upload_title}</h2>
+              <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>{t.upload_subtitle}</p>
 
               <div className="mb-8 p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-light)' }}>
                 <FontAwesomeIcon icon={faMapMarkerAlt} className="text-emerald-500 text-xl" />
                 <div className="flex-1">
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Location</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.upload_location}</p>
                   <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{locationName}</p>
                   {locationError && (
                     <p className="text-xs text-red-500 mt-1">{locationError}</p>
@@ -684,7 +686,7 @@ const Upload = () => {
                 <div className="mb-8">
                   <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                     <FontAwesomeIcon icon={faHistory} className="text-blue-500" />
-                    Ongoing Cleanups (Recent Activity)
+                    {t.dash_ongoing} {t.dash_recent_activity}
                   </h3>
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {drafts.map(draft => (
@@ -724,7 +726,7 @@ const Upload = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {/* Before Photo */}
                 <PhotoUploadCard
-                  title="Before Photo"
+                  title={t.upload_camera_before}
                   photo={beforePhoto}
                   onRemove={() => removePhoto('before')}
                   onCamera={() => openCamera('before')}
@@ -734,7 +736,7 @@ const Upload = () => {
 
                 {/* After Photo */}
                 <PhotoUploadCard
-                  title="After Photo"
+                  title={t.upload_camera_after}
                   photo={afterPhoto}
                   onRemove={() => removePhoto('after')}
                   onCamera={() => openCamera('after')}
@@ -747,7 +749,7 @@ const Upload = () => {
               <div className="mb-8">
                 <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
                   <FontAwesomeIcon icon={faUsers} className="mr-2" />
-                  Tag Members (Total: {taggedUsers.length + 1})
+                  {t.upload_tag_members} ({t.upload_members_count}: {taggedUsers.length + 1})
                 </label>
 
                 {/* Search Input */}
@@ -756,7 +758,7 @@ const Upload = () => {
                     <input
                       type="text"
                       className="w-full p-3 rounded-xl border border-gray-300"
-                      placeholder="Search users by name..."
+                      placeholder={t.upload_search_placeholder}
                       value={searchQuery}
                       onChange={async (e) => {
                         setSearchQuery(e.target.value);

@@ -15,9 +15,9 @@ exports.getDashboardStats = async (req, res) => {
 
     // Get stats
     const totalSubmissions = await Submission.countDocuments({ user: userId });
-    const verifiedSubmissions = await Submission.countDocuments({ 
-      user: userId, 
-      status: 'verified' 
+    const verifiedSubmissions = await Submission.countDocuments({
+      user: userId,
+      status: 'verified'
     });
 
     // Get total credits earned and redeemed
@@ -31,34 +31,14 @@ exports.getDashboardStats = async (req, res) => {
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
 
-    // Calculate Real Impact Data
-    // 1. Waste Cleaned: Sum of weight from verified submissions
-    const wasteStats = await Submission.aggregate([
-      { $match: { user: user._id, status: 'verified' } },
-      { $group: { _id: null, totalWeight: { $sum: '$weight' } } }
-    ]);
-    const wasteCollected = wasteStats[0]?.totalWeight || 0;
+    // Use NEW impact fields from User model
+    const pollutionSaved = user.impact?.pollutionSaved || 0;
+    const treesPlanted = user.impact?.treesPlanted || 0;
 
-    // 2. Trees Planted: Count of redeemed transactions linked to trees
-    // We fetch transactions to get both count and potentially impact from specific tree types
-    const treeTransactions = await Transaction.find({ 
-      user: userId, 
-      type: 'redeemed',
-      'metadata.treeId': { $exists: true } 
-    }).populate('metadata.treeId');
-
-    const treesPlanted = treeTransactions.length;
-
-    // 3. CO2 Saved: Mixed calculation
-    // From Waste: 1kg waste ≈ 0.5kg CO2
-    const co2FromWaste = wasteCollected * 0.5;
-    
-    // From Trees: Sum of specific tree impacts (or default estimate if not available)
-    const co2FromTrees = treeTransactions.reduce((sum, tx) => {
-      const treeImpact = tx.metadata.treeId?.impact?.co2Offset || 20; // Default 20kg if no specific data
-      return sum + treeImpact;
-    }, 0);
-
+    // Calculate CO2 saved from pollution (1kg waste = 0.5kg CO2)
+    const co2FromWaste = pollutionSaved * 0.5;
+    // Each tree absorbs ~20kg CO2/year
+    const co2FromTrees = treesPlanted * 20;
     const totalCo2Saved = Math.round(co2FromWaste + co2FromTrees);
 
     // Recent activity - Get all transactions
@@ -84,8 +64,8 @@ exports.getDashboardStats = async (req, res) => {
           currentBalance: user.credits,
           impact: {
             co2Saved: totalCo2Saved,
-            trees: treesPlanted,
-            waste: wasteCollected
+            trees: treesPlanted, // Dashboard expects 'trees' not 'treesPlanted'
+            waste: pollutionSaved // Dashboard expects 'waste' (pollution saved in kg)
           }
         },
         recentActivity
@@ -106,38 +86,47 @@ exports.getDashboardStats = async (req, res) => {
 exports.getLeaderboard = async (req, res) => {
   try {
     const userId = req.user?.id;
+    const { sortBy = 'pollutionSaved', limit = 10 } = req.query;
 
-    // Get top 10 users using lean() for better performance and modifiability
+    // Determine sort field
+    const sortField = sortBy === 'trees'
+      ? 'impact.treesPlanted'
+      : 'impact.pollutionSaved';
+
+    // Get top users sorted by environmental impact
     let topUsers = await User.find()
-      .select('name credits')
-      .sort({ credits: -1 })
-      .limit(10)
+      .select('name email impact')
+      .sort({ [sortField]: -1, 'impact.treesPlanted': -1 }) // Secondary sort by trees
+      .limit(parseInt(limit))
       .lean();
 
-    // Add rank property to top users
+    // Add rank property and ensure impact field exists
     topUsers = topUsers.map((user, index) => ({
       ...user,
-      rank: index + 1
+      rank: index + 1,
+      impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
     }));
 
     // If authenticated user is not in top 10, find their rank and add them
     if (userId) {
       const userInTop10 = topUsers.find(u => u._id.toString() === userId);
-      
+
       if (!userInTop10) {
-        const currentUser = await User.findById(userId).select('name credits').lean();
-        
+        const currentUser = await User.findById(userId).select('name email impact').lean();
+
         if (currentUser) {
-          // Calculate rank: count users with more credits
-          const higherRankCount = await User.countDocuments({ 
-            credits: { $gt: currentUser.credits } 
+          // Calculate rank: count users with higher impact
+          const currentImpact = currentUser.impact?.pollutionSaved || 0;
+          const higherRankCount = await User.countDocuments({
+            'impact.pollutionSaved': { $gt: currentImpact }
           });
-          
+
           const rank = higherRankCount + 1;
-          
+
           topUsers.push({
             ...currentUser,
-            rank: rank
+            rank: rank,
+            impact: currentUser.impact || { pollutionSaved: 0, treesPlanted: 0 }
           });
         }
       }
@@ -148,6 +137,7 @@ exports.getLeaderboard = async (req, res) => {
       data: topUsers
     });
   } catch (error) {
+    console.error('Leaderboard error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -210,8 +200,8 @@ exports.getDetailedAnalytics = async (req, res) => {
     const rejectedSubmissions = allSubmissions.filter(s => s.status === 'rejected').length;
 
     // Calculate verification rate
-    const verificationRate = totalSubmissions > 0 
-      ? Math.round((verifiedSubmissions / totalSubmissions) * 100) 
+    const verificationRate = totalSubmissions > 0
+      ? Math.round((verifiedSubmissions / totalSubmissions) * 100)
       : 0;
 
     // Get credits data
@@ -268,12 +258,12 @@ exports.getDetailedAnalytics = async (req, res) => {
 
     // Get credits trend based on period
     const creditsTrend = await Transaction.aggregate([
-      { 
-        $match: { 
-          user: user._id, 
+      {
+        $match: {
+          user: user._id,
           createdAt: { $gte: startDate },
           type: 'earned'
-        } 
+        }
       },
       {
         $group: {
@@ -287,10 +277,10 @@ exports.getDetailedAnalytics = async (req, res) => {
     // Get monthly activity - all time
     console.log('Fetching monthly activity for user:', userId);
     const monthlyActivity = await Submission.aggregate([
-      { 
-        $match: { 
+      {
+        $match: {
           user: new mongoose.Types.ObjectId(userId)
-        } 
+        }
       },
       {
         $group: {
@@ -306,7 +296,7 @@ exports.getDetailedAnalytics = async (req, res) => {
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
-    
+
     console.log('Monthly Activity Result:', monthlyActivity);
     console.log('Monthly Activity Count:', monthlyActivity.length);
 
@@ -403,17 +393,17 @@ exports.getSubmissionsByCategory = async (req, res) => {
 exports.getProgressTimeline = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     // Get last 12 months
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
     const timeline = await Submission.aggregate([
-      { 
-        $match: { 
-          user: userId, 
+      {
+        $match: {
+          user: userId,
           createdAt: { $gte: twelveMonthsAgo }
-        } 
+        }
       },
       {
         $group: {

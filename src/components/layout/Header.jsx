@@ -4,9 +4,11 @@ import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes
 import { useTheme } from '../../context/ThemeContext';
 import { getStoredUser } from '../../services/authService';
 import { getInventory, useItem } from '../../services/treeService';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Header = ({ onMenuClick, isSidebarOpen }) => {
   const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
   const [user, setUser] = useState(getStoredUser());
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -222,8 +224,32 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             border: '1px solid var(--border-light)'
           }}>
           <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
-          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.credits?.toLocaleString() || 0} Credits</span>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.credits?.toLocaleString() || 0}</span>
         </div>
+
+        {/* Trees Planted Badge */}
+        <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full shadow-sm"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-light)'
+          }}>
+          <span className="text-xl">🌳</span>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.impact?.treesPlanted?.toLocaleString() || 0}</span>
+        </div>
+
+        {/* Language Toggle */}
+        <button
+          onClick={toggleLanguage}
+          className="p-3 rounded-full transition-all duration-300 hover:shadow-md relative overflow-hidden group font-bold text-sm"
+          style={{
+            background: 'var(--bg-surface)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-light)'
+          }}
+          title={language === 'en' ? 'Switch to Hindi' : 'Switch to English'}
+        >
+          {language === 'en' ? '🇺🇸 EN' : '🇮🇳 HI'}
+        </button>
 
         {/* Theme Toggle */}
         <button

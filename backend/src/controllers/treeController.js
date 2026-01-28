@@ -79,6 +79,29 @@ exports.redeemTree = asyncHandler(async (req, res) => {
 
   // Deduct credits from user
   user.credits -= tree.cost;
+
+  // Track trees planted if environmental category
+  const environmentalCategories = ['trees', 'bundles'];
+  if (environmentalCategories.includes(tree.category)) {
+    user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
+
+    // Calculate tree count based on tree name
+    let treeCount = 1; // Default single tree
+
+    if (tree.category === 'bundles') {
+      // Extract number from package name (e.g., "3 Trees Package" -> 3)
+      const match = tree.name.match(/(\d+)\s+Trees/i);
+      if (match) {
+        treeCount = parseInt(match[1]);
+      } else {
+        treeCount = 10; // Default for bundles without number in name
+      }
+    }
+
+    user.impact.treesPlanted += treeCount;
+    console.log(`🌳 Added ${treeCount} tree(s) planted. Total: ${user.impact.treesPlanted}`);
+  }
+
   await user.save();
 
   // Create transaction record
@@ -101,7 +124,16 @@ exports.redeemTree = asyncHandler(async (req, res) => {
     data: {
       tree: tree,
       newBalance: user.credits,
-      creditsSpent: tree.cost
+      creditsSpent: tree.cost,
+      user: { // Return full updated user for frontend sync
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        credits: user.credits,
+        role: user.role,
+        impact: user.impact,
+        profilePicture: user.profilePicture
+      }
     }
   });
 });
@@ -111,7 +143,7 @@ exports.redeemTree = asyncHandler(async (req, res) => {
 // @access  Private
 exports.getInventory = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
-  
+
   res.json({
     success: true,
     count: user.inventory.length,

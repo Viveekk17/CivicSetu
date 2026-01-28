@@ -26,13 +26,13 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     e.stopPropagation(); // Extra safety to prevent event bubbling
-    
+
     setLoading(true);
     setError('');
 
     try {
       const response = await login(formData);
-      
+
       if (response.success) {
         // Success! Navigate to dashboard
         navigate('/');
@@ -67,27 +67,27 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-         style={{ background: 'var(--bg-body)' }}>
-      
+      style={{ background: 'var(--bg-body)' }}>
+
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
-             style={{ background: 'var(--primary)' }}></div>
+          style={{ background: 'var(--primary)' }}></div>
         <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full opacity-20 blur-3xl"
-             style={{ background: 'var(--secondary)' }}></div>
+          style={{ background: 'var(--secondary)' }}></div>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md relative z-10 p-8 card glass border-t border-white border-opacity-50 shadow-2xl"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg mb-4">
-            <FontAwesomeIcon icon={faLeaf} />
+          <div className="mx-auto mb-4 flex justify-center">
+            <img src="/logo.png" alt="CivicSetu" className="h-24 object-contain drop-shadow-lg" />
           </div>
           <h1 className="text-3xl font-bold mb-2 title-gradient">Welcome Back</h1>
-          <p className="text-gray-500">Sign in to continue your eco-journey</p>
+          <p className="text-gray-500">Sign in to continue your civic journey</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -102,8 +102,8 @@ const Login = () => {
             <label className="text-sm font-semibold text-gray-600">Email Address</label>
             <div className="relative">
               <FontAwesomeIcon icon={faEnvelope} className="absolute left-4 top-3.5 text-gray-400" />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -121,8 +121,8 @@ const Login = () => {
             </div>
             <div className="relative">
               <FontAwesomeIcon icon={faLock} className="absolute left-4 top-3.5 text-gray-400" />
-              <input 
-                type="password" 
+              <input
+                type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -133,7 +133,7 @@ const Login = () => {
             </div>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 group transition-all"

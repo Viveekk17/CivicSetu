@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import NotificationToast from '../common/NotificationToast';
 
+import { isAuthenticated } from '../../services/authService';
+
 const BaseLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex bg-gray-50 transition-colors duration-300"

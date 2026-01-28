@@ -14,7 +14,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
   const [showBag, setShowBag] = useState(false);
   const [inventory, setInventory] = useState([]);
   const [usingItem, setUsingItem] = useState(null);
-  
+
   const notificationRef = useRef(null);
   const userMenuRef = useRef(null);
   const bagRef = useRef(null);
@@ -66,7 +66,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
       // Refresh user from localStorage
       const updatedUser = getStoredUser();
       setUser(updatedUser);
-      
+
       // Add notification for credits earned
       if (event.detail && event.detail.credits) {
         addNotification({
@@ -79,7 +79,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
         });
 
       }
-      
+
       // Refresh inventory too
       fetchInventory();
     };
@@ -122,7 +122,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
   };
 
   const markAsRead = (id) => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(notif => notif.id === id ? { ...notif, read: true } : notif)
     );
   };
@@ -140,11 +140,11 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
     try {
       setUsingItem(itemId);
       const response = await useItem(itemId);
-      
+
       if (response.success) {
         // Update local inventory state
         setInventory(response.data);
-        
+
         // Add success notification
         addNotification({
           id: Date.now(),
@@ -154,7 +154,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
           timestamp: new Date().toISOString(),
           read: false
         });
-        
+
         // Dispatch event to refresh activity feed if needed
         window.dispatchEvent(new CustomEvent('creditsUpdated', { detail: {} }));
       }
@@ -176,9 +176,9 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <header 
+    <header
       className="sticky top-0 z-20 h-20 flex items-center justify-between px-6 glass"
-      style={{ 
+      style={{
         background: 'var(--bg-glass)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border-light)'
@@ -186,12 +186,11 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
     >
       <div className="flex items-center gap-4">
         {/* Hamburger Menu Button - Only visible when sidebar is closed */}
-        {/* Hamburger Menu Button - Only visible when sidebar is closed */}
         {!isSidebarOpen && (
-          <button 
+          <button
             onClick={onMenuClick}
             className="p-2 rounded-lg transition-colors"
-            style={{ 
+            style={{
               color: 'var(--text-secondary)',
               backgroundColor: 'transparent'
             }}
@@ -203,40 +202,43 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
           </button>
         )}
 
-        {/* Page Title - Always visible */}
-        <div className="hidden md:block">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          <span className="title-gradient">{user?.name || 'User'}!</span>
-          </h2>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Here's your environmental impact.</p>
+        {/* Page Title & Logo */}
+        <div className="hidden md:flex items-center gap-3">
+          <img src="/logo.png" alt="CivicSetu Logo" className="h-16 w-auto object-contain" />
+          <div>
+            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              <span className="title-gradient">CivicSetu</span>
+            </h2>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Turning Civic Effort into Citizen Value</p>
+          </div>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
         {/* Credits Badge */}
         <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full shadow-sm"
-             style={{ 
-               backgroundColor: 'var(--bg-surface)', 
-               border: '1px solid var(--border-light)' 
-             }}>
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-light)'
+          }}>
           <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
           <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.credits?.toLocaleString() || 0} Credits</span>
         </div>
 
         {/* Theme Toggle */}
-        <button 
+        <button
           onClick={toggleTheme}
           className="p-3 rounded-full transition-all duration-300 hover:shadow-md relative overflow-hidden group"
-          style={{ 
+          style={{
             background: theme === 'light' ? '#F3F4F6' : '#334155',
             color: theme === 'light' ? '#374151' : '#FCD34D'
           }}
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
-          <FontAwesomeIcon 
-            icon={theme === 'light' ? faMoon : faSun} 
-            className="transform transition-transform group-hover:rotate-12" 
+          <FontAwesomeIcon
+            icon={theme === 'light' ? faMoon : faSun}
+            className="transform transition-transform group-hover:rotate-12"
           />
         </button>
 
@@ -244,7 +246,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
         {/* Inventory Bag */}
         <div className="relative" ref={bagRef}>
-          <button 
+          <button
             onClick={() => setShowBag(!showBag)}
             className="p-3 rounded-full relative transition-colors"
             style={{ color: 'var(--text-secondary)' }}
@@ -261,9 +263,9 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
           {/* Bag Dropdown */}
           {showBag && (
-            <div 
+            <div
               className="absolute right-0 mt-2 w-80 rounded-xl shadow-xl overflow-hidden z-30"
-              style={{ 
+              style={{
                 backgroundColor: 'var(--bg-surface)',
                 border: '1px solid var(--border-light)',
                 maxHeight: '400px'
@@ -286,21 +288,20 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
                     <div
                       key={item._id}
                       className="p-3 mb-2 rounded-lg border flex items-center gap-3 transition-colors hover:bg-opacity-50"
-                      style={{ 
+                      style={{
                         borderColor: 'var(--border-light)',
                         backgroundColor: 'var(--bg-body)'
                       }}
                     >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        item.category === 'transport' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${item.category === 'transport' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
                         item.category === 'utilities' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' :
-                        'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400'
-                      }`}>
-                        <FontAwesomeIcon 
+                          'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400'
+                        }`}>
+                        <FontAwesomeIcon
                           icon={
                             item.category === 'transport' ? faBus :
-                            item.category === 'utilities' ? faBolt :
-                            faGift
+                              item.category === 'utilities' ? faBolt :
+                                faGift
                           }
                         />
                       </div>
@@ -316,7 +317,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
                         onClick={() => handleUseItem(item._id, item.name)}
                         disabled={usingItem === item._id}
                         className="px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
-                        style={{ 
+                        style={{
                           background: 'var(--gradient-primary)',
                           opacity: usingItem === item._id ? 0.7 : 1
                         }}
@@ -333,7 +334,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
         {/* Notifications */}
         <div className="relative" ref={notificationRef}>
-          <button 
+          <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="p-3 rounded-full relative transition-colors"
             style={{ color: 'var(--text-secondary)' }}
@@ -350,9 +351,9 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div 
+            <div
               className="absolute right-0 mt-2 w-80 rounded-xl shadow-xl overflow-hidden"
-              style={{ 
+              style={{
                 backgroundColor: 'var(--bg-surface)',
                 border: '1px solid var(--border-light)',
                 maxHeight: '400px'
@@ -387,24 +388,22 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
                       onClick={() => markAsRead(notif.id)}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          notif.type === 'success' ? 'bg-green-100 dark:bg-green-900/30' :
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${notif.type === 'success' ? 'bg-green-100 dark:bg-green-900/30' :
                           notif.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
-                          notif.type === 'error' ? 'bg-red-100 dark:bg-red-900/30' :
-                          'bg-blue-100 dark:bg-blue-900/30'
-                        }`}>
-                          <FontAwesomeIcon 
+                            notif.type === 'error' ? 'bg-red-100 dark:bg-red-900/30' :
+                              'bg-blue-100 dark:bg-blue-900/30'
+                          }`}>
+                          <FontAwesomeIcon
                             icon={
                               notif.type === 'success' ? faCheckCircle :
-                              notif.type === 'error' ? faTimes :
-                              faBell
+                                notif.type === 'error' ? faTimes :
+                                  faBell
                             }
-                            className={`text-sm ${
-                              notif.type === 'success' ? 'text-green-600 dark:text-green-400' :
+                            className={`text-sm ${notif.type === 'success' ? 'text-green-600 dark:text-green-400' :
                               notif.type === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
-                              notif.type === 'error' ? 'text-red-600 dark:text-red-400' :
-                              'text-blue-600 dark:text-blue-400'
-                            }`}
+                                notif.type === 'error' ? 'text-red-600 dark:text-red-400' :
+                                  'text-blue-600 dark:text-blue-400'
+                              }`}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -448,7 +447,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             aria-label="User menu"
           >
-            <div 
+            <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
               style={{ background: 'var(--gradient-primary)' }}
             >
@@ -461,9 +460,9 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
           {/* User Dropdown */}
           {showUserMenu && (
-            <div 
+            <div
               className="absolute right-0 mt-2 w-64 rounded-xl shadow-xl overflow-hidden"
-              style={{ 
+              style={{
                 backgroundColor: 'var(--bg-surface)',
                 border: '1px solid var(--border-light)'
               }}
@@ -471,7 +470,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
               {/* User Info */}
               <div className="p-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md"
                     style={{ background: 'var(--gradient-primary)' }}
                   >
@@ -496,10 +495,10 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
               {/* Logout Button */}
               <div className="p-3">
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full py-2.5 flex items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all"
-                  style={{ 
+                  style={{
                     color: '#ffffff',
                     backgroundColor: '#ef4444'
                   }}

@@ -9,13 +9,18 @@ import {
     faTrophy,
     faLeaf,
     faTrash,
-    faSpinner
+    faSpinner,
+    faSignInAlt,
+    faSignOutAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { searchUsers } from '../services/authService';
 import { getStoredUser } from '../services/authService';
+import api from '../services/api';
+import NotificationToast from '../components/common/NotificationToast';
 
 const Community = () => {
     const [communities, setCommunities] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [communityName, setCommunityName] = useState('');
     const [communityDescription, setCommunityDescription] = useState('');
@@ -23,14 +28,28 @@ const Community = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [toast, setToast] = useState(null);
+
     const currentUser = getStoredUser();
 
-    // Load communities from localStorage
-    useEffect(() => {
-        const stored = localStorage.getItem('communities');
-        if (stored) {
-            setCommunities(JSON.parse(stored));
+    // Fetch communities
+    const fetchCommunities = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get('/communities');
+            if (res.data.success) {
+                setCommunities(res.data.data);
+            }
+        } catch (err) {
+            console.error(err);
+            setToast({ type: 'error', message: 'Failed to load communities' });
+        } finally {
+            setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        fetchCommunities();
     }, []);
 
     const handleSearch = async (query) => {
@@ -67,69 +86,76 @@ const Community = () => {
         setSelectedMembers(selectedMembers.filter(m => m._id !== userId));
     };
 
-    const handleCreateCommunity = () => {
+    const handleCreateCommunity = async () => {
         if (!communityName.trim()) {
-            window.dispatchEvent(new CustomEvent('newNotification', {
-                detail: {
-                    type: 'error',
-                    title: 'Error',
-                    message: 'Please enter a community name'
-                }
-            }));
+            setToast({ type: 'error', message: 'Please enter a community name' });
             return;
         }
 
-        const newCommunity = {
-            id: Date.now(),
-            name: communityName,
-            description: communityDescription,
-            creator: currentUser?.id,
-            creatorName: currentUser?.name,
-            members: [
-                { _id: currentUser?.id, name: currentUser?.name },
-                ...selectedMembers
-            ],
-            totalPollutionSaved: Math.random() * 100, // Mock data
-            totalTreesPlanted: Math.floor(Math.random() * 50),
-            createdAt: new Date().toISOString()
-        };
+        try {
+            const res = await api.post('/communities', {
+                name: communityName,
+                description: communityDescription,
+                members: selectedMembers.map(m => m._id)
+            });
 
-        const updated = [...communities, newCommunity];
-        setCommunities(updated);
-        localStorage.setItem('communities', JSON.stringify(updated));
-
-        // Show success notification
-        window.dispatchEvent(new CustomEvent('newNotification', {
-            detail: {
+            setToast({
                 type: 'success',
-                title: 'Community Created!',
-                message: `${communityName} has been created with ${newCommunity.members.length} members`
-            }
-        }));
+                message: `${communityName} has been created!`
+            });
 
-        // Reset form
-        setShowCreateModal(false);
-        setCommunityName('');
-        setCommunityDescription('');
-        setSelectedMembers([]);
+            // Refresh list
+            fetchCommunities();
+
+            // Reset form
+            setShowCreateModal(false);
+            setCommunityName('');
+            setCommunityDescription('');
+            setSelectedMembers([]);
+        } catch (err) {
+            setToast({
+                type: 'error',
+                message: err.response?.data?.message || 'Failed to create community'
+            });
+        }
     };
 
-    const deleteCommunity = (communityId) => {
-        const updated = communities.filter(c => c.id !== communityId);
-        setCommunities(updated);
-        localStorage.setItem('communities', JSON.stringify(updated));
+    const handleDeleteCommunity = async (communityId) => {
+        if (!window.confirm('Are you sure you want to delete this community?')) return;
 
-        window.dispatchEvent(new CustomEvent('newNotification', {
-            detail: {
-                type: 'info',
-                title: 'Community Deleted',
-                message: 'The community has been removed'
-            }
-        }));
+        try {
+            await api.delete(`/communities/${communityId}`);
+            setToast({ type: 'success', message: 'Community deleted successfully' });
+            fetchCommunities();
+        } catch (err) {
+            setToast({ type: 'error', message: 'Failed to delete community' });
+        }
     };
 
-    // Sort communities by pollution saved for leaderboard
-    const leaderboard = [...communities].sort((a, b) => b.totalPollutionSaved - a.totalPollutionSaved);
+    const handleJoin = async (communityId) => {
+        try {
+            await api.put(`/communities/${communityId}/join`);
+            setToast({ type: 'success', message: 'Joined community successfully!' });
+            fetchCommunities();
+        } catch (err) {
+            setToast({ type: 'error', message: err.response?.data?.message || 'Failed to join' });
+        }
+    };
+
+    const handleLeave = async (communityId) => {
+        if (!window.confirm('Are you sure you want to leave this community?')) return;
+
+        try {
+            await api.put(`/communities/${communityId}/leave`);
+            setToast({ type: 'success', message: 'Left community successfully' });
+            fetchCommunities();
+        } catch (err) {
+            setToast({ type: 'error', message: err.response?.data?.message || 'Failed to leave' });
+        }
+    };
+
+    // Derived state
+    const leaderboard = [...communities]; // Already sorted from backend
     const myCommunities = communities.filter(c =>
         c.members.some(m => m._id === currentUser?.id)
     );
@@ -143,6 +169,14 @@ const Community = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
+            {toast && (
+                <NotificationToast
+                    type={toast.type}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                />
+            )}
+
             {/* Header */}
             <div className="mb-8 flex items-center justify-between">
                 <div>
@@ -163,163 +197,191 @@ const Community = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Community Leaderboard */}
-                <div className="lg:col-span-2">
-                    <div className="card p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                                <FontAwesomeIcon icon={faTrophy} className="text-yellow-500 text-2xl" />
+            {loading ? (
+                <div className="flex justify-center py-12">
+                    <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-emerald-500" />
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Community Leaderboard */}
+                    <div className="lg:col-span-2">
+                        <div className="card p-6">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                                    <FontAwesomeIcon icon={faTrophy} className="text-yellow-500 text-2xl" />
+                                </div>
+                                <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                                    Community Leaderboard
+                                </h3>
                             </div>
-                            <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                                Community Leaderboard
-                            </h3>
-                        </div>
 
-                        {leaderboard.length === 0 ? (
-                            <div className="text-center py-12">
-                                <div className="text-6xl mb-4">🏘️</div>
-                                <p className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                                    No Communities Yet
-                                </p>
-                                <p style={{ color: 'var(--text-secondary)' }}>
-                                    Be the first to create a community!
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                <AnimatePresence>
-                                    {leaderboard.map((community, index) => {
-                                        const rank = index + 1;
-                                        const isMine = community.members.some(m => m._id === currentUser?.id);
+                            {leaderboard.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="text-6xl mb-4">🏘️</div>
+                                    <p className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                                        No Communities Yet
+                                    </p>
+                                    <p style={{ color: 'var(--text-secondary)' }}>
+                                        Be the first to create a community!
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <AnimatePresence>
+                                        {leaderboard.map((community, index) => {
+                                            const rank = index + 1;
+                                            const isMine = community.members.some(m => m._id === currentUser?.id);
 
-                                        return (
-                                            <motion.div
-                                                key={community.id}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className="flex items-center gap-4 p-4 rounded-xl transition-all"
-                                                style={{
-                                                    background: isMine ? 'var(--gradient-primary)' : 'var(--bg-hover)',
-                                                    border: isMine ? '2px solid var(--primary)' : '2px solid transparent',
-                                                }}
-                                            >
-                                                {/* Rank */}
-                                                <div
-                                                    className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0"
+                                            return (
+                                                <motion.div
+                                                    key={community._id || community.id}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    className="flex items-center gap-4 p-4 rounded-xl transition-all"
                                                     style={{
-                                                        backgroundColor: rank <= 3 ? '#FEF3C7' : 'rgba(0,0,0,0.1)',
-                                                        color: isMine ? '#fff' : (rank <= 3 ? '#D97706' : 'var(--text-secondary)')
+                                                        background: isMine ? 'var(--gradient-primary)' : 'var(--bg-hover)',
+                                                        border: isMine ? '2px solid var(--primary)' : '2px solid transparent',
                                                     }}
                                                 >
-                                                    {getRankBadge(rank)}
-                                                </div>
-
-                                                {/* Community Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p
-                                                        className="font-bold truncate"
-                                                        style={{ color: isMine ? '#fff' : 'var(--text-primary)' }}
+                                                    {/* Rank */}
+                                                    <div
+                                                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0"
+                                                        style={{
+                                                            backgroundColor: rank <= 3 ? '#FEF3C7' : 'rgba(0,0,0,0.1)',
+                                                            color: isMine ? '#fff' : (rank <= 3 ? '#D97706' : 'var(--text-secondary)')
+                                                        }}
                                                     >
-                                                        {community.name}
-                                                        {isMine && (
-                                                            <span className="ml-2 text-xs font-normal opacity-90">(Your Community)</span>
-                                                        )}
-                                                    </p>
-                                                    <p
-                                                        className="text-xs"
-                                                        style={{ color: isMine ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)' }}
-                                                    >
-                                                        {community.members.length} members • Created by {community.creatorName}
-                                                    </p>
-                                                </div>
-
-                                                {/* Metrics */}
-                                                <div className="text-right flex-shrink-0">
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center justify-end gap-1">
-                                                            <p
-                                                                className="font-bold text-sm"
-                                                                style={{ color: isMine ? '#fff' : 'var(--primary)' }}
-                                                            >
-                                                                {community.totalPollutionSaved.toFixed(1)} kg
-                                                            </p>
-                                                            <span className="text-xs">♻️</span>
-                                                        </div>
-                                                        <div className="flex items-center justify-end gap-1">
-                                                            <p
-                                                                className="font-bold text-sm"
-                                                                style={{ color: isMine ? '#fff' : '#10B981' }}
-                                                            >
-                                                                {community.totalTreesPlanted}
-                                                            </p>
-                                                            <span className="text-xs">🌳</span>
-                                                        </div>
+                                                        {getRankBadge(rank)}
                                                     </div>
+
+                                                    {/* Community Info */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p
+                                                            className="font-bold truncate"
+                                                            style={{ color: isMine ? '#fff' : 'var(--text-primary)' }}
+                                                        >
+                                                            {community.name}
+                                                            {isMine && (
+                                                                <span className="ml-2 text-xs font-normal opacity-90">(Your Community)</span>
+                                                            )}
+                                                        </p>
+                                                        <p
+                                                            className="text-xs"
+                                                            style={{ color: isMine ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)' }}
+                                                        >
+                                                            {community.members.length} members • Created by {community.creator?.name || 'Unknown'}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Metrics */}
+                                                    <div className="text-right flex-shrink-0 flex items-center gap-4">
+                                                        <div className="flex flex-col gap-1 items-end">
+                                                            <div className="flex items-center justify-end gap-1">
+                                                                <p
+                                                                    className="font-bold text-sm"
+                                                                    style={{ color: isMine ? '#fff' : 'var(--primary)' }}
+                                                                >
+                                                                    {(community.totalPollutionSaved || 0).toFixed(1)} kg
+                                                                </p>
+                                                                <span className="text-xs">♻️</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-end gap-1">
+                                                                <p
+                                                                    className="font-bold text-sm"
+                                                                    style={{ color: isMine ? '#fff' : '#10B981' }}
+                                                                >
+                                                                    {community.totalTreesPlanted || 0}
+                                                                </p>
+                                                                <span className="text-xs">🌳</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Join Button (if not mine) */}
+                                                        {!isMine && (
+                                                            <button
+                                                                onClick={() => handleJoin(community._id || community.id)}
+                                                                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-emerald-600 hover:bg-emerald-50 transition-colors shadow-sm"
+                                                            >
+                                                                Join
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </AnimatePresence>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* My Communities */}
+                    <div>
+                        <div className="card p-6">
+                            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                                My Communities
+                            </h3>
+
+                            {myCommunities.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div className="text-4xl mb-2">👥</div>
+                                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                        You haven't joined any communities yet
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {myCommunities.map((community) => (
+                                        <div
+                                            key={community._id || community.id}
+                                            className="p-4 rounded-xl relative group"
+                                            style={{ backgroundColor: 'var(--bg-hover)' }}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                                                    {community.name}
+                                                </h4>
+
+                                                <div className="flex gap-2">
+                                                    {community.creator?._id === currentUser?.id || community.creator === currentUser?.id ? (
+                                                        <button
+                                                            onClick={() => handleDeleteCommunity(community._id || community.id)}
+                                                            className="text-red-500 hover:text-red-700 p-1"
+                                                            title="Delete Community"
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrash} size="sm" />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleLeave(community._id || community.id)}
+                                                            className="text-orange-500 hover:text-orange-700 p-1"
+                                                            title="Leave Community"
+                                                        >
+                                                            <FontAwesomeIcon icon={faSignOutAlt} size="sm" />
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </AnimatePresence>
-                            </div>
-                        )}
+                                            </div>
+                                            <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
+                                                {community.members.length} members
+                                            </p>
+                                            <div className="flex gap-2 text-xs">
+                                                <span className="flex items-center gap-1">
+                                                    ♻️ {(community.totalPollutionSaved || 0).toFixed(1)} kg
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    🌳 {community.totalTreesPlanted || 0}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-
-                {/* My Communities */}
-                <div>
-                    <div className="card p-6">
-                        <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-                            My Communities
-                        </h3>
-
-                        {myCommunities.length === 0 ? (
-                            <div className="text-center py-8">
-                                <div className="text-4xl mb-2">👥</div>
-                                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                                    You haven't joined any communities yet
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {myCommunities.map((community) => (
-                                    <div
-                                        key={community.id}
-                                        className="p-4 rounded-xl"
-                                        style={{ backgroundColor: 'var(--bg-hover)' }}
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                                                {community.name}
-                                            </h4>
-                                            {community.creator === currentUser?.id && (
-                                                <button
-                                                    onClick={() => deleteCommunity(community.id)}
-                                                    className="text-red-500 hover:text-red-700"
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} size="sm" />
-                                                </button>
-                                            )}
-                                        </div>
-                                        <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
-                                            {community.members.length} members
-                                        </p>
-                                        <div className="flex gap-2 text-xs">
-                                            <span className="flex items-center gap-1">
-                                                ♻️ {community.totalPollutionSaved.toFixed(1)} kg
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                🌳 {community.totalTreesPlanted}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+            )}
 
             {/* Create Community Modal */}
             {showCreateModal && (

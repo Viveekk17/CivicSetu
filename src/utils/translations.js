@@ -2,12 +2,13 @@ export const translations = {
     en: {
         // Header
         nav_dashboard: "Dashboard",
-        nav_upload: "Upload",
+        nav_upload: "Add Activity",
         nav_redeem: "Redeem",
         nav_submissions: "My Submissions",
         nav_analytics: "Analytics",
         nav_ngos: "NGOs",
         nav_community: "Community",
+        nav_report_issue: "Report Issue",
         nav_blockchain: "Blockchain",
         logout: "Logout",
 
@@ -68,12 +69,13 @@ export const translations = {
     hi: {
         // Header
         nav_dashboard: "डैशबोर्ड",
-        nav_upload: "अपलोड",
+        nav_upload: "गतिविधि जोड़ें",
         nav_redeem: "रिडीम",
         nav_submissions: "मेरी प्रस्तुतियाँ",
         nav_analytics: "एनालिटिक्स",
         nav_ngos: "NGOs",
         nav_community: "समुदाय",
+        nav_report_issue: "समस्या रिपोर्ट करें",
         nav_blockchain: "ब्लॉकचेन",
         logout: "लॉग आउट",
 

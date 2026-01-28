@@ -12,7 +12,8 @@ import {
   faLink,
   faSignOutAlt,
   faLeaf,
-  faBars
+  faBars,
+  faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -40,6 +41,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/analytics', name: t.nav_analytics, badge: null },
     { path: '/ngos', name: t.nav_ngos, badge: null },
     { path: '/community', name: t.nav_community, badge: null },
+    { path: '/report-issue', name: t.nav_report_issue, badge: null },
     { path: '/blockchain', name: t.nav_blockchain, badge: null },
   ];
 

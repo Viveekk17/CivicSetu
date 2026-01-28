@@ -12,6 +12,7 @@ import Analytics from './pages/Analytics';
 import Placeholder from './pages/Placeholder';
 import NGODashboard from './pages/NGODashboard';
 import Community from './pages/Community';
+import ReportIssue from './pages/ReportIssue';
 
 const App = () => {
   const { pathname } = useLocation();
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="analytics" element={<Analytics />} />
           <Route path="ngos" element={<NGODashboard />} />
           <Route path="community" element={<Community />} />
+          <Route path="report-issue" element={<ReportIssue />} />
           <Route path="blockchain" element={
             <Placeholder
               title="Blockchain"

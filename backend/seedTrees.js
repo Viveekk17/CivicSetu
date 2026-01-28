@@ -5,167 +5,176 @@ const Tree = require('./src/models/Tree');
 dotenv.config();
 
 const trees = [
-  // --- Transport ---
+  // --- Environmental Rewards ---
   {
-    name: 'Metro Pass',
-    cost: 500,
-    description: 'Weekly metro pass for eco-friendly commuting.',
-    category: 'transport',
-    impact: { co2Offset: 15, description: 'Saves approx. 15kg CO₂ vs driving' },
-    available: true
+    name: '1 Tree',
+    cost: 80,
+    description: 'Approx effort: ~1 kg trash. Real-world value: ₹50–70.',
+    category: 'trees',
+    available: true,
+    impact: { co2Offset: 20, description: 'Absorbs 20kg CO₂/year' }
   },
   {
-    name: 'Green Commuter Pass',
-    cost: 1000,
-    description: 'Monthly unlimited pass for city public transport.',
-    category: 'transport',
-    impact: { co2Offset: 60, description: 'Saves approx. 60kg CO₂/month' },
-    available: true
-  },
-  {
-    name: 'FASTag Credits',
+    name: '3 Trees Bundle',
     cost: 200,
-    description: '₹200 recharge for your FASTag.',
+    description: 'Approx effort: ~2 kg trash. Real-world value: ₹150–180.',
+    category: 'bundles',
+    available: true,
+    impact: { co2Offset: 60, description: 'Absorbs 60kg CO₂/year' }
+  },
+  {
+    name: '10 Trees Bundle',
+    cost: 550,
+    description: 'Approx effort: ~5–6 kg trash. Real-world value: ₹500–600.',
+    category: 'bundles',
+    available: true,
+    impact: { co2Offset: 200, description: 'Absorbs 200kg CO₂/year' }
+  },
+
+  // --- Public Transport Benefits ---
+  {
+    name: 'Bus Pass (Single Day)',
+    cost: 120,
+    description: 'Approx effort: ~1–1.2 kg trash. Real-world value: ₹50–80.',
     category: 'transport',
-    impact: { co2Offset: 0, description: 'Efficient travel support' },
-    available: true
-  },
-
-  // --- Utilities ---
-  {
-    name: 'Electricity Discount',
-    cost: 300,
-    description: '10% discount on your next green energy bill.',
-    category: 'utilities',
-    impact: { co2Offset: 0, description: 'Promotes energy efficiency' },
-    available: true
+    available: true,
+    impact: { co2Offset: 5, description: 'Saves approx. 5kg CO₂ vs driving' }
   },
   {
-    name: 'Water Bill Discount',
-    cost: 300,
-    description: '10% discount on water bill for efficient users.',
-    category: 'utilities',
-    impact: { co2Offset: 0, description: 'Encourages water conservation' },
-    available: true
-  },
-
-  // --- Goodies ---
-  {
-    name: 'Eco T-shirt',
+    name: 'Bus Pass (Monthly)',
     cost: 800,
-    description: '100% Organic Cotton T-shirt with EcoTrace logo.',
-    category: 'goodies',
-    impact: { co2Offset: 5, description: 'Sustainable material production' },
-    available: true
+    description: 'Approx effort: ~8 kg trash. Real-world value: ₹700–900.',
+    category: 'transport',
+    available: true,
+    impact: { co2Offset: 150, description: 'Saves approx. 150kg CO₂/month' }
   },
   {
-    name: 'Metal Water Bottle',
-    cost: 600,
-    description: 'Durable reusable bottle to reduce plastic use.',
-    category: 'goodies',
-    impact: { co2Offset: 10, description: 'Prevents single-use plastic waste' },
-    available: true
-  },
-
-  // --- Environment (Original Trees) ---
-  {
-    name: 'Oak Tree',
-    cost: 500,
-    description: 'Supports local biodiversity and provides habitat for wildlife.',
-    category: 'trees',
-    impact: {
-      co2Offset: 22,
-      description: 'Absorbs 22kg of CO₂ annually'
-    },
-    available: true
+    name: 'Metro Pass (Single Day)',
+    cost: 200,
+    description: 'Approx effort: ~2 kg trash. Real-world value: ₹120–150.',
+    category: 'transport',
+    available: true,
+    impact: { co2Offset: 15, description: 'Saves approx. 15kg CO₂ vs driving' }
   },
   {
-    name: 'Mangrove',
-    cost: 800,
-    description: 'Coastal protection expert. Prevents erosion and supports marine life.',
-    category: 'trees',
-    impact: {
-      co2Offset: 40,
-      description: 'Absorbs 40kg of CO₂ & protects coastlines'
-    },
-    available: true
-  },
-  {
-    name: 'Pine Tree',
-    cost: 300,
-    description: 'Fast-growing conifer that thrives in various climates.',
-    category: 'trees',
-    impact: {
-      co2Offset: 15,
-      description: 'Absorbs 15kg of CO₂ annually'
-    },
-    available: true
-  },
-  {
-    name: 'Forest Package',
-    cost: 2000,
-    description: '5 native trees bundle for reforestation projects.',
-    category: 'bundles',
-    impact: {
-      co2Offset: 100,
-      description: '5 trees absorbing 100kg of CO₂ annually'
-    },
-    available: true
-  },
-  {
-    name: 'Urban Forest',
-    cost: 3500,
-    description: '10 trees for city parks and urban green spaces.',
-    category: 'bundles',
-    impact: {
-      co2Offset: 200,
-      description: '10 trees creating urban green space'
-    },
-    available: true
-  },
-  {
-    name: 'Bee Habitat',
+    name: 'Metro Pass (Monthly)',
     cost: 1200,
-    description: 'Support pollinators with native wildflower meadow and bee house.',
-    category: 'wildlife',
-    impact: {
-      co2Offset: 5,
-      description: 'Supports 500+ bees and pollinates local plants'
-    },
-    available: true
+    description: 'Approx effort: ~12 kg trash. Real-world value: ₹1200–1500.',
+    category: 'transport',
+    available: true,
+    impact: { co2Offset: 60, description: 'Saves approx. 60kg CO₂/month' }
+  },
+
+  // --- FASTag Credits ---
+  {
+    name: 'FASTag Credit ₹100',
+    cost: 120,
+    description: 'Approx effort: ~1.2 kg trash.',
+    category: 'transport',
+    available: true,
+    impact: { co2Offset: 0, description: 'Efficient travel support' }
   },
   {
-    name: 'Bird Sanctuary',
-    cost: 1500,
-    description: 'Create safe haven for local bird species with nesting boxes.',
-    category: 'wildlife',
-    impact: {
-      co2Offset: 10,
-      description: 'Provides habitat for 20+ bird species'
-    },
-    available: true
+    name: 'FASTag Credit ₹300',
+    cost: 300,
+    description: 'Approx effort: ~3 kg trash.',
+    category: 'transport',
+    available: true,
+    impact: { co2Offset: 0, description: 'Efficient travel support' }
   },
   {
-    name: '1 Tonne CO₂ Offset',
-    cost: 1000,
-    description: 'Certified carbon offset credit verified by international standards.',
-    category: 'offset',
-    impact: {
-      co2Offset: 1000,
-      description: 'Offsets 1 tonne of CO₂ emissions'
-    },
-    available: true
+    name: 'FASTag Credit ₹500',
+    cost: 500,
+    description: 'Approx effort: ~5 kg trash.',
+    category: 'transport',
+    available: true,
+    impact: { co2Offset: 0, description: 'Efficient travel support' }
+  },
+
+  // --- Physical Goodies ---
+  {
+    name: 'Reusable Water Bottle',
+    cost: 120,
+    description: 'Approx effort: ~1.2 kg trash. Govt bulk cost: ₹80–120.',
+    category: 'goodies',
+    available: true,
+    impact: { co2Offset: 1, description: 'Prevents single-use plastic waste' }
   },
   {
-    name: '5 Tonne CO₂ Offset',
-    cost: 4500,
-    description: 'Large certified carbon offset package for major impact.',
-    category: 'offset',
-    impact: {
-      co2Offset: 5000,
-      description: 'Offsets 5 tonnes of CO₂ emissions'
-    },
-    available: true
+    name: 'Cloth / Jute Bag',
+    cost: 80,
+    description: 'Approx effort: ~1 kg trash. Govt bulk cost: ₹40–60.',
+    category: 'goodies',
+    available: true,
+    impact: { co2Offset: 1, description: 'Reduces plastic bag usage' }
+  },
+  {
+    name: 'Stationery Kit',
+    cost: 100,
+    description: 'Approx effort: ~1 kg trash. Govt bulk cost: ₹70–100.',
+    category: 'goodies',
+    available: true,
+    impact: { co2Offset: 1, description: 'Sustainable materials' }
+  },
+  {
+    name: 'Sanitary Kit',
+    cost: 100,
+    description: 'Gloves, Mask, Sanitizer. Approx effort: ~1 kg trash. Govt bulk cost: ₹60–90.',
+    category: 'goodies',
+    available: true,
+    impact: { co2Offset: 0, description: 'Hygiene support' }
+  },
+
+  // --- Utility Bill Discounts ---
+  {
+    name: 'Water Bill Discount ₹100',
+    cost: 120,
+    description: 'Approx effort: ~1.2 kg trash.',
+    category: 'utilities',
+    available: true,
+    impact: { co2Offset: 0, description: 'Encourages water conservation' }
+  },
+  {
+    name: 'Electricity Bill Discount ₹200',
+    cost: 200,
+    description: 'Approx effort: ~2 kg trash.',
+    category: 'utilities',
+    available: true,
+    impact: { co2Offset: 0, description: 'Promotes energy efficiency' }
+  },
+  {
+    name: 'Electricity Bill Discount ₹500',
+    cost: 500,
+    description: 'Approx effort: ~5 kg trash.',
+    category: 'utilities',
+    available: true,
+    impact: { co2Offset: 0, description: 'Promotes energy efficiency' }
+  },
+
+  // --- Recognition & Motivation ---
+  {
+    name: 'Digital Certificate',
+    cost: 80,
+    description: 'Verified Civic Contributor. Approx effort: ~1 kg trash.',
+    category: 'recognition',
+    available: true,
+    impact: { co2Offset: 0, description: 'Social Impact Recognition' }
+  },
+  {
+    name: 'Ward / City Recognition Badge',
+    cost: 250,
+    description: 'Approx effort: ~2.5 kg trash.',
+    category: 'recognition',
+    available: true,
+    impact: { co2Offset: 0, description: 'Civic Leadership' }
+  },
+  {
+    name: 'Physical Trophy / Medal',
+    cost: 300,
+    description: 'Approx effort: ~3 kg trash. Cost to govt: ₹200–300.',
+    category: 'recognition',
+    available: true,
+    impact: { co2Offset: 0, description: 'Outstanding Contribution' }
   }
 ];
 

@@ -56,6 +56,8 @@ const submissionRoutes = require('./routes/submissionRoutes');
 const treeRoutes = require('./routes/treeRoutes');
 const redeemRoutes = require('./routes/redeemRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const communityRoutes = require('./routes/communityRoutes');
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -64,6 +66,8 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/trees', treeRoutes);
 app.use('/api/redeem', redeemRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/communities', communityRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {

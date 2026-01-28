@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTree, faLayerGroup, faPaw, faGlobeAmericas, faCoins, faSpinner, faTimes, faCheckCircle, faBus, faBolt, faGift } from '@fortawesome/free-solid-svg-icons';
+import { faTree, faLayerGroup, faPaw, faGlobeAmericas, faCoins, faSpinner, faTimes, faCheckCircle, faBus, faBolt, faGift, faMedal } from '@fortawesome/free-solid-svg-icons';
 import { getTrees, redeemTree } from '../services/treeService';
 import { getStoredUser } from '../services/authService';
 
 const Redeem = () => {
-  const [activeTab, setActiveTab] = useState('trees');
+  const [activeTab, setActiveTab] = useState('environment');
   const [trees, setTrees] = useState([]);
   const [filteredTrees, setFilteredTrees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,7 @@ const Redeem = () => {
     { id: 'transport', label: 'Transport', icon: faBus },
     { id: 'utilities', label: 'Utilities', icon: faBolt },
     { id: 'goodies', label: 'Goodies', icon: faGift },
+    { id: 'recognition', label: 'Recognition', icon: faMedal },
     { id: 'environment', label: 'Environment', icon: faTree },
   ];
 
@@ -135,7 +136,8 @@ const Redeem = () => {
       offset: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
       transport: 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300',
       utilities: 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300',
-      goodies: 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'
+      goodies: 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300',
+      recognition: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300'
     };
     return colors[category] || colors.trees;
   };
@@ -145,6 +147,7 @@ const Redeem = () => {
       case 'transport': return faBus;
       case 'utilities': return faBolt;
       case 'goodies': return faGift;
+      case 'recognition': return faMedal;
       case 'wildlife': return faPaw;
       case 'offset': return faGlobeAmericas;
       case 'bundles': return faLayerGroup;
@@ -160,7 +163,8 @@ const Redeem = () => {
       offset: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400',
       transport: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400',
       utilities: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400',
-      goodies: 'bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400'
+      goodies: 'bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400',
+      recognition: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400'
     };
     return styles[category] || styles.trees;
   };
@@ -233,8 +237,8 @@ const Redeem = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-2 text-sm md:text-base ${activeTab === tab.id
-                ? 'shadow-lg scale-105'
-                : 'opacity-70 hover:opacity-100'
+              ? 'shadow-lg scale-105'
+              : 'opacity-70 hover:opacity-100'
               }`}
             style={{
               backgroundColor: activeTab === tab.id ? 'var(--bg-surface)' : 'transparent',

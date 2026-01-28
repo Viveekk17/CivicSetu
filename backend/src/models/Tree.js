@@ -17,7 +17,7 @@ const treeSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['trees', 'bundles', 'wildlife', 'offset', 'transport', 'utilities', 'goodies'],
+    enum: ['trees', 'bundles', 'wildlife', 'offset', 'transport', 'utilities', 'goodies', 'recognition'],
     default: 'trees'
   },
   image: {

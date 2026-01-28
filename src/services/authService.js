@@ -1,15 +1,19 @@
 import api from './api';
 
 import { auth, googleProvider } from '../config/firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
   updateProfile
 } from 'firebase/auth';
 
 // Register new user (Firebase -> Backend Sync)
+export const searchUsers = async (query) => {
+  return await api.get(`/users/search?query=${query}`);
+};
+
 export const register = async (userData) => {
   try {
     const { email, password, name } = userData;
@@ -25,13 +29,13 @@ export const register = async (userData) => {
 
     // 4. Sync with Backend
     const response = await api.post('/auth/firebase', { token });
-    
+
     // Store token and user data
     if (response.success) {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-    
+
     return response;
   } catch (error) {
     console.error("Registration Error:", error);
@@ -52,13 +56,13 @@ export const login = async (credentials) => {
 
     // 3. Sync with Backend
     const response = await api.post('/auth/firebase', { token });
-    
+
     // Store token and user data
     if (response.success) {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-    
+
     return response;
   } catch (error) {
     console.error("Login Error:", error);

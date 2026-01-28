@@ -15,6 +15,11 @@ const submissionSchema = new mongoose.Schema({
     type: String,
     required: true
   }],
+  imageHashes: [{
+    type: String,
+    required: true,
+    index: true
+  }],
   weight: {
     type: Number,
     min: 0

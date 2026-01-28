@@ -9,6 +9,11 @@ export const analyzePhotos = async (formData) => {
   });
 };
 
+// Check for duplicate images
+export const checkDuplicateImage = async (hashes) => {
+  return await api.post('/submissions/check-duplicate', { hashes });
+};
+
 // Create new submission with photos (final submission)
 export const createSubmission = async (formData) => {
   // formData should contain: photos (files), type, weight, location, description

@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faWater, faTree, faCheckCircle, faCoins, faTimes, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 const ActivityFeed = ({ activities = [] }) => {
   const [showAllModal, setShowAllModal] = useState(false);
+  const navigate = useNavigate();
 
   // Helper function to format time ago
   const getTimeAgo = (dateString) => {
     const now = new Date();
     const activityDate = new Date(dateString);
     const seconds = Math.floor((now - activityDate) / 1000);
-    
+
     if (seconds < 60) return 'Just now';
     if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
@@ -19,42 +21,63 @@ const ActivityFeed = ({ activities = [] }) => {
   };
 
   // Helper to get icon and color based on transaction type
-  const getActivityIcon = (description) => {
-    if (description.includes('garbage') || description.includes('cleanup')) {
-      return { icon: faTrash, color: 'text-blue-500' };
+  const getActivityIcon = (description, type) => {
+    if (type === 'draft') {
+      return { icon: faHistory, color: 'text-purple-500', bg: 'bg-purple-50' };
+    } else if (description.includes('garbage') || description.includes('cleanup')) {
+      return { icon: faTrash, color: 'text-blue-500', bg: 'bg-blue-50' };
     } else if (description.includes('tree') || description.includes('Redeemed')) {
-      return { icon: faTree, color: 'text-green-500' };
+      return { icon: faTree, color: 'text-green-500', bg: 'bg-green-50' };
     } else if (description.includes('water')) {
-      return { icon: faWater, color: 'text-cyan-500' };
+      return { icon: faWater, color: 'text-cyan-500', bg: 'bg-cyan-50' };
     } else {
-      return { icon: faCoins, color: 'text-yellow-500' };
+      return { icon: faCoins, color: 'text-yellow-500', bg: 'bg-yellow-50' };
     }
   };
 
   const ActivityItem = ({ item, index, showConnector }) => {
-    const { icon, color } = getActivityIcon(item.description);
+    const { icon, color, bg } = getActivityIcon(item.description, item.type);
     const isEarned = item.type === 'earned';
-    
+    const isDraft = item.type === 'draft';
+
     return (
       <div className="flex gap-4 relative">
         {/* Timeline connector */}
         {showConnector && (
           <div className="absolute left-5 top-10 bottom-[-1.5rem] w-0.5" style={{ backgroundColor: 'var(--border-light)' }}></div>
         )}
-        
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${color}`}
-             style={{ backgroundColor: 'var(--bg-hover)', borderColor: 'var(--border-light)' }}>
+
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${color} ${bg || ''}`}
+          style={{ backgroundColor: bg || 'var(--bg-hover)', borderColor: 'var(--border-light)' }}>
           <FontAwesomeIcon icon={icon} />
         </div>
-        
+
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <h4 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
               {item.description}
             </h4>
-            <span className={`text-xs font-bold ${isEarned ? 'text-green-500' : 'text-orange-500'}`}>
-              {isEarned ? '+' : '-'}{item.amount} Credits
-            </span>
+            {isDraft ? (
+              <button
+                onClick={() => {
+                  // Navigate to upload and pass draft data via state or just let Upload page load it
+                  // Since Upload page loads from localStorage, we can just navigate
+                  // But specifically we might want to trigger the "resume" logic.
+                  // For now, simple navigation works if the user manually clicks resume there.
+                  // OR we navigate with state: { resumeDraftId: item._id }
+                  // But the upload page logic checks localStorage.
+                  // Let's just go to /upload.
+                  navigate('/upload');
+                }}
+                className="text-xs font-bold text-purple-600 border border-purple-200 bg-purple-50 px-2 py-1 rounded hover:bg-purple-100"
+              >
+                Resume
+              </button>
+            ) : (
+              <span className={`text-xs font-bold ${isEarned ? 'text-green-500' : 'text-orange-500'}`}>
+                {isEarned ? '+' : '-'}{item.amount} Credits
+              </span>
+            )}
           </div>
           <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>{getTimeAgo(item.createdAt)}</p>
         </div>

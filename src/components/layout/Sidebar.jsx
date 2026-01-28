@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faHome, 
-  faCamera, 
-  faTree, 
-  faList, 
-  faChartLine, 
-  faHandHoldingHeart, 
-  faUsers, 
+import {
+  faHome,
+  faCamera,
+  faTree,
+  faList,
+  faChartLine,
+  faHandHoldingHeart,
+  faUsers,
   faLink,
   faSignOutAlt,
   faLeaf,
@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { path: '/', name: 'Dashboard', badge: null },
-    { path: '/upload', name: 'Upload Photo', badge: null },
+    { path: '/upload', name: 'Add Activity', badge: null },
     { path: '/redeem', name: 'Redeem', badge: 'HOT' },
     { path: '/submissions', name: 'My Submissions', badge: null },
     { path: '/analytics', name: 'Analytics', badge: null },
@@ -47,21 +47,21 @@ const Sidebar = ({ isOpen, onClose }) => {
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar Container - Hidden by default, toggle with hamburger */}
-      <motion.aside 
+      <motion.aside
         className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white transition-all duration-300 ease-in-out flex flex-col glass border-r border-gray-200
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
-        style={{ 
-            backgroundColor: 'var(--bg-surface)', 
-            borderRight: '1px solid rgba(0,0,0,0.05)',
-            boxShadow: 'var(--shadow-lg)' 
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderRight: '1px solid rgba(0,0,0,0.05)',
+          boxShadow: 'var(--shadow-lg)'
         }}
       >
         {/* Hamburger Menu + Logo */}
@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           <button
             onClick={onClose}
             className="p-2 rounded-lg transition-colors"
-            style={{ 
+            style={{
               color: 'var(--text-secondary)',
               backgroundColor: 'transparent'
             }}
@@ -88,11 +88,11 @@ const Sidebar = ({ isOpen, onClose }) => {
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => { if(window.innerWidth < 768) onClose() }}
+              onClick={() => { if (window.innerWidth < 768) onClose() }}
               className={({ isActive }) => `
                 flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative
               `}
-              style={({ isActive }) => isActive ? { 
+              style={({ isActive }) => isActive ? {
                 background: 'var(--gradient-primary)',
                 color: '#fff'
               } : {

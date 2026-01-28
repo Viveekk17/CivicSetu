@@ -20,6 +20,38 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+// @desc    Search users by name or email
+// @route   GET /api/users/search
+// @access  Private
+exports.searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Search by name (case insensitive)
+    // Exclude current user
+    const users = await User.find({
+      _id: { $ne: req.user.id },
+      name: { $regex: query, $options: 'i' }
+    }).select('name email _id').limit(10);
+
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private

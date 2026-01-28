@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   analyzePhotos,
   createSubmission,
+  checkDuplicate,
   getSubmissions,
   getSubmission,
   deleteSubmission
@@ -14,6 +15,7 @@ const upload = require('../middleware/uploadMiddleware');
 router.use(protect);
 
 // Routes
+router.post('/check-duplicate', checkDuplicate);
 router.post('/analyze', upload.array('photos', 5), analyzePhotos);
 router.post('/', upload.array('photos', 5), createSubmission);
 router.get('/', getSubmissions);

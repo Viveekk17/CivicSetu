@@ -21,14 +21,24 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  const [localDrafts, setLocalDrafts] = useState([]);
+
+  useEffect(() => {
+    // Load drafts
+    const saved = localStorage.getItem('eco_trace_drafts');
+    if (saved) {
+      setLocalDrafts(JSON.parse(saved));
+    }
+  }, []);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       const response = await getDashboardStats();
-      
+
       if (response.success) {
         setStats(response.data);
-        
+
         // Sync localStorage credits with database value
         const currentUser = getStoredUser();
         if (currentUser && response.data.stats.currentBalance !== currentUser.credits) {
@@ -37,7 +47,7 @@ const Dashboard = () => {
             credits: response.data.stats.currentBalance
           };
           localStorage.setItem('user', JSON.stringify(updatedUser));
-          
+
           // Dispatch event to update header
           window.dispatchEvent(new CustomEvent('creditsUpdated', {
             detail: { credits: response.data.stats.currentBalance }
@@ -56,9 +66,9 @@ const Dashboard = () => {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         staggerChildren: 0.1
       }
     }
@@ -85,7 +95,7 @@ const Dashboard = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchDashboardData}
             className="px-6 py-2 rounded-lg text-white"
             style={{ background: 'var(--gradient-primary)' }}
@@ -98,7 +108,7 @@ const Dashboard = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -107,23 +117,23 @@ const Dashboard = () => {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div variants={itemVariants}>
-          <StatsCard 
-            title="Carbon Credits" 
-            value={stats.stats.currentBalance.toLocaleString()} 
-            icon={faCoins} 
+          <StatsCard
+            title="Carbon Credits"
+            value={stats.stats.currentBalance.toLocaleString()}
+            icon={faCoins}
             color="#FBBF24"
-            trend={stats.stats.currentBalance > 0 ? 15 : 0} 
+            trend={stats.stats.currentBalance > 0 ? 15 : 0}
           />
         </motion.div>
         <motion.div variants={itemVariants}>
           <div className="card p-4 h-full flex flex-col justify-center relative overflow-hidden">
             <div className="flex items-center gap-2 mb-3 z-10">
-               <div className="w-8 h-8 rounded-full flex items-center justify-center text-blue-500" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
-                 <FontAwesomeIcon icon={faEarthAmericas} /> 
-               </div>
-               <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Environmental Impact</h3>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-blue-500" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                <FontAwesomeIcon icon={faEarthAmericas} />
+              </div>
+              <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Environmental Impact</h3>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-2 z-10">
               {/* CO2 Saved */}
               <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
@@ -152,18 +162,18 @@ const Dashboard = () => {
                 <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>kg Waste</div>
               </div>
             </div>
-            
-             {/* Decorative Background */}
-             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-green-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+
+            {/* Decorative Background */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-green-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
           </div>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <StatsCard 
-            title="Total Submissions" 
-            value={stats.stats.totalSubmissions.toString()} 
-            icon={faTree} 
+          <StatsCard
+            title="Total Submissions"
+            value={stats.stats.totalSubmissions.toString()}
+            icon={faTree}
             color="#10B981"
-            trend={stats.stats.totalSubmissions > 5 ? 25 : 10} 
+            trend={stats.stats.totalSubmissions > 5 ? 25 : 10}
           />
         </motion.div>
       </div>
@@ -176,27 +186,27 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Quick Actions Banner */}
             <motion.div variants={itemVariants}>
-              <div className="card p-6 relative overflow-hidden flex flex-col justify-center h-[240px]" style={{ background: 'var(--gradient-primary)' }}>
-                 <div className="relative z-10">
-                   <h2 className="text-xl font-bold mb-1" style={{ color: '#FFFFFF' }}>Ready to impact?</h2>
-                   <p className="mb-4 text-xs" style={{ color: '#FFFFFF', opacity: 0.9 }}>Upload photos or redeem credits.</p>
-                   <div className="flex flex-row gap-2">
-                     <button 
-                       onClick={() => navigate('/upload')}
-                       className="flex-1 px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all bg-white text-emerald-600 border-none"
-                     >
-                       Upload
-                     </button>
-                     <button 
-                       onClick={() => navigate('/redeem')}
-                       className="flex-1 px-4 py-2 rounded-lg font-bold text-sm transition-all border border-white/30 text-white hover:bg-white/10"
-                     >
-                       Redeem
-                     </button>
-                   </div>
-                 </div>
-                 {/* Decorative Circle */}
-                 <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
+              <div className="card p-6 relative overflow-hidden flex flex-col justify-center h-[240px]" style={{ background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)' }}>
+                <div className="relative z-10">
+                  <h2 className="text-2xl font-bold mb-1" style={{ color: '#FFFFFF' }}>Add a cleanup activity here</h2>
+                  <p className="mb-4 text-xs" style={{ color: '#FFFFFF', opacity: 0.9 }}>Upload photos or redeem credits.</p>
+                  <div className="flex flex-row gap-2">
+                    <button
+                      onClick={() => navigate('/upload')}
+                      className="flex-1 px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all bg-white text-emerald-600 border-none"
+                    >
+                      Upload
+                    </button>
+                    <button
+                      onClick={() => navigate('/redeem')}
+                      className="flex-1 px-4 py-2 rounded-lg font-bold text-sm transition-all border border-white/30 text-white hover:bg-white/10"
+                    >
+                      Redeem
+                    </button>
+                  </div>
+                </div>
+                {/* Decorative Circle */}
+                <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
               </div>
             </motion.div>
 
@@ -214,10 +224,23 @@ const Dashboard = () => {
 
         {/* Right Column (Span 1): Activity Feed */}
         <motion.div className="lg:col-span-1 h-full min-h-[500px]" variants={itemVariants}>
-          <ActivityFeed activities={stats.recentActivity} />
+          <ActivityFeed
+            activities={[
+              ...localDrafts.map(d => ({
+                _id: d.id,
+                type: 'draft',
+                description: `Draft: ${d.locationName || 'Cleanup'}`,
+                amount: 0,
+                createdAt: d.timestamp,
+                isDraft: true,
+                rawDraft: d
+              })),
+              ...(stats.recentActivity || [])
+            ]}
+          />
         </motion.div>
       </div>
-      
+
     </motion.div>
   );
 };

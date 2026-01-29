@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLeaf, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faLeaf, faEnvelope, faLock, faArrowRight, faUserShield } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useLanguage } from '../context/LanguageContext';
 import { login, googleLogin } from '../services/authService';
@@ -180,6 +180,13 @@ const Login = () => {
               {t.login_register}
             </Link>
           </p>
+        </div>
+
+        <div className="mt-8 pt-4 border-t border-gray-100 text-center">
+          <Link to="/admin/login" className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider">
+            <FontAwesomeIcon icon={faUserShield} className="mr-1" />
+            Officer Login
+          </Link>
         </div>
       </motion.div>
     </div>

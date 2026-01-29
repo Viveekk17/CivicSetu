@@ -16,6 +16,17 @@ cloudinary.config({
  */
 const uploadToCloudinary = async (localFilePath, folder = 'ecotrace') => {
   try {
+    console.log(`📤 Starting Cloudinary upload for: ${localFilePath}`);
+    console.log(`📁 Target folder: ${folder}`);
+
+    // Check if Cloudinary is configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('❌ Cloudinary credentials missing in environment variables');
+      throw new Error('Cloudinary not configured');
+    }
+
+    console.log(`✅ Cloudinary configured: ${process.env.CLOUDINARY_CLOUD_NAME}`);
+
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(localFilePath, {
       folder: folder,
@@ -26,14 +37,21 @@ const uploadToCloudinary = async (localFilePath, folder = 'ecotrace') => {
       ]
     });
 
+    console.log(`✅ Cloudinary upload successful!`);
+    console.log(`   URL: ${result.secure_url}`);
+    console.log(`   Public ID: ${result.public_id}`);
+
     // Delete the local file after successful upload
     await fs.unlink(localFilePath);
-    console.log(`✅ Uploaded to Cloudinary and deleted local file: ${localFilePath}`);
+    console.log(`🗑️  Deleted local file: ${localFilePath}`);
 
     return result.secure_url;
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    throw new Error('Failed to upload image to cloud storage');
+    console.error('❌ Cloudinary upload error:');
+    console.error('   Error message:', error.message);
+    console.error('   Error details:', error);
+    console.error('   File path:', localFilePath);
+    throw new Error(`Failed to upload image to cloud storage: ${error.message}`);
   }
 };
 

@@ -138,9 +138,22 @@ exports.createSubmission = async (req, res) => {
     if (verification.verified) {
       const { uploadMultipleToCloudinary } = require('../utils/cloudinary');
 
-      // Upload to Cloudinary and delete local files
-      cloudinaryUrls = await uploadMultipleToCloudinary(localPhotoPaths, 'ecotrace/submissions');
-      console.log(`✅ Uploaded ${cloudinaryUrls.length} photos to Cloudinary`);
+      try {
+        console.log(`🚀 Attempting to upload ${localPhotoPaths.length} photos to Cloudinary...`);
+
+        // Upload to Cloudinary and delete local files
+        cloudinaryUrls = await uploadMultipleToCloudinary(localPhotoPaths, 'ecotrace/submissions');
+
+        console.log(`✅ Successfully uploaded ${cloudinaryUrls.length} photos to Cloudinary`);
+        console.log('Cloudinary URLs:', cloudinaryUrls);
+      } catch (cloudinaryError) {
+        console.error('❌ Cloudinary upload failed:', cloudinaryError.message);
+        console.error('Full error:', cloudinaryError);
+
+        // Fallback: Use local paths instead of failing completely
+        console.log('⚠️  Falling back to local file paths');
+        cloudinaryUrls = photoRelativePaths;
+      }
     } else {
       // If rejected, still delete local files
       const fs = require('fs').promises;
@@ -180,11 +193,11 @@ exports.createSubmission = async (req, res) => {
 
     const finalCreditsPerPerson = Math.ceil(totalPool / members);
 
-    // Create submission with Cloudinary URLs (or empty array if rejected)
+    // Create submission with Cloudinary URLs (or local paths as fallback)
     const submission = await Submission.create({
       user: req.user.id,
       type: verification.category || type, // Use AI-detected category
-      photos: cloudinaryUrls.length > 0 ? cloudinaryUrls : [],
+      photos: cloudinaryUrls.length > 0 ? cloudinaryUrls : photoRelativePaths,
       imageHashes: imageHashes ? JSON.parse(imageHashes) : [], // Expecting JSON array string if sent via FormData
       weight: verification.weight || weight || 1, // Use verified weight if available
       location: JSON.parse(location),
@@ -204,6 +217,8 @@ exports.createSubmission = async (req, res) => {
         totalPool: Math.ceil(totalPool)
       }
     });
+
+    console.log(`💾 Submission saved with ${cloudinaryUrls.length > 0 ? 'Cloudinary' : 'local'} URLs:`, submission.photos);
 
     // If verified, award credits to user (Primary Uploader)
     if (verification.verified) {

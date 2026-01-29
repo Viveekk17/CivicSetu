@@ -58,6 +58,7 @@ const redeemRoutes = require('./routes/redeemRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const communityRoutes = require('./routes/communityRoutes');
+const adminRoutes = require('./routes/adminRoutes'); // Import Admin Routes
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -68,6 +69,7 @@ app.use('/api/redeem', redeemRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/communities', communityRoutes);
+app.use('/api/admin', adminRoutes); // Mount Admin Routes
 
 // Health check route
 app.get('/health', (req, res) => {

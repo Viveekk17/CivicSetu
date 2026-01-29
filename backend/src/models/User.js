@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true // Allow null/undefined values to exist alongside unique constraint
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
   password: {
     type: String,
     required: false, // Optional for Google Auth / Firebase Auth users

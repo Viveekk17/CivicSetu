@@ -42,7 +42,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/ngos', name: t.nav_ngos, badge: null },
     { path: '/community', name: t.nav_community, badge: null },
     { path: '/report-issue', name: t.nav_report_issue, badge: null },
-    { path: '/blockchain', name: t.nav_blockchain, badge: null },
   ];
 
   // No more profile functions needed in sidebar

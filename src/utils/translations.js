@@ -9,7 +9,6 @@ export const translations = {
         nav_ngos: "NGOs",
         nav_community: "Community",
         nav_report_issue: "Report Issue",
-        nav_blockchain: "Blockchain",
         logout: "Logout",
 
         // Sidebar
@@ -76,7 +75,6 @@ export const translations = {
         nav_ngos: "NGOs",
         nav_community: "समुदाय",
         nav_report_issue: "समस्या रिपोर्ट करें",
-        nav_blockchain: "ब्लॉकचेन",
         logout: "लॉग आउट",
 
         // Sidebar

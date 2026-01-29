@@ -96,7 +96,7 @@ const Community = () => {
             const res = await api.post('/communities', {
                 name: communityName,
                 description: communityDescription,
-                members: selectedMembers.map(m => m._id)
+                members: selectedMembers.map(m => m._id) // Explicitly map to IDs
             });
 
             setToast({

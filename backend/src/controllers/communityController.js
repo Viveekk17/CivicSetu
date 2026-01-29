@@ -17,22 +17,15 @@ exports.getCommunities = asyncHandler(async (req, res) => {
         .populate('members', 'name impact') // Populate members to calculate impact if needed
         .sort({ 'stats.totalPollutionSaved': -1 });
 
-    // Optional: Recalculate stats on the fly if not using cached stats
-    // This is expensive for large data but fine for prototype
+    // Recalculate stats on the fly
     const populatedCommunities = communities.map(community => {
         const totalPollution = community.members.reduce((acc, member) => {
-            // Handle if member or member.impact is missing/null
             return acc + (member.impact?.pollutionSaved || 0);
         }, 0);
 
         const totalTrees = community.members.reduce((acc, member) => {
             return acc + (member.impact?.treesPlanted || 0);
         }, 0);
-
-        // Update the object (not saving to DB here to avoid write load on every read, 
-        // unless we want to sync)
-        // Ideally we update these stats when a user makes a submission or joins.
-        // For now, let's just return the calculated values.
 
         return {
             ...community.toObject(),
@@ -63,8 +56,13 @@ exports.createCommunity = asyncHandler(async (req, res) => {
 
     if (members && Array.isArray(members)) {
         // Filter valid IDs and combine
-        initialMembers = [...new Set([...initialMembers, ...members])];
+        // Ensure we don't duplicate creator or other members
+        const validMembers = members.filter(id => id && id !== req.user.id);
+        initialMembers = [...initialMembers, ...validMembers];
     }
+
+    // Remove duplicates
+    initialMembers = [...new Set(initialMembers)];
 
     const community = await Community.create({
         name,

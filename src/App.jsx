@@ -13,6 +13,15 @@ import Placeholder from './pages/Placeholder';
 import NGODashboard from './pages/NGODashboard';
 import Community from './pages/Community';
 import ReportIssue from './pages/ReportIssue';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminRequests from './pages/admin/AdminRequests';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminSubmissions from './pages/admin/AdminSubmissions';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminCommunities from './pages/admin/AdminCommunities';
+import AdminTransactions from './pages/admin/AdminTransactions';
 
 const App = () => {
   const { pathname } = useLocation();
@@ -26,6 +35,21 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+
+          <Route path="submissions" element={<AdminSubmissions />} />
+          <Route path="requests" element={<AdminRequests />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="communities" element={<AdminCommunities />} />
+          <Route path="transactions" element={<AdminTransactions />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="settings" element={<div className="p-8 text-center text-gray-500">Settings Page Placeholder</div>} />
+        </Route>
 
         <Route path="/" element={<BaseLayout />}>
           <Route index element={<Dashboard />} />

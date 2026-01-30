@@ -188,22 +188,28 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Quick Actions Banner */}
             <motion.div variants={itemVariants}>
-              <div className="card p-6 relative overflow-hidden flex flex-col justify-center h-[240px]" style={{ background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)' }}>
+              <div className="card p-6 relative overflow-hidden flex flex-col justify-center h-[240px]" style={{ background: 'linear-gradient(135deg, #E0F2FE 0%, #DBEAFE 100%)' }}>
                 <div className="relative z-10">
-                  <h2 className="text-2xl font-bold mb-1" style={{ color: '#FFFFFF' }}>Add a cleanup activity here</h2>
-                  <p className="mb-4 text-xs" style={{ color: '#FFFFFF', opacity: 0.9 }}>Upload photos or redeem credits.</p>
-                  <div className="flex flex-row gap-2">
+                  <h2 className="text-2xl font-bold mb-1" style={{ color: '#1E293B' }}>Add a cleanup activity here</h2>
+                  <p className="mb-4 text-xs" style={{ color: '#475569' }}>Upload photos or redeem credits.</p>
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => navigate('/upload')}
-                      className="flex-1 px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all bg-white text-emerald-600 border-none"
+                      className="px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all bg-emerald-600 text-white border-none hover:bg-emerald-700"
                     >
                       Upload
                     </button>
                     <button
                       onClick={() => navigate('/redeem')}
-                      className="flex-1 px-4 py-2 rounded-lg font-bold text-sm transition-all border border-white/30 text-white hover:bg-white/10"
+                      className="px-4 py-2 rounded-lg font-bold text-sm transition-all bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50"
                     >
                       Redeem
+                    </button>
+                    <button
+                      onClick={() => navigate('/feed')}
+                      className="px-4 py-2 rounded-lg font-bold text-sm transition-all bg-blue-500 text-white border-none hover:bg-blue-600"
+                    >
+                      Feed
                     </button>
                   </div>
                 </div>
@@ -225,21 +231,77 @@ const Dashboard = () => {
         </div>
 
         {/* Right Column (Span 1): Activity Feed */}
-        <motion.div className="lg:col-span-1 h-full min-h-[500px]" variants={itemVariants}>
-          <ActivityFeed
-            activities={[
-              ...localDrafts.map(d => ({
-                _id: d.id,
-                type: 'draft',
-                description: `Draft: ${d.locationName || 'Cleanup'}`,
-                amount: 0,
-                createdAt: d.timestamp,
-                isDraft: true,
-                rawDraft: d
-              })),
-              ...(stats.recentActivity || [])
-            ]}
-          />
+        <motion.div className="lg:col-span-1 flex flex-col gap-6" variants={itemVariants}>
+          <div className="flex-1">
+            <ActivityFeed
+              activities={[
+                ...localDrafts.map(d => ({
+                  _id: d.id,
+                  type: 'draft',
+                  description: `Draft: ${d.locationName || 'Cleanup'}`,
+                  amount: 0,
+                  createdAt: d.timestamp,
+                  isDraft: true,
+                  rawDraft: d
+                })),
+                ...(stats.recentActivity || [])
+              ]}
+            />
+          </div>
+
+          {/* Government Resources Card */}
+          <div className="card p-6 bg-white shadow-sm border border-gray-100 rounded-xl">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <span className="text-xl">🏛️</span>
+              <span style={{ color: 'var(--text-primary)' }}>Official Portals</span>
+            </h3>
+            <div className="space-y-3">
+              <a
+                href="https://swachhbharatmission.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-orange-50 transition-colors group border border-transparent hover:border-orange-100"
+              >
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
+                  <FontAwesomeIcon icon={faRecycle} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 group-hover:text-orange-700">Swachh Bharat Mission</h4>
+                  <p className="text-xs text-gray-500">Government of India</p>
+                </div>
+              </a>
+
+              <a
+                href="https://ngodarpan.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors group border border-transparent hover:border-blue-100"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                  <FontAwesomeIcon icon={faEarthAmericas} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 group-hover:text-blue-700">NGO Darpan Portal</h4>
+                  <p className="text-xs text-gray-500">Directory of NGOs</p>
+                </div>
+              </a>
+
+              <a
+                href="https://mohua.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-50 transition-colors group border border-transparent hover:border-green-100"
+              >
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                  <FontAwesomeIcon icon={faTree} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 group-hover:text-green-700">MoHUA</h4>
+                  <p className="text-xs text-gray-500">Urban Affairs & Subsidies</p>
+                </div>
+              </a>
+            </div>
+          </div>
         </motion.div>
       </div>
 

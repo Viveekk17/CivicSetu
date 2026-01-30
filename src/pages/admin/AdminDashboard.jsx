@@ -65,7 +65,7 @@ const AdminDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         whileHover={{ scale: 1.02 }}
-                        className="bg-white border-l-4 border-[#4daa57] rounded-lg p-5 shadow-sm hover:shadow-md transition-all duration-300"
+                        className="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-all duration-300"
                     >
                         <div className="flex items-start justify-between">
                             <div className="flex-1">

@@ -82,7 +82,9 @@ const Sidebar = ({ isOpen, onClose }) => {
           >
             <FontAwesomeIcon icon={faBars} size="lg" />
           </button>
-          <h1 className="text-2xl font-bold tracking-tight title-gradient">CivicSetu</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            <span style={{ color: '#3b82f6' }}>CIVIC</span><span style={{ color: '#10b981' }}>सेतु</span>
+          </h1>
         </div>
 
         {/* Navigation - Text Only */}

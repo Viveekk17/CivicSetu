@@ -173,11 +173,17 @@ const Login = () => {
           <div className="mx-auto mb-4 flex justify-center">
             <img src="/logo.png" alt="CivicSetu" className="h-24 object-contain drop-shadow-lg" />
           </div>
-          <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-            {isNewUser ? "Welcome!" : t.login_welcome}
+          <h2 className="text-3xl font-bold mb-2">
+            {isNewUser ? (
+              "Welcome!"
+            ) : (
+              <>
+                Welcome to <span style={{ color: '#3b82f6' }}>CIVIC</span><span style={{ color: '#10b981' }}>सेतु</span>
+              </>
+            )}
           </h2>
-          <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-            {isNewUser ? "Please set a username to continue" : t.login_subtitle}
+          <p className="font-bold text-lg" style={{ color: '#000000' }}>
+            {isNewUser ? "Please set a username to continue" : "स्वच्छ भारत अपना भारत"}
           </p>
         </div>
 

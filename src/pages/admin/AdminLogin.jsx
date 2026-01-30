@@ -42,28 +42,31 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)' }}>
             {/* Background patterns */}
             <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3"></div>
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-900 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3"></div>
             </div>
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative z-10"
+                className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl p-8 shadow-2xl relative z-10"
             >
                 <Link to="/login" className="absolute top-6 left-6 text-slate-400 hover:text-white transition-colors">
                     <FontAwesomeIcon icon={faArrowLeft} />
                 </Link>
 
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 mx-auto bg-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/30">
-                        <FontAwesomeIcon icon={faUserShield} className="text-white text-3xl" />
+                    <div className="mx-auto mb-4 flex justify-center">
+                        <img src="/logo.png" alt="CivicSetu" className="h-20 object-contain drop-shadow-lg" />
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Internal Portal</h1>
-                    <p className="text-slate-400">Authorized Government Personnel Only</p>
+                    <h2 className="text-3xl font-bold mb-1">
+                        <span style={{ color: '#3b82f6' }}>CIVIC</span><span style={{ color: '#10b981' }}>सेतु</span>
+                    </h2>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Admin Portal</h1>
+                    <p className="text-gray-500">Authorized Government Personnel Only</p>
                 </div>
 
                 {error && (
@@ -74,16 +77,16 @@ const AdminLogin = () => {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-bold text-slate-300 mb-2">Officer Email</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Officer Email</label>
                         <div className="relative">
-                            <span className="absolute left-4 top-3.5 text-slate-400">
+                            <span className="absolute left-4 top-3.5 text-gray-400">
                                 <FontAwesomeIcon icon={faIdCard} />
                             </span>
                             <input
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-400"
                                 placeholder="admin@ecotrace.com"
                                 required
                             />
@@ -91,16 +94,16 @@ const AdminLogin = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-slate-300 mb-2">Secure Password</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Secure Password</label>
                         <div className="relative">
-                            <span className="absolute left-4 top-3.5 text-slate-400">
+                            <span className="absolute left-4 top-3.5 text-gray-400">
                                 <FontAwesomeIcon icon={faLock} />
                             </span>
                             <input
                                 type="password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-400"
                                 placeholder="••••••••"
                                 required
                             />
@@ -110,7 +113,7 @@ const AdminLogin = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2"
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>Processing...</>

@@ -263,7 +263,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
     <header
       className="sticky top-0 z-20 h-20 flex items-center justify-between px-6 glass"
       style={{
-        background: 'var(--bg-glass)',
+        background: 'linear-gradient(to bottom, #FFB366 0%, #FFFFFF 50%, #4CAF50 100%)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border-light)'
       }}
@@ -290,10 +290,10 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
         <div className="hidden md:flex items-center gap-3">
           <img src="/logo.png" alt="CivicSetu Logo" className="h-16 w-auto object-contain" />
           <div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              <span className="title-gradient">CivicSetu</span>
+            <h2 className="text-xl font-bold">
+              <span style={{ color: '#3b82f6' }}>CIVIC</span><span style={{ color: '#10b981' }}>सेतु</span>
             </h2>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Turning Civic Effort into Citizen Value</p>
+            <p className="text-xs font-semibold" style={{ color: '#000000' }}>स्वच्छ भारत अपना भारत</p>
           </div>
         </div>
       </div>
@@ -302,8 +302,9 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
         {/* Credits Badge */}
         <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full shadow-sm"
           style={{
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-light)'
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
           <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
           <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.credits?.toLocaleString() || 0}</span>
@@ -315,8 +316,9 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             onClick={() => setShowTreeHistory(!showTreeHistory)}
             className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full shadow-sm cursor-pointer transition-all hover:shadow-md"
             style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-light)'
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
             }}
           >
             <span className="text-xl">🌳</span>
@@ -430,31 +432,16 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
           onClick={toggleLanguage}
           className="p-3 rounded-full transition-all duration-300 hover:shadow-md relative overflow-hidden group font-bold text-sm"
           style={{
-            background: 'var(--bg-surface)',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(10px)',
             color: 'var(--text-primary)',
-            border: '1px solid var(--border-light)'
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}
           title={language === 'en' ? 'Switch to Hindi' : 'Switch to English'}
         >
           {language === 'en' ? '🇺🇸 EN' : '🇮🇳 HI'}
         </button>
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-3 rounded-full transition-all duration-300 hover:shadow-md relative overflow-hidden group"
-          style={{
-            background: theme === 'light' ? '#F3F4F6' : '#334155',
-            color: theme === 'light' ? '#374151' : '#FCD34D'
-          }}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          <FontAwesomeIcon
-            icon={theme === 'light' ? faMoon : faSun}
-            className="transform transition-transform group-hover:rotate-12"
-          />
-        </button>
 
 
 

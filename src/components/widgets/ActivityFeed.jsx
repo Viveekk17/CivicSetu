@@ -88,9 +88,9 @@ const ActivityFeed = ({ activities = [] }) => {
   if (activities.length === 0) {
     return (
       <div className="card p-6 h-full">
-        <h3 className="font-bold text-lg mb-6" style={{ color: 'var(--text-primary)' }}>Recent Activity</h3>
+        <h3 className="font-bold text-lg mb-6" style={{ color: 'var(--text-primary)' }}>My Transactions</h3>
         <div className="text-center py-12">
-          <p style={{ color: 'var(--text-secondary)' }}>No recent activity yet</p>
+          <p style={{ color: 'var(--text-secondary)' }}>No transactions yet</p>
           <p className="text-sm mt-2" style={{ color: 'var(--text-tertiary)' }}>
             Start by uploading photos or redeeming credits!
           </p>
@@ -105,12 +105,18 @@ const ActivityFeed = ({ activities = [] }) => {
 
   return (
     <>
-      <div className="card p-6 h-full">
+      <div
+        className="card p-6 h-full cursor-pointer hover:shadow-lg transition-shadow"
+        onClick={() => navigate('/submissions')}
+      >
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Recent Activity</h3>
+          <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>My Transactions</h3>
           {hasMore && (
             <button
-              onClick={() => setShowAllModal(true)}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click
+                navigate('/submissions');
+              }}
               className="text-sm font-medium hover:underline transition-all"
               style={{ color: 'var(--primary)' }}
             >
@@ -128,6 +134,13 @@ const ActivityFeed = ({ activities = [] }) => {
               showConnector={index !== recentActivities.length - 1}
             />
           ))}
+        </div>
+
+        {/* Hint to click */}
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-light)' }}>
+          <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
+            Click to view all your submissions →
+          </p>
         </div>
       </div>
 

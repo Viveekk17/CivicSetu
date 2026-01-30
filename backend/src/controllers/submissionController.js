@@ -20,9 +20,10 @@ exports.analyzePhotos = async (req, res) => {
 
     // Get photo paths
     const photos = req.files.map(file => `/uploads/${file.filename}`);
+    const localPhotoPaths = req.files.map(file => file.path); // Get absolute paths for AI
 
     // Run AI verification (but don't save to database)
-    const verification = await verifySubmission(type, photos, weight || 1);
+    const verification = await verifySubmission(type, localPhotoPaths, weight || 1);
 
     // Return AI analysis without saving
     res.json({
@@ -178,20 +179,72 @@ exports.createSubmission = async (req, res) => {
     // However, if taggedUsers was sent, meaningful count should be taggedUsers.length + 1
     // Front end sends `memberCount` as `taggedUsers.length + 1` correctly.
 
-    const baseCredits = verification.credits || 0;
+    const {
+      // type, // Already declared above
+      // weight, // Already declared above
+      // location, // Already declared above
+      // description, // Already declared above
+      // memberCount, // Already declared above
+      taggedUsers,
+      taggingMode,
+      taggedCommunities
+    } = req.body;
 
-    // Calculate Bonus Pool
-    // Example: 100 Base. 5 Members.
-    // Bonus Muliplier = 1 + (4 * 0.1) = 1.4
-    // Total Pool = 140.
-    // Per Person = 140 / 5 = 28.
+    console.log('📥 Received submission data:', { type, weight, taggingMode, memberCount });
 
-    let totalPool = baseCredits;
-    if (members > 1) {
-      totalPool = baseCredits * (1 + (members - 1) * 0.1);
+    // New tagging mode validation
+    if (weight > 50 && taggingMode !== 'ngo') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cleanups over 50 kg require NGO tagging mode.',
+        requiresNGO: true,
+        weight: weight
+      });
     }
 
-    const finalCreditsPerPerson = Math.ceil(totalPool / members);
+    if (weight > 20 && taggingMode === 'members') {
+      console.log('⚠️ Warning: Cleanup over 20kg using members mode (allowed but not recommended)');
+    }
+
+    // Process credits based on tagging mode
+    let totalPool = verification.credits || 0;
+    let membersForCredit = 1; // Default for community/NGO mode
+    let finalCreditsPerPerson = totalPool;
+    let tags = []; // This will store the IDs of tagged users or communities
+
+    // Mode-specific credit caps
+    const creditCaps = {
+      ngo: 650,
+      community: 750,
+      members: 1000
+    };
+
+    const capPerPerson = creditCaps[taggingMode] || 1000;
+
+    if (taggingMode === 'members') {
+      // Members mode: Split credits among tagged users + self
+      const parsedTaggedUsers = taggedUsers ? JSON.parse(taggedUsers) : [];
+      membersForCredit = parsedTaggedUsers.length + 1; // Uploader + tagged users
+      tags = parsedTaggedUsers;
+    } else if (taggingMode === 'community' || taggingMode === 'ngo') {
+      // Community/NGO mode: All credits go to submitter only
+      membersForCredit = 1;
+      const parsedCommunities = taggedCommunities ? JSON.parse(taggedCommunities) : [];
+      tags = parsedCommunities;
+    }
+
+    // Apply mode-specific cap
+    totalPool = Math.min(totalPool, capPerPerson * membersForCredit);
+    finalCreditsPerPerson = Math.ceil(totalPool / membersForCredit);
+
+    console.log('💰 Credit Calculation:', {
+      mode: taggingMode,
+      rawCredits: verification.credits,
+      cappedPool: totalPool,
+      members: membersForCredit,
+      perPerson: finalCreditsPerPerson,
+      cap: capPerPerson
+    });
 
     // Create submission with Cloudinary URLs (or local paths as fallback)
     const submission = await Submission.create({
@@ -213,8 +266,9 @@ exports.createSubmission = async (req, res) => {
         trashWeight: verification.trashWeight,
         category: verification.category,
         suggestedDescription: verification.suggestedDescription,
-        memberCount: members,
-        totalPool: Math.ceil(totalPool)
+        memberCount: membersForCredit,
+        totalPool: Math.ceil(totalPool),
+        taggingMode: taggingMode || 'members' // Store tagging mode
       }
     });
 
@@ -236,56 +290,54 @@ exports.createSubmission = async (req, res) => {
       }
 
       await user.save();
+      console.log(`✅ Awarded ${finalCreditsPerPerson} credits to uploader (${user.username})`);
 
+      // 2. Award to tagged users (if in members mode)
+      if (taggingMode === 'members' && tags.length > 0) {
+        console.log(`Distributing credits to ${tags.length} tagged users...`);
+        for (const userId of tags) {
+          // Skip if self (shouldn't happen due to frontend filter but safety first)
+          if (userId === req.user.id) continue;
+
+          const taggedUser = await User.findById(userId);
+          if (taggedUser) {
+            taggedUser.credits += finalCreditsPerPerson;
+            await taggedUser.save();
+
+            await Transaction.create({
+              user: userId,
+              type: 'earned',
+              amount: finalCreditsPerPerson,
+              description: `Credits earned from ${type} submission (Shared Activity)`,
+              metadata: {
+                submissionId: submission._id,
+                sharedBy: req.user.id
+              }
+            });
+            console.log(`✅ Awarded ${finalCreditsPerPerson} credits to tagged user (${taggedUser.username})`);
+          } else {
+            console.warn(`Tagged user with ID ${userId} not found.`);
+          }
+        }
+      }
+
+      // 3. Create transaction for uploader
       await Transaction.create({
         user: req.user.id,
         type: 'earned',
         amount: finalCreditsPerPerson,
-        description: `Credits earned from ${type} submission (${members} members)`,
+        description: `Credits earned from ${type} submission (${membersForCredit} members)`,
         metadata: { submissionId: submission._id }
       });
-
-      // 2. Award to Tagged Users
-      if (req.body.taggedUsers) {
-        try {
-          const taggedIds = JSON.parse(req.body.taggedUsers);
-          if (Array.isArray(taggedIds) && taggedIds.length > 0) {
-            console.log(`Distributing credits to ${taggedIds.length} tagged users...`);
-
-            for (const userId of taggedIds) {
-              // Skip if self (shouldn't happen due to frontend filter but safety first)
-              if (userId === req.user.id) continue;
-
-              await User.findByIdAndUpdate(userId, {
-                $inc: { credits: finalCreditsPerPerson }
-              });
-
-              await Transaction.create({
-                user: userId,
-                type: 'earned',
-                amount: finalCreditsPerPerson,
-                description: `Credits earned from ${type} submission (Shared Activity)`,
-                metadata: {
-                  submissionId: submission._id,
-                  sharedBy: req.user.id
-                }
-              });
-            }
-          }
-        } catch (err) {
-          console.error('Error distributing credits to tagged users:', err);
-          // Don't fail the whole request, just log it
-        }
-      }
     }
-
 
     res.status(201).json({
       success: true,
       message: verification.verified
         ? 'Submission verified and uploaded to cloud storage'
         : 'Submission rejected by AI verification',
-      data: submission
+      data: submission,
+      creditsAwarded: finalCreditsPerPerson
     });
   } catch (error) {
     console.error('Submission error:', error);

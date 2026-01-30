@@ -6,12 +6,40 @@ const asyncHandler = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };
 
+// @desc    Search communities by name
+// @route   GET /api/communities/search
+// @access  Private
+exports.searchCommunities = asyncHandler(async (req, res) => {
+    const query = req.query.q;
+    if (!query) {
+        return res.status(400).json({ success: false, message: 'Please provide a search query' });
+    }
+
+    const communities = await Community.find({
+        name: { $regex: query, $options: 'i' }
+    }).select('name memberCount description').limit(10);
+
+    // Map memberCount explicitly if it's virtual or computed (schema uses members array)
+    // If memberCount is not in schema, compute it.
+    const results = communities.map(c => ({
+        _id: c._id,
+        name: c.name,
+        description: c.description,
+        memberCount: c.members ? c.members.length : 0
+    }));
+
+    res.json({
+        success: true,
+        data: results
+    });
+});
+
 // @desc    Get all communities (Leaderboard)
 // @route   GET /api/communities
 // @access  Private
 exports.getCommunities = asyncHandler(async (req, res) => {
     // Fetch communities and populate creator
-    // For dynamic leaderboard, we might want to sort by stats
+    // For dynamic leaderboard, we might want to sort
     let communities = await Community.find()
         .populate('creator', 'name')
         .populate('members', 'name impact') // Populate members to calculate impact if needed

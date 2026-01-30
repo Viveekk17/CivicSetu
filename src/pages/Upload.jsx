@@ -14,7 +14,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { startCamera, stopCamera, capturePhoto, isCameraAvailable } from '../utils/cameraService';
 import { getCurrentLocation, reverseGeocode, isGeolocationAvailable } from '../utils/locationService';
 import { checkDuplicateImage } from '../services/submissionService';
+import { searchCommunities } from '../services/api';
 import SparkMD5 from 'spark-md5';
+import axios from 'axios';
 
 
 const Upload = () => {
@@ -55,7 +57,6 @@ const Upload = () => {
   const [memberCount, setMemberCount] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [taggedUsers, setTaggedUsers] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
   // Upload flow
@@ -65,6 +66,22 @@ const Upload = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+
+  // Public Feed & Tagging
+  const [shareToFeed, setShareToFeed] = useState(true);
+  const [feedDescription, setFeedDescription] = useState('');
+
+  // Tagging System States
+  const [enableTagging, setEnableTagging] = useState(false);
+  const [taggingMode, setTaggingMode] = useState('members'); // 'members', 'community', 'ngo'
+  const [taggedUsers, setTaggedUsers] = useState([]);
+  const [taggedCommunities, setTaggedCommunities] = useState([]);
+  const [userQuery, setUserQuery] = useState('');
+  const [communityQuery, setCommunityQuery] = useState('');
+  const [userResults, setUserResults] = useState([]);
+  const [communityResults, setCommunityResults] = useState([]);
+  const [isSearchingUser, setIsSearchingUser] = useState(false);
+  const [isSearchingCommunity, setIsSearchingCommunity] = useState(false);
 
   const typeIcons = {
     garbage: { icon: faTrash, color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -363,7 +380,7 @@ const Upload = () => {
         console.log(`🏷️ Category: ${verification.category}`);
         console.log(`⚖️ Weight: ${verification.trashWeight} kg`);
         console.log(`🪙 Credits: ${verification.credits}`);
-        console.log(`🌱 CO2 Saved: ${verification.co2Saved?.toFixed(2)} kg`);
+        console.log(`🌱 CO2 Saved: ${typeof verification.co2Saved === 'number' ? verification.co2Saved.toFixed(2) : verification.co2Saved} kg`);
         console.log(`📝 Description: ${verification.suggestedDescription || verification.notes}`);
         console.log(`📊 Confidence: ${(verification.confidence * 100).toFixed(1)}%`);
         console.groupEnd();
@@ -372,7 +389,7 @@ const Upload = () => {
           category: verification.category || 'NA',
           weight: verification.trashWeight || 0,
           description: verification.suggestedDescription || verification.notes,
-          co2Saved: verification.co2Saved || 0,
+          co2Saved: parseFloat(verification.co2Saved) || 0,
           credits: verification.credits || 0,
           photos: response.data.photos // Save photo paths for final submission
         });
@@ -427,8 +444,20 @@ const Upload = () => {
   // Final submission (actually save to database)
   const handleConfirmSubmit = async () => {
     try {
+      // Validate large cleanup requirements based on new thresholds
+      if (aiData.weight > 50 && (!enableTagging || taggingMode !== 'ngo')) {
+        alert(`Large Cleanup Validation Failed\n\nCleanups over 50 kg require NGO tagging.\n\nDetected weight: ${aiData.weight} kg\n\nPlease enable tagging and select "Tag NGO" mode before submitting.`);
+        return;
+      }
+
+      if (aiData.weight > 20 && (!enableTagging || taggingMode === 'members')) {
+        const confirmed = window.confirm(`Weight-Based Recommendation\n\nCleanups over 20 kg are strongly recommended to tag a Community or NGO for better coordination.\n\nDetected weight: ${aiData.weight} kg\nCurrent mode: ${taggingMode}\n\nDo you want to proceed anyway?`);
+        if (!confirmed) return;
+      }
+
       setSubmitting(true);
       setError('');
+
 
       // Create final submission with confirmed data
       const formData = new FormData();
@@ -442,10 +471,15 @@ const Upload = () => {
       }));
       formData.append('description', aiData.description);
 
-      // Calculate member count from tagged users (including self)
-      const totalMembers = taggedUsers.length + 1;
-      formData.append('memberCount', totalMembers);
-      formData.append('taggedUsers', JSON.stringify(taggedUsers.map(u => u._id))); // Send array of IDs
+      // New tagging system data
+      formData.append('taggingMode', taggingMode);
+      if (taggingMode === 'members') {
+        const totalMembers = taggedUsers.length + 1;
+        formData.append('memberCount', totalMembers);
+        formData.append('taggedUsers', JSON.stringify(taggedUsers.map(u => u._id)));
+      } else if (taggingMode === 'community' || taggingMode === 'ngo') {
+        formData.append('taggedCommunities', JSON.stringify(taggedCommunities.map(c => c._id)));
+      }
 
       // Calculate hashes again for submission (or store in state - recalculating is safer/easier dev)
       const beforeHash = await calculateImageHash(beforePhoto.file);
@@ -525,6 +559,31 @@ const Upload = () => {
           co2Saved: aiData.co2Saved,
           category: aiData.category
         });
+
+        // Create post if shareToFeed is enabled
+        if (shareToFeed && feedDescription.trim() && selectedPhotos.length > 0) {
+          try {
+            const token = localStorage.getItem('token');
+            await axios.post(
+              `${import.meta.env.VITE_API_URL}/posts`,
+              {
+                submissionId: response.data._id,
+                description: feedDescription.trim(),
+                selectedPhotos: selectedPhotos, // Send which photos to display
+                tags: taggedCommunities.map(c => c._id) // Send tagged community IDs
+              },
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+            console.log('✅ Post shared to public feed');
+          } catch (postError) {
+            console.error('Failed to create post:', postError);
+            // Don't show error to user since submission was successful
+          }
+        }
       } else {
         setError(response.message || 'Submission failed');
 
@@ -858,6 +917,119 @@ const Upload = () => {
                 </button>
               )}
             </div>
+
+            {/* TAGGING SYSTEM - Moved to Step 1 */}
+            <div className="card p-6 border border-gray-100 shadow-sm mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${enableTagging ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                    <FontAwesomeIcon icon={faUsers} className="text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Tag Collaborators</h3>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      Tag members, communities, or NGOs who helped with this cleanup
+                    </p>
+                  </div>
+                </div>
+
+                {/* Toggle Switch */}
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={enableTagging}
+                    onChange={(e) => setEnableTagging(e.target.checked)}
+                  />
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <AnimatePresence>
+                {enableTagging && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pl-0 md:pl-16 pt-2">
+                      {/* Mode Selection - Radio Buttons */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>
+                          Tagging Mode
+                        </label>
+                        <div className="flex gap-4">
+                          <label className={`flex-1 p-3 border-2 rounded-xl cursor-pointer transition-all ${taggingMode === 'members' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="taggingMode"
+                              value="members"
+                              checked={taggingMode === 'members'}
+                              onChange={(e) => setTaggingMode(e.target.value)}
+                              className="sr-only"
+                            />
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${taggingMode === 'members' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                {taggingMode === 'members' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                              </div>
+                              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tag Members</span>
+                            </div>
+                            <p className="text-xs mt-1 ml-7 text-gray-500">For small group cleanups (Max 1000 credits/person)</p>
+                          </label>
+
+                          <label className={`flex-1 p-3 border-2 rounded-xl cursor-pointer transition-all ${taggingMode === 'community' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="taggingMode"
+                              value="community"
+                              checked={taggingMode === 'community'}
+                              onChange={(e) => setTaggingMode(e.target.value)}
+                              className="sr-only"
+                            />
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${taggingMode === 'community' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                {taggingMode === 'community' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                              </div>
+                              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tag Community</span>
+                            </div>
+                            <p className="text-xs mt-1 ml-7 text-gray-500">For organized groups (Max 750 credits/person)</p>
+                          </label>
+
+                          <label className={`flex-1 p-3 border-2 rounded-xl cursor-pointer transition-all ${taggingMode === 'ngo' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200'}`}>
+                            <input
+                              type="radio"
+                              name="taggingMode"
+                              value="ngo"
+                              checked={taggingMode === 'ngo'}
+                              onChange={(e) => setTaggingMode(e.target.value)}
+                              className="sr-only"
+                            />
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${taggingMode === 'ngo' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                {taggingMode === 'ngo' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                              </div>
+                              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tag NGO</span>
+                            </div>
+                            <p className="text-xs mt-1 ml-7 text-gray-500">For large cleanups (Max 650 credits/person)</p>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Info message about weight requirements */}
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
+                        <p className="text-sm text-blue-700 dark:text-blue-400">
+                          <strong>Weight Requirements:</strong> Cleanups over 20kg require Community/NGO tagging. Cleanups over 50kg require NGO tagging.
+                        </p>
+                      </div>
+
+                      {/* Placeholder for search interfaces - to be completed */}
+                      <p className="text-sm text-gray-500 italic">Search interface for {taggingMode} mode will be added here</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
 
@@ -885,85 +1057,310 @@ const Upload = () => {
                 </div>
               </div>
 
-              {/* AI Analysis */}
-              <div className="space-y-4 mb-8">
-                {/* Category */}
-                <div className="p-4 rounded-xl flex items-center gap-4 border" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${typeIcons[aiData.category]?.bg} dark:bg-opacity-20`}>
-                    <FontAwesomeIcon
-                      icon={typeIcons[aiData.category]?.icon || faTrash}
-                      className={`text-xl ${typeIcons[aiData.category]?.color}`}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Category</p>
-                    <p className="font-bold capitalize" style={{ color: 'var(--text-primary)' }}>{aiData.category}</p>
-                  </div>
-                </div>
-
-                {/* Weight */}
-                {/* Weight */}
-                <div className="p-4 rounded-xl flex items-center gap-4 border" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
-                  <div className="w-12 h-12 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faWeightHanging} className="text-xl text-orange-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Weight</p>
-                    <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{aiData.weight} kg</p>
+              {/* Large Cleanup Warning (>80kg requires NGO) */}
+              {aiData.weight > 80 && taggedCommunities.length === 0 && (
+                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-red-800 dark:text-red-300 mb-1">
+                        NGO Required for Large Cleanup
+                      </h4>
+                      <p className="text-sm text-red-700 dark:text-red-400">
+                        Cleanups over 80 kg must be coordinated through a registered NGO or community organization.
+                        Please tag an NGO below to proceed with this {aiData.weight} kg cleanup.
+                      </p>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Credits */}
-                <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center gap-4 border border-green-100 dark:border-green-800/50">
-                  <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-800 flex items-center justify-center">
-                    <FontAwesomeIcon icon={faCoins} className="text-xl text-green-600 dark:text-green-400" />
+              {/* AI Analysis Results */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                  Verification Results
+                </h3>
+
+                <div className="border rounded-xl overflow-hidden" style={{ borderColor: 'var(--border-light)' }}>
+                  {/* Header */}
+                  <div className="px-6 py-3 border-b" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
+                    <p className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                      Analysis Summary
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Credits Earned (Per Person)</p>
-                    {(() => {
-                      const members = taggedUsers.length + 1;
-                      const base = aiData.credits || 0;
-                      let pool = base;
-                      if (members > 1) {
-                        pool = base * (1 + (members - 1) * 0.1);
-                      }
-                      const perPerson = Math.ceil(pool / members);
-                      return <p className="font-bold text-green-600 dark:text-green-400">{perPerson} Credits</p>;
-                    })()}
+
+                  {/* Details Grid */}
+                  <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                    {/* Category */}
+                    <div className="px-6 py-4 grid grid-cols-2 gap-4">
+                      <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Category</dt>
+                      <dd className="font-semibold capitalize" style={{ color: 'var(--text-primary)' }}>{aiData.category}</dd>
+                    </div>
+
+                    {/* Weight */}
+                    <div className="px-6 py-4 grid grid-cols-2 gap-4">
+                      <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Estimated Weight</dt>
+                      <dd className="font-semibold" style={{ color: 'var(--text-primary)' }}>{aiData.weight} kg</dd>
+                    </div>
+
+                    {/* Credits */}
+                    <div className="px-6 py-4 grid grid-cols-2 gap-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10">
+                      <dt className="font-medium text-green-700 dark:text-green-400">
+                        Credits Earned (Per Person)
+                        {enableTagging && (
+                          <span className="block text-xs font-normal mt-1">
+                            {taggingMode === 'ngo' && 'Max 650 per person (NGO mode)'}
+                            {taggingMode === 'community' && 'Max 750 per person (Community mode)'}
+                            {taggingMode === 'members' && 'Max 1000 per person (Members mode)'}
+                          </span>
+                        )}
+                      </dt>
+                      <dd className="font-bold text-green-700 dark:text-green-400">
+                        {(() => {
+                          const creditCaps = { ngo: 650, community: 750, members: 1000 };
+                          const capPerPerson = enableTagging ? creditCaps[taggingMode] : 1000;
+                          const members = taggingMode === 'members' ? taggedUsers.length + 1 : 1;
+                          const totalCredits = aiData.credits || 0;
+                          const perPerson = Math.ceil(totalCredits / members);
+                          const cappedPerPerson = Math.min(perPerson, capPerPerson);
+                          return `${cappedPerPerson} Credits`;
+                        })()}
+                      </dd>
+                    </div>
+
+                    {/* CO2 Saved */}
+                    {aiData.co2Saved > 0 && (
+                      <div className="px-6 py-4 grid grid-cols-2 gap-4">
+                        <dt className="font-medium" style={{ color: 'var(--text-secondary)' }}>Environmental Impact</dt>
+                        <dd className="font-semibold text-blue-600 dark:text-blue-400">
+                          {aiData.co2Saved.toFixed(1)} kg CO₂ Saved
+                        </dd>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <div className="px-6 py-4">
+                      <dt className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Description</dt>
+                      <dd className="leading-relaxed" style={{ color: 'var(--text-primary)' }}>{aiData.description}</dd>
+                    </div>
                   </div>
                 </div>
-
-                {/* Description */}
-                {/* Description */}
-                <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-body)', borderColor: 'var(--border-light)' }}>
-                  <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>AI Description</p>
-                  <p style={{ color: 'var(--text-primary)' }}>{aiData.description}</p>
-                </div>
-
-                {/* CO2 Saved */}
-                {aiData.co2Saved > 0 && (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                    <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">Environmental Impact</p>
-                    <p className="font-bold text-blue-800 dark:text-blue-300">🌱 CO₂ Saved: {aiData.co2Saved.toFixed(1)} kg</p>
-                  </div>
-                )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-4">
+              {/* TAGGING SYSTEM - Toggle Based */}
+              <div className="card p-6 border border-gray-100 shadow-sm mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${enableTagging ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                      <FontAwesomeIcon icon={faUsers} className="text-xl" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Tag Collaborators</h3>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        Tag members, communities, or NGOs who helped
+                        {aiData.weight > 50 && <span className="text-red-600 font-semibold"> • NGO required for 50kg+</span>}
+                        {aiData.weight > 20 && aiData.weight <= 50 && <span className="text-orange-600 font-semibold"> • Community/NGO recommended for 20kg+</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={enableTagging}
+                      onChange={(e) => setEnableTagging(e.target.checked)}
+                    />
+                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <AnimatePresence>
+                  {enableTagging && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-0 md:pl-16 pt-2">
+                        {/* Mode Selection - Radio Buttons */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>
+                            Tagging Mode
+                          </label>
+                          <div className="flex gap-4">
+                            <label className={`flex-1 p-3 border-2 rounded-xl cursor-pointer transition-all ${taggingMode === 'members' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200'}`}>
+                              <input
+                                type="radio"
+                                name="taggingMode"
+                                value="members"
+                                checked={taggingMode === 'members'}
+                                onChange={(e) => setTaggingMode(e.target.value)}
+                                className="sr-only"
+                              />
+                              <div className="flex items-center gap-2">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${taggingMode === 'members' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                  {taggingMode === 'members' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                                </div>
+                                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tag Members</span>
+                              </div>
+                              <p className="text-xs mt-1 ml-7 text-gray-500">For small group cleanups (Max 1000 credits/person)</p>
+                            </label>
+
+                            <label className={`flex-1 p-3 border-2 rounded-xl cursor-pointer transition-all ${taggingMode === 'community' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200'}`}>
+                              <input
+                                type="radio"
+                                name="taggingMode"
+                                value="community"
+                                checked={taggingMode === 'community'}
+                                onChange={(e) => setTaggingMode(e.target.value)}
+                                className="sr-only"
+                              />
+                              <div className="flex items-center gap-2">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${taggingMode === 'community' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                  {taggingMode === 'community' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                                </div>
+                                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tag Community</span>
+                              </div>
+                              <p className="text-xs mt-1 ml-7 text-gray-500">For organized groups (Max 750 credits/person)</p>
+                            </label>
+
+                            <label className={`flex-1 p-3 border-2 rounded-xl cursor-pointer transition-all ${taggingMode === 'ngo' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200'}`}>
+                              <input
+                                type="radio"
+                                name="taggingMode"
+                                value="ngo"
+                                checked={taggingMode === 'ngo'}
+                                onChange={(e) => setTaggingMode(e.target.value)}
+                                className="sr-only"
+                              />
+                              <div className="flex items-center gap-2">
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${taggingMode === 'ngo' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                  {taggingMode === 'ngo' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                                </div>
+                                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tag NGO</span>
+                              </div>
+                              <p className="text-xs mt-1 ml-7 text-gray-500">For large cleanups (Max 650 credits/person)</p>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Validation Warnings */}
+                        {aiData.weight > 50 && taggingMode !== 'ngo' && (
+                          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
+                            <p className="text-sm text-red-700 dark:text-red-400 font-semibold">
+                              ⚠️ Cleanups over 50 kg require NGO tagging. Please select "Tag NGO" mode.
+                            </p>
+                          </div>
+                        )}
+
+                        {aiData.weight > 20 && aiData.weight <= 50 && taggingMode === 'members' && (
+                          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 rounded">
+                            <p className="text-sm text-orange-700 dark:text-orange-400 font-semibold">
+                              💡 Cleanups over 20 kg are recommended to tag a Community or NGO for better coordination.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* TODO: Complete tagging interfaces for members/community/NGO modes */}
+                        <p className="text-sm text-gray-500">Tagging interface will be completed in next iteration</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* SHARE TO FEED CARD (Redesigned) */}
+              <div className="card p-6 border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${shareToFeed ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'}`}>
+                      <FontAwesomeIcon icon={faUsers} className="text-xl" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Share to Public Feed</h3>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Inspire others with your contribution</p>
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={shareToFeed}
+                      onChange={(e) => setShareToFeed(e.target.checked)}
+                    />
+                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+
+                <AnimatePresence>
+                  {shareToFeed && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-0 md:pl-16 pt-2">
+                        {/* Caption Input */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text-secondary)' }}>
+                            Caption
+                          </label>
+                          <textarea
+                            className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none font-medium"
+                            placeholder="Share your story! What motivated you to do this?"
+                            rows="3"
+                            value={feedDescription}
+                            onChange={(e) => setFeedDescription(e.target.value)}
+                            maxLength={1000}
+                            style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                          />
+                          <div className="flex justify-between mt-1 text-xs text-gray-400">
+                            <span>Write a catchy description</span>
+                            <span>{feedDescription.length}/1000</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex gap-4 mt-8">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 rounded-xl border-2 border-gray-300 font-bold hover:bg-gray-50"
+                  className="px-6 py-4 rounded-xl font-bold border-2 border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                  disabled={submitting}
                 >
                   Back
                 </button>
                 <button
                   onClick={handleConfirmSubmit}
-                  disabled={submitting}
-                  className="flex-1 py-3 rounded-xl font-bold text-white shadow-lg"
+                  className="flex-1 py-4 rounded-xl font-bold text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                   style={{ background: 'var(--gradient-primary)' }}
+                  disabled={submitting}
                 >
-                  {submitting ? 'Submitting...' : 'Confirm & Submit'}
+                  {submitting ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} spin />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faCheckCircle} />
+                      Confirm & Submit
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -6,7 +6,9 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
-  updateProfile
+  updateProfile,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from 'firebase/auth';
 
 // Register new user (Firebase -> Backend Sync)
@@ -94,6 +96,68 @@ export const googleLogin = async () => {
     return response;
   } catch (error) {
     console.error("Google Login Error:", error);
+    throw error;
+  }
+};
+
+// Setup Recaptcha
+export const setupRecaptcha = (phoneNumber) => {
+  const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    'size': 'invisible',
+    'callback': (response) => {
+      // reCAPTCHA solved, allow signInWithPhoneNumber.
+      // onSignInSubmit();
+      console.log("Recaptcha verified");
+    }
+  });
+  return recaptchaVerifier;
+};
+
+// Send OTP
+export const sendOtp = async (phoneNumber, appVerifier) => {
+  try {
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    return confirmationResult;
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    throw error;
+  }
+};
+
+// Verify OTP and Login
+export const verifyOtp = async (confirmationResult, otp) => {
+  try {
+    const result = await confirmationResult.confirm(otp);
+    const user = result.user;
+    const token = await user.getIdToken();
+
+    const response = await api.post('/auth/firebase', { token });
+
+    if (response.success && !response.isNewUser) {
+      localStorage.setItem('token', response.data.token); // Use backend token
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+
+    // Return response even if new user
+    return response;
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    throw error;
+  }
+};
+
+// Complete Phone Signup
+export const completePhoneSignup = async (token, name) => {
+  try {
+    const response = await api.post('/auth/phone-register', { token, name });
+
+    if (response.success) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response;
+  } catch (error) {
+    console.error("Error completing signup:", error);
     throw error;
   }
 };

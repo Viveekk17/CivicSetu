@@ -17,6 +17,7 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  /^http:\/\/localhost:\d+$/, // Allow any localhost port (5174, 5175, etc.)
   process.env.FRONTEND_URL,
   /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel deployments
 ].filter(Boolean);
@@ -59,6 +60,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const communityRoutes = require('./routes/communityRoutes');
 const adminRoutes = require('./routes/adminRoutes'); // Import Admin Routes
+const postRoutes = require('./routes/postRoutes'); // Import Post Routes
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -70,6 +72,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/admin', adminRoutes); // Mount Admin Routes
+app.use('/api/posts', postRoutes); // Mount Post Routes
+app.use('/api/admin/tree-redemptions', require('./routes/adminTreeRoutes')); // Admin Tree Management
 
 // Health check route
 app.get('/health', (req, res) => {

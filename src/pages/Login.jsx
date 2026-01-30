@@ -1,22 +1,34 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faEnvelope, faLock, faArrowRight, faUserShield } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useLanguage } from '../context/LanguageContext';
-import { login, googleLogin } from '../services/authService';
+import { login, googleLogin, setupRecaptcha, sendOtp, verifyOtp, completePhoneSignup } from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const recaptchaRef = useRef(null); // Ref to store reCAPTCHA verifier
+
+  // Email Login State
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  // Phone Login State
+  const [isPhoneLogin, setIsPhoneLogin] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('+91 '); // Default to India
+  const [otp, setOtp] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [username, setUsername] = useState('');
+  const [tempToken, setTempToken] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,6 +36,78 @@ const Login = () => {
       [e.target.name]: e.target.value
     });
     // Don't clear error here - let it persist until next submission
+  };
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      // Initialize reCAPTCHA only if not already done
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = setupRecaptcha(phoneNumber);
+      }
+      const appVerifier = recaptchaRef.current;
+      const confirmation = await sendOtp(phoneNumber, appVerifier);
+      setConfirmationResult(confirmation);
+      setOtpSent(true);
+    } catch (err) {
+      console.error("Send OTP Error:", err);
+      setError(err.message || "Failed to send OTP");
+      // If error occurs, we might want to reset the catpcha to allow retry
+      if (recaptchaRef.current) {
+        try {
+          recaptchaRef.current.clear();
+          recaptchaRef.current = null;
+          // Clear the container manually if needed
+          const container = document.getElementById('recaptcha-container');
+          if (container) container.innerHTML = '';
+        } catch (clearErr) {
+          console.error("Failed to clear captcha", clearErr);
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const response = await verifyOtp(confirmationResult, otp);
+      if (response.success) {
+        if (response.isNewUser) {
+          setIsNewUser(true);
+          setTempToken(response.token);
+        } else {
+          navigate('/');
+        }
+      }
+    } catch (err) {
+      console.error("Verify OTP Error:", err);
+      setError(err.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteSignup = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const response = await completePhoneSignup(tempToken, username);
+      if (response.success) {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error("Signup Error:", err);
+      setError(err.message || "Failed to complete signup");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = async (e) => {
@@ -90,10 +174,10 @@ const Login = () => {
             <img src="/logo.png" alt="CivicSetu" className="h-24 object-contain drop-shadow-lg" />
           </div>
           <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-            {t.login_welcome}
+            {isNewUser ? "Welcome!" : t.login_welcome}
           </h2>
           <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-            {t.login_subtitle}
+            {isNewUser ? "Please set a username to continue" : t.login_subtitle}
           </p>
         </div>
 
@@ -103,56 +187,180 @@ const Login = () => {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="scale-100 origin-top">
-          <div className="mb-4">
-            <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
-              {t.login_email}
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FontAwesomeIcon icon={faEnvelope} />
-              </span>
+        {/* Login Method Tabs - Hide if new user setup */}
+        {!isNewUser && (
+          <div className="flex mb-6 border-b border-gray-200">
+            <button
+              className={`flex-1 pb-2 text-sm font-bold transition-colors ${!isPhoneLogin ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
+              onClick={() => setIsPhoneLogin(false)}
+            >
+              Email Login
+            </button>
+            <button
+              className={`flex-1 pb-2 text-sm font-bold transition-colors ${isPhoneLogin ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-gray-400 hover:text-gray-600'}`}
+              onClick={() => setIsPhoneLogin(true)}
+            >
+              Phone Login
+            </button>
+          </div>
+        )}
+
+        {isNewUser ? (
+          /* Step 3: Username Setup (For New Users) */
+          <form onSubmit={handleCompleteSignup}>
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+                Choose Username
+              </label>
               <input
-                type="email"
-                name="email" // Added name attribute for formData
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
-                value={formData.email} // Changed to formData.email
-                onChange={handleChange} // Changed to handleChange
-                placeholder="name@example.com"
+                type="text"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
                 style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
                 required
               />
             </div>
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
-              {t.login_password}
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FontAwesomeIcon icon={faLock} />
-              </span>
-              <input
-                type="password"
-                name="password" // Added name attribute for formData
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
-                value={formData.password} // Changed to formData.password
-                onChange={handleChange} // Changed to handleChange
-                placeholder="••••••••"
-                style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
-                required
-              />
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all mb-4 text-white"
+              style={{ background: 'var(--gradient-primary)' }}
+              disabled={loading}
+            >
+              {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : "Create Account"}
+            </button>
+          </form>
+        ) : !isPhoneLogin ? (
+          /* Email Login Form */
+          <form onSubmit={handleLogin} className="scale-100 origin-top">
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+                {t.login_email}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <FontAwesomeIcon icon={faEnvelope} />
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="name@example.com"
+                  style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                  required
+                />
+              </div>
             </div>
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+                {t.login_password}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <FontAwesomeIcon icon={faLock} />
+                </span>
+                <input
+                  type="password"
+                  name="password"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                  required
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all mb-4 text-white"
+              style={{ background: 'var(--gradient-primary)' }}
+              disabled={loading}
+            >
+              {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : t.login_button}
+            </button>
+          </form>
+        ) : (
+          /* Phone Login Form */
+          <div className="scale-100 origin-top">
+            {!otpSent ? (
+              // Step 1: Enter Phone Number
+              <form onSubmit={handleSendOtp}>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <FontAwesomeIcon icon={faUserShield} />
+                    </span>
+                    <input
+                      type="tel"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="9876543210"
+                      style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 ml-1">Default: India (+91)</p>
+                </div>
+                <div id="recaptcha-container"></div>
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all mb-4 text-white"
+                  style={{ background: 'var(--gradient-primary)' }}
+                  disabled={loading}
+                >
+                  {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : "Send OTP"}
+                </button>
+              </form>
+            ) : (
+              // Step 2: Enter OTP
+              <form onSubmit={handleVerifyOtp}>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--text-secondary)' }}>
+                    Enter OTP
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <FontAwesomeIcon icon={faLock} />
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="123456"
+                      style={{ backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                      required
+                      maxLength={6}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all mb-4 text-white"
+                  style={{ background: 'var(--gradient-primary)' }}
+                  disabled={loading}
+                >
+                  {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : "Verify OTP"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOtpSent(false)}
+                  className="w-full text-sm font-medium text-gray-500 hover:text-gray-700 mt-2"
+                >
+                  Change Phone Number
+                </button>
+              </form>
+            )}
           </div>
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all mb-4 text-white"
-            style={{ background: 'var(--gradient-primary)' }}
-            disabled={loading}
-          >
-            {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : t.login_button}
-          </button>
-        </form>
+        )}
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">

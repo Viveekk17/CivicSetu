@@ -36,8 +36,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     { path: '/', name: t.nav_dashboard, badge: null },
     { path: '/upload', name: t.nav_upload, badge: null },
-    { path: '/redeem', name: t.nav_redeem, badge: 'HOT' },
-    { path: '/submissions', name: t.nav_submissions, badge: null },
+    { path: '/feed', name: 'Public Feed', badge: null },
+    { path: '/redeem', name: t.nav_redeem, badge: null },
     { path: '/analytics', name: t.nav_analytics, badge: null },
     { path: '/ngos', name: t.nav_ngos, badge: null },
     { path: '/community', name: t.nav_community, badge: null },

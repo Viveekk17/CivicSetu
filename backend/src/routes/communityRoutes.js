@@ -1,6 +1,7 @@
 const express = require('express');
 const {
     getCommunities,
+    searchCommunities,
     createCommunity,
     joinCommunity,
     leaveCommunity,
@@ -15,6 +16,8 @@ router.use(protect);
 router.route('/')
     .get(getCommunities)
     .post(createCommunity);
+
+router.get('/search', searchCommunities);
 
 router.route('/:id/join').put(joinCommunity);
 router.route('/:id/leave').put(leaveCommunity);

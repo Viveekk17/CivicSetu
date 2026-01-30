@@ -9,10 +9,16 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Please provide an email'],
+    required: false, // Email is optional for phone login users
     unique: true,
     lowercase: true,
+    sparse: true, // Allow multiple null values
     match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
+  },
+  phoneNumber: {
+    type: String,
+    unique: true,
+    sparse: true // Allow multiple null values
   },
   firebaseUid: {
     type: String,

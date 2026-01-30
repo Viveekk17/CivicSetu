@@ -14,7 +14,8 @@ import {
     faUsers,
     faGift,
     faCoins,
-    faChevronDown
+    faChevronDown,
+    faSeedling
 } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -39,8 +40,10 @@ const AdminLayout = () => {
 
     const menuItems = [
         { path: '/admin/dashboard', name: 'Dashboard', icon: faChartLine },
+        { path: '/admin/feed', name: 'Public Feed', icon: faList }, // Using faList or maybe faNewspaper would be better? I will import faNewspaper.
         { path: '/admin/submissions', name: 'Submissions', icon: faCheck },
-        { path: '/admin/requests', name: 'Reports', icon: faList },
+        { path: '/admin/requests', name: 'Reports', icon: faList }, // Reports used faList. I should use unique icons if possible.
+        { path: '/admin/tree-requests', name: 'Tree Requests', icon: faSeedling },
         { path: '/admin/communities', name: 'Communities', icon: faUsers },
         { path: '/admin/transactions', name: 'Transactions', icon: faCoins },
         { path: '/admin/users', name: 'Users', icon: faUserShield },

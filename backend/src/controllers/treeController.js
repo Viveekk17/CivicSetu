@@ -82,11 +82,11 @@ exports.redeemTree = asyncHandler(async (req, res) => {
 
   // Track trees planted if environmental category
   const environmentalCategories = ['trees', 'bundles'];
-  if (environmentalCategories.includes(tree.category)) {
-    user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
+  let treeCount = 0;
 
+  if (environmentalCategories.includes(tree.category)) {
     // Calculate tree count based on tree name
-    let treeCount = 1; // Default single tree
+    treeCount = 1; // Default single tree
 
     if (tree.category === 'bundles') {
       // Extract number from package name (e.g., "3 Trees Package" -> 3)
@@ -98,13 +98,40 @@ exports.redeemTree = asyncHandler(async (req, res) => {
       }
     }
 
-    user.impact.treesPlanted += treeCount;
-    console.log(`🌳 Added ${treeCount} tree(s) planted. Total: ${user.impact.treesPlanted}`);
+    // Create TreeRedemption record instead of immediately adding trees
+    const TreeRedemption = require('../models/TreeRedemption');
+    const redemption = await TreeRedemption.create({
+      user: user._id,
+      itemName: tree.name,
+      treesRequested: treeCount,
+      creditsSpent: tree.cost,
+      status: 'pending',
+      statusHistory: [{
+        status: 'pending',
+        updatedBy: user._id,
+        notes: 'Redemption request created',
+        timestamp: new Date()
+      }]
+    });
+
+    console.log(`🌳 Created tree redemption request for ${treeCount} tree(s). Status: pending`);
   }
 
   await user.save();
 
-  // Create transaction record
+  // Create transaction record for the redemption
+  await Transaction.create({
+    user: req.user.id,
+    type: 'redeemed',
+    amount: tree.cost,
+    description: `Redeemed ${tree.name}`,
+    metadata: {
+      treeId: tree._id,
+      treeName: tree.name,
+      category: tree.category,
+      treesRequested: treeCount
+    }
+  });
 
 
   // Add to inventory if it's a redeemable item (not an environmental donation)
@@ -120,11 +147,15 @@ exports.redeemTree = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: `Successfully redeemed ${tree.name}!`,
+    message: environmentalCategories.includes(tree.category)
+      ? `Successfully redeemed ${tree.name}! Your tree planting request is pending admin approval.`
+      : `Successfully redeemed ${tree.name}!`,
     data: {
       tree: tree,
       newBalance: user.credits,
       creditsSpent: tree.cost,
+      treesRequested: treeCount,
+      redemptionStatus: environmentalCategories.includes(tree.category) ? 'pending' : null,
       user: { // Return full updated user for frontend sync
         id: user._id,
         name: user.name,
@@ -189,5 +220,22 @@ exports.useItem = asyncHandler(async (req, res) => {
     success: true,
     message: `Successfully used ${item.name}`,
     data: user.inventory
+  });
+});
+
+// @desc    Get user's tree redemption history
+// @route   GET /api/trees/my-redemptions
+// @access  Private
+exports.getMyRedemptions = asyncHandler(async (req, res) => {
+  const TreeRedemption = require('../models/TreeRedemption');
+
+  const redemptions = await TreeRedemption.find({ user: req.user.id })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  res.json({
+    success: true,
+    count: redemptions.length,
+    data: redemptions
   });
 });

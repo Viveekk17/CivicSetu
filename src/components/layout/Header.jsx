@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt, faNewspaper, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { getStoredUser } from '../../services/authService';
 import { getInventory, useItem } from '../../services/treeService';
 import { useLanguage } from '../../context/LanguageContext';
+import axios from 'axios';
 
 const Header = ({ onMenuClick, isSidebarOpen }) => {
   const { theme, toggleTheme } = useTheme();
@@ -14,12 +15,16 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showBag, setShowBag] = useState(false);
+  const [showTreeHistory, setShowTreeHistory] = useState(false);
   const [inventory, setInventory] = useState([]);
   const [usingItem, setUsingItem] = useState(null);
+  const [redemptions, setRedemptions] = useState([]);
+  const [loadingRedemptions, setLoadingRedemptions] = useState(false);
 
   const notificationRef = useRef(null);
   const userMenuRef = useRef(null);
   const bagRef = useRef(null);
+  const treeDropdownRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -33,16 +38,19 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
       if (bagRef.current && !bagRef.current.contains(event.target)) {
         setShowBag(false);
       }
+      if (treeDropdownRef.current && !treeDropdownRef.current.contains(event.target)) {
+        setShowTreeHistory(false);
+      }
     };
 
-    if (showNotifications || showUserMenu || showBag) {
+    if (showNotifications || showUserMenu || showBag || showTreeHistory) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showNotifications, showUserMenu, showBag]);
+  }, [showNotifications, showUserMenu, showBag, showTreeHistory]);
 
   // Fetch inventory
   const fetchInventory = async () => {
@@ -175,6 +183,80 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
     }
   };
 
+  // Fetch tree redemptions
+  const fetchRedemptions = async () => {
+    try {
+      setLoadingRedemptions(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/trees/my-redemptions`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success) {
+        setRedemptions(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching redemptions:', error);
+    } finally {
+      setLoadingRedemptions(false);
+    }
+  };
+
+  // Fetch redemptions when tree history dropdown opens
+  useEffect(() => {
+    if (showTreeHistory && user) {
+      fetchRedemptions();
+    }
+  }, [showTreeHistory]);
+
+  // Helper function to render status badge
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: {
+        label: 'Pending',
+        icon: '⏳',
+        bg: '#FEF3C7',
+        text: '#92400E'
+      },
+      sent_to_ngo: {
+        label: 'Sent to NGO',
+        icon: '📤',
+        bg: '#DBEAFE',
+        text: '#1E40AF'
+      },
+      planting_in_process: {
+        label: 'Planting in Progress',
+        icon: '🌿',
+        bg: '#D1FAE5',
+        text: '#065F46'
+      },
+      completed: {
+        label: 'Completed',
+        icon: '✅',
+        bg: '#D1FAE5',
+        text: '#065F46'
+      }
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    return (
+      <span
+        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold"
+        style={{
+          backgroundColor: config.bg,
+          color: config.text
+        }}
+      >
+        <span>{config.icon}</span>
+        <span>{config.label}</span>
+      </span>
+    );
+  };
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -227,14 +309,120 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
           <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.credits?.toLocaleString() || 0}</span>
         </div>
 
-        {/* Trees Planted Badge */}
-        <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full shadow-sm"
-          style={{
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-light)'
-          }}>
-          <span className="text-xl">🌳</span>
-          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.impact?.treesPlanted?.toLocaleString() || 0}</span>
+        {/* Trees Planted Badge with Redemption History Dropdown */}
+        <div className="relative" ref={treeDropdownRef}>
+          <button
+            onClick={() => setShowTreeHistory(!showTreeHistory)}
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full shadow-sm cursor-pointer transition-all hover:shadow-md"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-light)'
+            }}
+          >
+            <span className="text-xl">🌳</span>
+            <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{user?.impact?.treesPlanted?.toLocaleString() || 0}</span>
+            <FontAwesomeIcon
+              icon={faChevronDown}
+              className={`text-xs transition-transform ${showTreeHistory ? 'rotate-180' : ''}`}
+              style={{ color: 'var(--text-secondary)' }}
+            />
+          </button>
+
+          {/* Tree Redemption History Dropdown */}
+          {showTreeHistory && (
+            <div
+              className="absolute right-0 mt-2 w-96 rounded-xl shadow-2xl overflow-hidden z-50"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-light)'
+              }}
+            >
+              {/* Header */}
+              <div className="p-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
+                <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                  🌳 Tree Redemption History
+                </h3>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  Track your tree planting requests
+                </p>
+              </div>
+
+              {/* Redemptions List */}
+              <div className="max-h-96 overflow-y-auto">
+                {loadingRedemptions ? (
+                  <div className="p-8 text-center">
+                    <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading...</p>
+                  </div>
+                ) : redemptions.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <span className="text-4xl">🌱</span>
+                    <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>No tree redemptions yet</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Redeem trees to start planting!</p>
+                  </div>
+                ) : (
+                  <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                    {redemptions.map((redemption) => (
+                      <div key={redemption._id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">🌱</span>
+                              <div>
+                                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                                  {redemption.treesRequested} {redemption.treesRequested === 1 ? 'Tree' : 'Trees'}
+                                </p>
+                                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                                  {redemption.itemName}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Status Badge */}
+                            <div className="mt-2">
+                              {getStatusBadge(redemption.status)}
+                            </div>
+
+                            {/* Date */}
+                            <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+                              {redemption.status === 'completed' && redemption.completedAt
+                                ? `Completed: ${new Date(redemption.completedAt).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}`
+                                : `Requested: ${new Date(redemption.createdAt).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}`}
+                            </p>
+
+                            {/* Admin Notes */}
+                            {redemption.adminNotes && (
+                              <p className="text-xs mt-1 italic" style={{ color: 'var(--text-secondary)' }}>
+                                Note: {redemption.adminNotes}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="text-right">
+                            <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                              {redemption.creditsSpent} credits
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Language Toggle */}
@@ -519,6 +707,53 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
                 </div>
               </div>
 
+              {/* My Posts & My Submissions Tabs */}
+              <div className="p-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      window.location.href = '/feed?myPosts=true';
+                      setShowUserMenu(false);
+                    }}
+                    className="py-2.5 flex items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all"
+                    style={{
+                      color: 'var(--text-primary)',
+                      backgroundColor: 'var(--bg-hover)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--primary-lighter)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faNewspaper} />
+                    My Posts
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      window.location.href = '/submissions';
+                      setShowUserMenu(false);
+                    }}
+                    className="py-2.5 flex items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all"
+                    style={{
+                      color: 'var(--text-primary)',
+                      backgroundColor: 'var(--bg-hover)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--primary-lighter)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faCheckCircle} />
+                    My Submissions
+                  </button>
+                </div>
+              </div>
+
               {/* Logout Button */}
               <div className="p-3">
                 <button
@@ -567,6 +802,8 @@ const handleLogout = () => {
   localStorage.removeItem('user');
   window.location.href = '/login';
 };
+
+
 
 // Helper function to format time
 const formatTime = (timestamp) => {

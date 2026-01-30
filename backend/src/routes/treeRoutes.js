@@ -5,7 +5,8 @@ const {
   getTree,
   redeemTree,
   getInventory,
-  useItem
+  useItem,
+  getMyRedemptions
 } = require('../controllers/treeController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -13,11 +14,13 @@ const { protect } = require('../middleware/authMiddleware');
 router.get('/inventory', protect, getInventory);
 router.post('/inventory/:itemId/use', protect, useItem);
 
+// Redemption history route
+router.get('/my-redemptions', protect, getMyRedemptions);
+
 // Public routes
 router.get('/', getTrees);
 router.get('/:id', getTree);
 
-// Protected routes
 // Protected routes
 router.post('/:id/redeem', protect, redeemTree);
 

@@ -55,4 +55,13 @@ api.interceptors.response.use(
   }
 );
 
+export const searchCommunities = async (query) => {
+  try {
+    const response = await api.get(`/communities/search?q=${query}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
 export default api;

@@ -129,35 +129,127 @@ exports.firebaseLogin = async (req, res) => {
     // Verify token
     const admin = require('../config/firebase');
     const decodedToken = await admin.auth().verifyIdToken(token);
-    const { uid, email, name, picture } = decodedToken;
+    const { uid, email, name, picture, phone_number } = decodedToken;
+    const provider = decodedToken.firebase.sign_in_provider; // 'phone', 'google.com', 'password'
 
-    // Check if user exists
+    console.log(`Login attempt: Provider=${provider}, UID=${uid}, Email=${email}, Phone=${phone_number}`);
+
+    // Check if user exists by firebaseUid
     let user = await User.findOne({ firebaseUid: uid });
 
     if (!user) {
-      // Check by email to link legacy accounts
-      user = await User.findOne({ email });
+      // If not found by UID, try alternative lookups to link accounts
+
+      // 1. Try by Email (if available)
+      if (email) {
+        user = await User.findOne({ email });
+      }
+
+      // 2. Try by Phone Number (if available and not found yet)
+      if (!user && phone_number) {
+        user = await User.findOne({ phoneNumber: phone_number });
+      }
 
       if (user) {
         // Link existing user
+        console.log(`Linking existing user: ${user._id}`);
         user.firebaseUid = uid;
+        if (!user.email && email) user.email = email;
+        if (!user.phoneNumber && phone_number) user.phoneNumber = phone_number;
         // Update profile if needed
         if (!user.profilePicture && picture) user.profilePicture = picture;
         await user.save();
       } else {
-        // Create new user
-        user = await User.create({
-          name: name || email.split('@')[0],
-          email,
+        // New User - Do NOT create yet, return isNewUser flag
+        console.log('New phone user detected, waiting for username setup');
+        return res.status(200).json({
+          success: true,
+          isNewUser: true,
+          token: token, // Send back firebase token for next step
           firebaseUid: uid,
-          profilePicture: picture || '/uploads/default-avatar.png',
-          role: 'user', // Default role
-          credits: 0
+          email,
+          phone_number
         });
       }
     }
 
+    // Existing user login
+    const appToken = generateToken(user._id);
+
     res.status(200).json({
+      success: true,
+      isNewUser: false,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          credits: user.credits,
+          role: user.role,
+          profilePicture: user.profilePicture,
+          impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
+        },
+        token: appToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Firebase Login Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Complete phone registration with username
+// @route   POST /api/auth/phone-register
+// @access  Public
+exports.completePhoneRegistration = async (req, res) => {
+  try {
+    const { token, name } = req.body;
+
+    if (!token || !name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide token and username'
+      });
+    }
+
+    // Verify token again
+    const admin = require('../config/firebase');
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const { uid, email, picture, phone_number } = decodedToken;
+
+    // Double check if user already exists
+    let user = await User.findOne({ firebaseUid: uid });
+    if (user) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already registered'
+      });
+    }
+
+    // Create new user
+    console.log('Creating new user with username:', name);
+    const userData = {
+      name: name,
+      firebaseUid: uid,
+      profilePicture: picture || '/uploads/default-avatar.png',
+      role: 'user', // Default role
+      credits: 0
+    };
+
+    if (email) userData.email = email;
+    if (phone_number) userData.phoneNumber = phone_number;
+
+    user = await User.create(userData);
+
+    // Generate app token
+    const appToken = generateToken(user._id);
+
+    res.status(201).json({
       success: true,
       data: {
         user: {
@@ -169,12 +261,12 @@ exports.firebaseLogin = async (req, res) => {
           profilePicture: user.profilePicture,
           impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
         },
-        token // Return the same firebase token or nothing (client has it)
+        token: appToken
       }
     });
 
   } catch (error) {
-    console.error('Firebase Login Error:', error);
+    console.error('Phone Register Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

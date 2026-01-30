@@ -182,7 +182,13 @@ const Login = () => {
               </>
             )}
           </h2>
-          <p className="font-bold text-lg" style={{ color: '#000000' }}>
+          <p className="font-bold text-lg" style={{
+            background: 'linear-gradient(to right, #FF9933, #FFFFFF, #138808)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            display: 'inline-block',
+            filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.3))'
+          }}>
             {isNewUser ? "Please set a username to continue" : "स्वच्छ भारत अपना भारत"}
           </p>
         </div>

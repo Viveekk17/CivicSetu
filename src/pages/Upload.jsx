@@ -451,8 +451,8 @@ const Upload = () => {
       }
 
       if (aiData.weight > 20 && (!enableTagging || taggingMode === 'members')) {
-        const confirmed = window.confirm(`Weight-Based Recommendation\n\nCleanups over 20 kg are strongly recommended to tag a Community or NGO for better coordination.\n\nDetected weight: ${aiData.weight} kg\nCurrent mode: ${taggingMode}\n\nDo you want to proceed anyway?`);
-        if (!confirmed) return;
+        alert(`Large Cleanup Validation Failed\n\nCleanups over 20 kg require Community or NGO tagging.\n\nDetected weight: ${aiData.weight} kg\n\nPlease enable tagging and select "Community" or "NGO" mode before submitting.`);
+        return;
       }
 
       setSubmitting(true);

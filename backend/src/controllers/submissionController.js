@@ -202,8 +202,14 @@ exports.createSubmission = async (req, res) => {
       });
     }
 
-    if (weight > 20 && taggingMode === 'members') {
-      console.log('⚠️ Warning: Cleanup over 20kg using members mode (allowed but not recommended)');
+    // Strict validation for > 20kg (Community or NGO required)
+    if (weight > 20 && (!taggingMode || taggingMode === 'members')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cleanups over 20 kg require Community or NGO tagging.',
+        requiresCommunityOrNGO: true,
+        weight: weight
+      });
     }
 
     // Process credits based on tagging mode

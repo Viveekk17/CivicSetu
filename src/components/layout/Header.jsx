@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faSun, faMoon, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt, faNewspaper, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from '../../context/ThemeContext';
+import { faBars, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt, faNewspaper, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+// import { useTheme } from '../../context/ThemeContext';
 import { getStoredUser } from '../../services/authService';
 import { getInventory, useItem } from '../../services/treeService';
 import { useLanguage } from '../../context/LanguageContext';
 import axios from 'axios';
 
 const Header = ({ onMenuClick, isSidebarOpen }) => {
-  const { theme, toggleTheme } = useTheme();
+  // const { theme, toggleTheme } = useTheme(); // Removed for light theme enforcement
   const { language, toggleLanguage, t } = useLanguage();
   const [user, setUser] = useState(getStoredUser());
   const [notifications, setNotifications] = useState([]);

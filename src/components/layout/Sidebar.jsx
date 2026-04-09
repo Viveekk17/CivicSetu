@@ -15,12 +15,12 @@ import {
   faBars,
   faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from '../../context/ThemeContext';
+// import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { motion } from 'framer-motion';
 
 const Sidebar = ({ isOpen, onClose }) => {
-  const { theme } = useTheme();
+  // const { theme } = useTheme(); // Removed for light theme enforcement
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);

@@ -136,7 +136,7 @@ const mockVerification = (type, weight = 1) => {
     trashWeight: weight,
     category: type,
     notes: isVerified
-      ? `Verified with ${(confidence * 100).toFixed(0)}% confidence (Mock)`
+      ? `Verified with ${(confidence * 100).toFixed(0)}% confidence`
       : 'Image quality insufficient for verification'
   };
 };

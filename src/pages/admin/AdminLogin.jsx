@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserShield, faLock, faIdCard, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { login } from '../../services/authService';
+import { adminLogin } from '../../services/authService';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
@@ -17,7 +17,7 @@ const AdminLogin = () => {
         setError('');
 
         try {
-            const response = await login(formData);
+            const response = await adminLogin(formData);
 
             if (response.success) {
                 // Check for admin privileges

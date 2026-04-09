@@ -1,0 +1,28 @@
+[
+  {
+    "impact": {
+      "pollutionSaved": 89.75,
+      "treesPlanted": 0
+    },
+    "_id": "6975d9175bc340720d52f4ff",
+    "name": "Vivek",
+    "email": "vivek@gmail.com",
+    "password": "$2b$10$Fy/M58gEw5A3aW3GJbnbyez0yuMfn99ha6ervfqJbSQ2OxS5pUPBa",
+    "credits": 383,
+    "profilePicture": "/uploads/default-avatar.png",
+    "role": "admin",
+    "createdAt": "2026-01-25T08:49:27.772Z",
+    "updatedAt": "2026-01-31T14:43:50.389Z",
+    "__v": 4,
+    "firebaseUid": "tqKwyYkCheQd4Pwu9RnA1x0fEIv2",
+    "inventory": [
+      {
+        "itemId": "6978c02cedf43294d5b0ffac",
+        "name": "FASTag Credits",
+        "category": "transport",
+        "_id": "697999eac6f22cbc49382039",
+        "acquiredAt": "2026-01-28T05:08:58.935Z"
+      }
+    ]
+  }
+]

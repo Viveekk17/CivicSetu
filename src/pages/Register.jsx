@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLeaf, faUser, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { register, googleLogin } from '../services/authService';
 
@@ -95,11 +95,13 @@ const Register = () => {
         className="w-full max-w-md relative z-10 p-8 card glass border-t border-white border-opacity-50 shadow-2xl"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg mb-4">
-            <FontAwesomeIcon icon={faLeaf} />
+          <div className="mx-auto mb-4 flex justify-center">
+            <img src="/logo.png" alt="CivicSetu" className="h-16 object-contain drop-shadow-md" />
           </div>
-          <h1 className="text-3xl font-bold mb-2 title-gradient">Join EcoTrace</h1>
-          <p className="text-gray-500">Start tracking your impact today.</p>
+          <h1 className="text-3xl font-bold mb-1">
+            <span style={{ color: '#3b82f6' }}>CIVIC</span><span style={{ color: '#10b981' }}>सेतु</span>
+          </h1>
+          <p className="text-gray-500 mt-1">Join the movement. Track your civic impact.</p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">

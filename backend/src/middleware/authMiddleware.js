@@ -1,5 +1,6 @@
-const admin = require('../config/firebase');
+const firebaseAdmin = require('../config/firebase');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 exports.protect = async (req, res, next) => {
   let token;
@@ -17,52 +18,49 @@ exports.protect = async (req, res, next) => {
     });
   }
 
+  // --- Strategy 1: Try Backend JWT (used by adminLogin / direct login) ---
   try {
-    // Verify token with Firebase Admin
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (user) {
+      req.user = user;
+      return next();
+    }
+  } catch (jwtError) {
+    // Not a valid JWT — fall through to Firebase verification
+  }
+
+  // --- Strategy 2: Try Firebase ID Token (used by regular citizen login) ---
+  try {
     console.log('🔍 Verifying Firebase token...');
-    console.log('Token (first 20 chars):', token.substring(0, 20) + '...');
+    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+    console.log('✅ Firebase token verified, UID:', decodedToken.uid);
 
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    console.log('✅ Token verified successfully');
-    console.log('Firebase UID:', decodedToken.uid);
-    console.log('Email:', decodedToken.email);
-
-    // Get user from MongoDB using firebaseUid or email (for legacy migration)
     let user = await User.findOne({ firebaseUid: decodedToken.uid });
-    console.log('User found by firebaseUid:', !!user);
 
     if (!user && decodedToken.email) {
-      // Fallback: Check by email and link if found
-      console.log('Trying fallback: finding user by email...');
       user = await User.findOne({ email: decodedToken.email });
-      console.log('User found by email:', !!user);
       if (user) {
-        console.log('Linking firebaseUid to existing user');
         user.firebaseUid = decodedToken.uid;
         await user.save();
       }
     }
 
     if (!user) {
-      console.log('❌ User not found in database');
       return res.status(401).json({
         success: false,
         message: 'User not found'
       });
     }
 
-    console.log('✅ Auth successful for user:', user.email);
     req.user = user;
-    next();
-  } catch (error) {
-    console.error('❌ Auth Error:', error.code || error.message);
-    if (error.code) {
-      console.error('Firebase Error Code:', error.code);
-    }
+    return next();
+  } catch (firebaseError) {
+    console.error('❌ Auth Error:', firebaseError.code || firebaseError.message);
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route',
-      error: error.message
+      error: firebaseError.message
     });
   }
 };

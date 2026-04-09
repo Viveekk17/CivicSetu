@@ -19,28 +19,64 @@ export const searchUsers = async (query) => {
 export const register = async (userData) => {
   try {
     const { email, password, name } = userData;
-    // 1. Create user in Firebase Auth
+
+    // Step 1: Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    const firebaseUser = userCredential.user;
 
-    // 2. Update profile (name)
-    await updateProfile(user, { displayName: name });
+    // Step 2: Update Firebase profile with name
+    await updateProfile(firebaseUser, { displayName: name });
 
-    // 3. Get ID Token
-    const token = await user.getIdToken();
+    // Step 3: Get Firebase ID Token
+    const firebaseToken = await firebaseUser.getIdToken();
 
-    // 4. Sync with Backend
-    const response = await api.post('/auth/firebase', { token });
+    // Step 4: Try to sync with backend
+    // Note: api interceptor returns response.data directly, so response IS the data object
+    const syncResponse = await api.post('/auth/firebase', { token: firebaseToken });
 
-    // Store token and user data
+    if (syncResponse.isNewUser) {
+      // Step 5 (new user): Call phone-register to create MongoDB user and get app JWT
+      const registerResponse = await api.post('/auth/phone-register', {
+        token: firebaseToken,
+        name
+      });
+
+      if (registerResponse.success) {
+        localStorage.setItem('token', registerResponse.data.token);
+        localStorage.setItem('user', JSON.stringify(registerResponse.data.user));
+      }
+
+      return registerResponse;
+    }
+
+    // Existing user — store app token from the sync response
+    if (syncResponse.success) {
+      localStorage.setItem('token', syncResponse.data.token);
+      localStorage.setItem('user', JSON.stringify(syncResponse.data.user));
+    }
+
+    return syncResponse;
+  } catch (error) {
+    console.error("Registration Error:", error);
+    throw error;
+  }
+};
+
+
+
+// Admin Login - bypasses Firebase, uses backend JWT directly
+export const adminLogin = async (credentials) => {
+  try {
+    const response = await api.post('/auth/login', credentials);
+
     if (response.success) {
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
 
     return response;
   } catch (error) {
-    console.error("Registration Error:", error);
+    console.error("Admin Login Error:", error);
     throw error;
   }
 };
@@ -60,16 +96,10 @@ export const login = async (credentials) => {
     const response = await api.post('/auth/firebase', { token });
 
     // Store token and user data
+    // Note: api interceptor returns response.data directly, so response IS the data object
     if (response.success) {
-      console.log('✅ Login successful, storing token and user data');
-      console.log('Token (first 20 chars):', token.substring(0, 20) + '...');
-      console.log('User:', response.data.user);
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      // Verify storage immediately
-      const storedToken = localStorage.getItem('token');
-      console.log('✅ Verified token is in localStorage:', !!storedToken);
+      localStorage.setItem('user', JSON.stringify(response.data?.user || response.user));
     }
 
     return response;

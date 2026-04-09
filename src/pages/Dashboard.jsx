@@ -192,7 +192,7 @@ const Dashboard = () => {
                 <div className="relative z-10">
                   <h2 className="text-2xl font-bold mb-1" style={{ color: '#1E293B' }}>Add a cleanup activity here</h2>
                   <p className="mb-4 text-xs" style={{ color: '#475569' }}>Upload photos or redeem credits.</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => navigate('/upload')}
                       className="px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all bg-emerald-600 text-white border-none hover:bg-emerald-700"
@@ -210,6 +210,13 @@ const Dashboard = () => {
                       className="px-4 py-2 rounded-lg font-bold text-sm transition-all bg-blue-500 text-white border-none hover:bg-blue-600"
                     >
                       Feed
+                    </button>
+                    <button
+                      onClick={() => navigate('/about')}
+                      className="px-4 py-2 rounded-lg font-bold text-sm transition-all border-none hover:opacity-90"
+                      style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}
+                    >
+                      About Us
                     </button>
                   </div>
                 </div>

@@ -25,6 +25,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminCommunities from './pages/admin/AdminCommunities';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import PublicFeed from './pages/PublicFeed';
+import AboutUs from './pages/AboutUs';
 
 const App = () => {
   const { pathname } = useLocation();
@@ -66,6 +67,7 @@ const App = () => {
           <Route path="ngos" element={<NGODashboard />} />
           <Route path="community" element={<Community />} />
           <Route path="report-issue" element={<ReportIssue />} />
+          <Route path="about" element={<AboutUs />} />
           <Route path="blockchain" element={
             <Placeholder
               title="Blockchain"

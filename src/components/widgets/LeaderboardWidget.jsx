@@ -112,13 +112,17 @@ const LeaderboardWidget = () => {
 
                 {/* Avatar */}
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0"
+                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 overflow-hidden"
                   style={{
                     background: isCurrentUser ? 'rgba(255,255,255,0.3)' : 'var(--gradient-primary)',
                     color: '#fff'
                   }}
                 >
-                  {getInitials(user.name)}
+                  {(user.profilePicture && !user.profilePicture.includes('default-avatar.png')) ? (
+                    <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    getInitials(user.name)
+                  )}
                 </div>
 
                 {/* Name */}

@@ -431,3 +431,45 @@ exports.getProgressTimeline = async (req, res) => {
   }
 };
 
+
+// @desc    Get global platform impact statistics
+// @route   GET /api/analytics/global-impact
+// @access  Public
+exports.getGlobalImpactStats = async (req, res) => {
+  try {
+    // 1. Civic Actions Logged (Total Submissions)
+    const totalSubmissions = await Submission.countDocuments();
+    
+    // 2. Active Citizens (Total users excluding admins)
+    const totalUsers = await User.countDocuments({ role: { $ne: 'admin' } });
+    
+    // 3. Global Trees Planted (Sum of all treesPlanted from User model)
+    const impactStats = await User.aggregate([
+      { $group: { _id: null, totalTrees: { $sum: "$impact.treesPlanted" } } }
+    ]);
+    const totalTreesPlanted = impactStats[0]?.totalTrees || 0;
+
+    // 4. Credits Redeemed (Sum of all 'redeemed' transactions)
+    const creditStats = await Transaction.aggregate([
+      { $match: { type: 'redeemed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalCreditsRedeemed = creditStats[0]?.total || 0;
+
+    res.json({
+      success: true,
+      data: {
+        civicActions: totalSubmissions,
+        activeCitizens: totalUsers,
+        treesPlanted: totalTreesPlanted,
+        creditsRedeemed: totalCreditsRedeemed
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};

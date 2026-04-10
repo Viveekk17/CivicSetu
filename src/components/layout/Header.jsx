@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt, faNewspaper, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faBell, faCoins, faCheckCircle, faTrash, faTimes, faSignOutAlt, faShoppingBag, faGift, faBus, faBolt, faNewspaper, faChevronDown, faUser } from '@fortawesome/free-solid-svg-icons';
+import { Link, useNavigate } from 'react-router-dom';
 // import { useTheme } from '../../context/ThemeContext';
 import { getStoredUser } from '../../services/authService';
 import { getInventory, useItem } from '../../services/treeService';
@@ -8,6 +9,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import axios from 'axios';
 
 const Header = ({ onMenuClick, isSidebarOpen }) => {
+  const navigate = useNavigate();
   // const { theme, toggleTheme } = useTheme(); // Removed for light theme enforcement
   const { language, toggleLanguage, t } = useLanguage();
   const [user, setUser] = useState(getStoredUser());
@@ -261,7 +263,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
 
   return (
     <header
-      className="sticky top-0 z-20 h-20 flex items-center justify-between px-6 glass"
+      className="sticky top-0 z-50 h-20 flex items-center justify-between px-6 glass"
       style={{
         background: 'linear-gradient(to bottom, #FFB366 0%, #FFFFFF 50%, #4CAF50 100%)',
         backdropFilter: 'blur(12px)',
@@ -649,10 +651,14 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             aria-label="User menu"
           >
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md overflow-hidden"
               style={{ background: 'var(--gradient-primary)' }}
             >
-              <span>{getInitials(user?.name)}</span>
+              {(user?.profilePicture && !user.profilePicture.includes('default-avatar.png')) ? (
+                <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span>{getInitials(user?.name)}</span>
+              )}
             </div>
             <span className="hidden md:block font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
               {user?.name || 'User'}
@@ -672,10 +678,14 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
               <div className="p-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
                 <div className="flex items-center gap-3 mb-2">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md"
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md overflow-hidden"
                     style={{ background: 'var(--gradient-primary)' }}
                   >
-                    <span>{getInitials(user?.name)}</span>
+                    {(user?.profilePicture && !user.profilePicture.includes('default-avatar.png')) ? (
+                      <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{getInitials(user?.name)}</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold truncate" style={{ color: 'var(--text-primary)' }}>
@@ -692,6 +702,22 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
                     {user?.credits?.toLocaleString() || 0} Credits
                   </span>
                 </div>
+              </div>
+
+              {/* Profile Link */}
+              <div className="p-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+                <Link
+                  to="/profile"
+                  onClick={() => setShowUserMenu(false)}
+                  className="w-full py-2.5 flex items-center justify-center gap-2 text-sm font-bold rounded-lg transition-all"
+                  style={{
+                    color: 'var(--text-primary)',
+                    backgroundColor: 'var(--primary-lighter)'
+                  }}
+                >
+                  <FontAwesomeIcon icon={faUser} />
+                  My Profile
+                </Link>
               </div>
 
               {/* My Posts & My Submissions Tabs */}

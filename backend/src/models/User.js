@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   },
   profilePicture: {
     type: String,
-    default: '/uploads/default-avatar.png'
+    default: ''
   },
   inventory: [{
     itemId: {

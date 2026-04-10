@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import api from '../../services/api';
 import { LineChart, Line, AreaChart, Area, PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 const AdminAnalytics = () => {
     const [stats, setStats] = useState(null);
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-    });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -22,11 +15,12 @@ const AdminAnalytics = () => {
                     api.get('/admin/stats'),
                     api.get('/admin/dashboard-analytics')
                 ]);
-                if (statsRes.data.success) {
-                    setStats(statsRes.data.data);
+                
+                if (statsRes.success) {
+                    setStats(statsRes.data);
                 }
-                if (analyticsRes.data.success) {
-                    setAnalytics(analyticsRes.data.data);
+                if (analyticsRes.success) {
+                    setAnalytics(analyticsRes.data);
                 }
             } catch (error) {
                 console.error('Error fetching analytics data:', error);

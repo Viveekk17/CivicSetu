@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoins, faCheckCircle, faTree, faCloud, faRecycle, faLeaf, faEarthAmericas } from '@fortawesome/free-solid-svg-icons';
+import { 
+    faCoins, faTree, faLeaf, faEarthAmericas, faCloud, 
+    faRecycle, faCheckCircle, faUsers, faHeart, faBrain
+} from '@fortawesome/free-solid-svg-icons';
 import StatsCard from '../components/common/StatsCard';
+import HeroBanner from '../components/dashboard/HeroBanner';
 import AQIWidget from '../components/widgets/AQIWidget';
 import ActivityFeed from '../components/widgets/ActivityFeed';
 import LeaderboardWidget from '../components/widgets/LeaderboardWidget';
 import { getDashboardStats } from '../services/analyticsService';
+import { getGlobalImpact } from '../services/api';
 import { getStoredUser } from '../services/authService';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -15,12 +20,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [stats, setStats] = useState(null);
+  const [globalImpact, setGlobalImpact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const user = getStoredUser();
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchAllStats();
   }, []);
 
   const [localDrafts, setLocalDrafts] = useState([]);
@@ -33,30 +39,35 @@ const Dashboard = () => {
     }
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchAllStats = async () => {
     try {
       setLoading(true);
-      const response = await getDashboardStats();
+      const [userStats, platformStats] = await Promise.all([
+        getDashboardStats(),
+        getGlobalImpact()
+      ]);
 
-      if (response.success) {
-        setStats(response.data);
+      if (userStats.success) {
+        setStats(userStats.data);
 
         // Sync localStorage credits with database value
         const currentUser = getStoredUser();
-        if (currentUser && response.data.stats.currentBalance !== currentUser.credits) {
+        if (currentUser && userStats.data.stats.currentBalance !== currentUser.credits) {
           const updatedUser = {
             ...currentUser,
-            credits: response.data.stats.currentBalance
+            credits: userStats.data.stats.currentBalance
           };
           localStorage.setItem('user', JSON.stringify(updatedUser));
 
           // Dispatch event to update header
           window.dispatchEvent(new CustomEvent('creditsUpdated', {
-            detail: { credits: response.data.stats.currentBalance }
+            detail: { credits: userStats.data.stats.currentBalance }
           }));
         }
-      } else {
-        setError('Failed to load dashboard data');
+      }
+      
+      if (platformStats?.success) {
+        setGlobalImpact(platformStats.data);
       }
     } catch (err) {
       console.error('Dashboard error:', err);
@@ -98,7 +109,7 @@ const Dashboard = () => {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={fetchDashboardData}
+            onClick={fetchAllStats}
             className="px-6 py-2 rounded-lg text-white"
             style={{ background: 'var(--gradient-primary)' }}
           >
@@ -116,6 +127,7 @@ const Dashboard = () => {
       initial="hidden"
       animate="visible"
     >
+      <HeroBanner globalImpact={globalImpact} />
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div variants={itemVariants}>

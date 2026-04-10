@@ -90,6 +90,8 @@ exports.getSubmissions = asyncHandler(async (req, res) => {
 
     const submissions = await Submission.find(query)
         .populate('user', 'name email profilePicture')
+        .populate('verificationDetails.taggedUsers', 'name username')
+        .populate('verificationDetails.taggedCommunities', 'name')
         .sort({ createdAt: -1 });
 
     res.json({
@@ -114,42 +116,96 @@ exports.updateSubmissionStatus = asyncHandler(async (req, res) => {
         return res.status(400).json({ success: false, message: 'Submission already processed' });
     }
 
+    // Calculate credits to award (use admin-specified or fall back to AI suggestion)
+    const creditsToAward = points ? parseInt(points) : (submission.verificationDetails?.suggestedCredits || 50);
+
     submission.status = status;
     submission.verificationDetails = {
+        ...submission.verificationDetails,
         verifiedAt: Date.now(),
-        verifiedBy: 'Admin', // Could handle via auth user name
+        verifiedBy: 'Admin',
         notes: notes || ''
     };
 
     if (status === 'verified') {
-        // Calculate credits to award (default 50 or custom)
-        const creditsToAward = points ? parseInt(points) : 50;
         submission.creditsAwarded = creditsToAward;
+        await submission.save();
 
-        // Update User Credits & Impact
+        // 1. Award credits to the main uploader + track environmental impact
         const user = await User.findById(submission.user);
         if (user) {
             user.credits += creditsToAward;
 
-            // Should probably determine impact based on submission type
-            // Simple mock logic for now
+            // Track environmental impact
             if (submission.type === 'garbage') {
-                user.impact.pollutionSaved += (submission.weight || 5); // 5kg default
+                user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
+                user.impact.pollutionSaved += (submission.weight || 0);
             } else if (submission.type === 'restoration') {
+                user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
                 user.impact.treesPlanted += 1;
             }
 
             await user.save();
-        }
-    }
 
-    await submission.save();
+            // Create transaction record for uploader
+            await Transaction.create({
+                user: submission.user,
+                type: 'earned',
+                amount: creditsToAward,
+                description: `Credits awarded for ${submission.type} submission (Admin approved)`,
+                metadata: { submissionId: submission._id }
+            });
+        }
+
+        // 2. Award credits to tagged users (if members tagging mode)
+        const taggingMode = submission.verificationDetails?.taggingMode;
+        const taggedUsers = submission.verificationDetails?.taggedUsers || [];
+
+        if (taggingMode === 'members' && taggedUsers.length > 0) {
+            for (const userId of taggedUsers) {
+                if (userId.toString() === submission.user.toString()) continue;
+                const taggedUser = await User.findById(userId);
+                if (taggedUser) {
+                    taggedUser.credits += creditsToAward;
+                    await taggedUser.save();
+
+                    await Transaction.create({
+                        user: userId,
+                        type: 'earned',
+                        amount: creditsToAward,
+                        description: `Credits awarded from shared ${submission.type} submission (Admin approved)`,
+                        metadata: { submissionId: submission._id, sharedBy: submission.user }
+                    });
+                }
+            }
+        }
+    } else {
+        // Rejected — no credits
+        submission.creditsAwarded = 0;
+        await submission.save();
+    }
+    
+    // ── SEND STATUS UPDATE EMAIL (ASYNC) ──
+    try {
+        const { sendStatusUpdateEmail } = require('../utils/mailService');
+        const userToNotify = await User.findById(submission.user);
+        if (userToNotify && userToNotify.email) {
+            // Fire and forget, don't wait for email to respond to admin
+            sendStatusUpdateEmail(userToNotify, submission).catch(err => {
+                console.error('📧 Status Update Email error:', err);
+            });
+        }
+    } catch (mailErr) {
+        console.error('📧 Mail service initialization error:', mailErr);
+    }
 
     res.json({
         success: true,
+        message: `Submission ${status === 'verified' ? 'verified' : 'rejected'} successfully`,
         data: submission
     });
 });
+
 
 // @desc    Get All User Reports
 // @route   GET /api/admin/reports

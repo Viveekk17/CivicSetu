@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes, faEye, faFilter, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,10 +11,6 @@ const AdminRequests = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -22,8 +18,8 @@ const AdminRequests = () => {
             // Status values match DB enum: 'open', 'in-progress', 'resolved', 'closed'
             const res = await api.get(`/admin/reports?status=${filterStatus}`);
 
-            if (res.data.success) {
-                const allReports = res.data.data.map(r => ({
+            if (res.success) {
+                const allReports = res.data.map(r => ({
                     id: r._id,
                     user: r.user?.name || 'Anonymous',
                     userEmail: r.user?.email || '',

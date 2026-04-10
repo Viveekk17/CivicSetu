@@ -515,47 +515,22 @@ const Upload = () => {
       const response = await createSubmission(formData);
 
       if (response.success) {
-        // Remove from drafts if this matches a draft (fuzzy match or just cleanup)
-        // Ideally we track which draft ID was active, but for now let's just 
-        // find a draft with matching "before" photo or just rely on user manually deleting?
-        // Actually, the requirement said "after submission... recently stored image will be deleted".
-        // Let's find if the current beforePhoto matches any draft and delete it.
-        // Doing a simple check on base64 is expensive. 
-        // Let's just delete the most recent draft if it matches location?
-        // Or better: pass `draftId` if we resumed one.
-        // For simplicity, I'll just clear the drafts that match the exact location/time?
-        // No, let's keep it simple: The user just submitted, if they came from a draft we should know.
-        // I won't overengineer the matching right now.
-        // But wait, the requirement is specific on deletion.
-        // "after submission in recently stored image will be deleted"
+        // NOTE: Credits are NOT awarded immediately anymore.
+        // The submission is in 'pending' state. The admin must approve it.
+        // We do NOT update localStorage credits here.
 
-        // Let's just TRY to find a draft that looks like this one (same timestamp? no).
-        // I will implement a "activeDraftId" state to track this.
-
-        // Update user credits in localStorage
-        const updatedUser = {
-          ...user,
-          credits: user.credits + response.data.creditsAwarded
-        };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-
-        // Dispatch custom event to update header credits and notification
-        window.dispatchEvent(new CustomEvent('creditsUpdated', {
-          detail: { credits: response.data.creditsAwarded }
-        }));
-
-        // Add success notification
+        // Add success notification — informs user submission is under review
         window.dispatchEvent(new CustomEvent('newNotification', {
           detail: {
             type: 'success',
-            title: 'Submission Verified!',
-            message: `Your ${aiData.category} cleanup has been verified. You earned ${response.data.creditsAwarded} credits and saved ${aiData.co2Saved?.toFixed(1)} kg of CO₂!`
+            title: 'Submission Sent for Review!',
+            message: `Your ${aiData.category} cleanup has been sent to authorities. Estimated ${response.creditsAwarded} credits will be added upon approval.`
           }
         }));
 
-        // Show success
+        // Show success screen
         setResult({
-          credits: response.data.creditsAwarded,
+          credits: response.creditsAwarded,
           co2Saved: aiData.co2Saved,
           category: aiData.category
         });
@@ -617,36 +592,108 @@ const Upload = () => {
 
   // Success screen
   if (result) {
-    const typeInfo = typeIcons[result.category] || typeIcons.garbage;
-
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+        {/* Animated Success Icon */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-500 text-5xl mb-6"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          className="w-28 h-28 rounded-full flex items-center justify-center text-6xl mb-6"
+          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 20px 60px rgba(16,185,129,0.4)' }}
         >
-          <FontAwesomeIcon icon={faCheckCircle} />
+          <FontAwesomeIcon icon={faCheckCircle} className="text-white" />
         </motion.div>
-        <h2 className="text-3xl font-bold mb-2">Submission Verified!</h2>
-        <p className="text-gray-500 mb-2">You've earned {result.credits} credits!</p>
-        <p className="text-sm text-gray-400 mb-8">
-          CO₂ Saved: {result.co2Saved?.toFixed(1)} kg
-        </p>
-        <div className="flex gap-4">
+
+        {/* Main Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-4xl font-extrabold mb-3" style={{ color: 'var(--text-primary)' }}>
+            Submission Received! 🎉
+          </h2>
+          <p className="text-lg font-semibold mb-2" style={{ color: '#059669' }}>
+            Your submission has been verified and sent to higher authorities for review.
+          </p>
+          <p className="text-base mb-6 max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Once reviewed and accepted, <strong>{result.credits} credits</strong> will be credited to your account. You will be notified by the authorities shortly.
+          </p>
+        </motion.div>
+
+        {/* Info Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="flex flex-wrap justify-center gap-4 mb-8"
+        >
+          <div className="flex items-center gap-2 px-5 py-3 rounded-xl border" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-light)' }}>
+            <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
+            <div className="text-left">
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Estimated Credits</p>
+              <p className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{result.credits}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-5 py-3 rounded-xl border" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-light)' }}>
+            <FontAwesomeIcon icon={faLeaf} className="text-emerald-500" />
+            <div className="text-left">
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>CO₂ Offset</p>
+              <p className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{result.co2Saved?.toFixed(1)} kg</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-5 py-3 rounded-xl border" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-light)' }}>
+            <FontAwesomeIcon icon={faClock} className="text-blue-500" />
+            <div className="text-left">
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Status</p>
+              <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Under Review</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Notice Banner */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="max-w-lg w-full mb-8 p-4 rounded-xl flex items-start gap-3"
+          style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe' }}
+        >
+          <span className="text-blue-500 text-xl mt-0.5">ℹ️</span>
+          <p className="text-sm text-blue-700 text-left leading-relaxed">
+            <strong>What happens next?</strong> Our team of authorities will review your before &amp; after photos and the AI analysis. Upon approval, credits will automatically be added to your account. This usually takes <strong>1–3 business days</strong>.
+          </p>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="flex gap-4 flex-wrap justify-center"
+        >
+          <button
+            onClick={() => navigate('/submissions')}
+            className="btn btn-primary px-8 py-3 text-base font-bold"
+          >
+            View My Submissions
+          </button>
           <button
             onClick={() => navigate('/')}
-            className="btn btn-primary"
+            className="px-8 py-3 rounded-xl border-2 font-bold hover:bg-gray-50 transition-colors text-base"
+            style={{ borderColor: 'var(--border-medium)', color: 'var(--text-primary)' }}
           >
             Back to Dashboard
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-xl border-2 border-gray-300 font-bold hover:bg-gray-50"
+            className="px-8 py-3 rounded-xl font-bold transition-colors text-base"
+            style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
           >
             Upload More
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }

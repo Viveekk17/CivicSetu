@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminUsers = () => {
@@ -19,18 +19,13 @@ const AdminUsers = () => {
     const [creditReason, setCreditReason] = useState('');
     const [notificationMessage, setNotificationMessage] = useState('');
 
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-
     const fetchUsers = async () => {
         setLoading(true);
         try {
             const res = await api.get('/admin/users');
-            if (res.data.success) {
-                setUsers(res.data.data);
-                setFilteredUsers(res.data.data);
+            if (res.success) {
+                setUsers(res.data);
+                setFilteredUsers(res.data);
             }
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -62,9 +57,9 @@ const AdminUsers = () => {
         setDetailsLoading(true);
         try {
             const res = await api.get(`/admin/users/${userId}`);
-            if (res.data.success) {
-                setUserDetails(res.data.data);
-                setSelectedUser(res.data.data.user);
+            if (res.success) {
+                setUserDetails(res.data);
+                setSelectedUser(res.data.user);
             }
         } catch (error) {
             console.error(error);
@@ -113,7 +108,7 @@ const AdminUsers = () => {
             fetchUsers();
         } catch (error) {
             console.error("Error deleting user:", error);
-            alert(error.response?.data?.message || "Failed to delete user");
+            alert(error.message || "Failed to delete user");
         }
     };
 

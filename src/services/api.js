@@ -38,15 +38,22 @@ api.interceptors.response.use(
     console.log('Status:', error.response?.status);
     console.log('Error data:', error.response?.data);
 
-    // Don't redirect on login/register pages to avoid refresh
-    const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register';
+    const isAuthPage = window.location.pathname === '/login' || 
+                       window.location.pathname === '/register' || 
+                       window.location.pathname === '/admin/login';
 
     if (error.response?.status === 401 && !isAuthPage) {
       console.log('🚫 401 Unauthorized - clearing auth and redirecting');
       // Unauthorized - clear token and redirect to login (only if not on auth pages)
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      
+      // If on an admin page, redirect to admin login
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/admin/login';
+      } else {
+        window.location.href = '/login';
+      }
     }
 
     // Return error in a format we can use
@@ -63,5 +70,7 @@ export const searchCommunities = async (query) => {
     throw error.response?.data || error.message;
   }
 };
+
+export const getGlobalImpact = () => api.get('/analytics/global-impact');
 
 export default api;

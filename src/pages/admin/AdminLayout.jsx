@@ -1,29 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faChartLine,
-    faList,
-    faClipboardList,
-    faCog,
     faSignOutAlt,
-    faUserShield,
-    faBell,
-    faCheck,
-    faSearch,
-    faUsers,
-    faGift,
-    faCoins,
+    faBars,
+    faTimes,
     faChevronDown,
-    faSeedling
+    faBell
 } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import AdminSidebar from '../../components/layout/AdminSidebar';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState(null);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -38,94 +31,83 @@ const AdminLayout = () => {
         navigate('/admin/login');
     };
 
-    const menuItems = [
-        { path: '/admin/dashboard', name: 'Dashboard', icon: faChartLine },
-        { path: '/admin/feed', name: 'Public Feed', icon: faList }, // Using faList or maybe faNewspaper would be better? I will import faNewspaper.
-        { path: '/admin/submissions', name: 'Submissions', icon: faCheck },
-        { path: '/admin/requests', name: 'Reports', icon: faList }, // Reports used faList. I should use unique icons if possible.
-        { path: '/admin/tree-requests', name: 'Tree Requests', icon: faSeedling },
-        { path: '/admin/communities', name: 'Communities', icon: faUsers },
-        { path: '/admin/transactions', name: 'Transactions', icon: faCoins },
-        { path: '/admin/users', name: 'Users', icon: faUserShield },
-        { path: '/admin/analytics', name: 'Analytics', icon: faClipboardList },
-    ];
-
-    // Theme Colors
-    // Primary: Navy Blue #1F3C88
-    // Background: Light Grey #F4F6F9
-    // Accent: Teal #00A8A8
-    // Text: Dark Charcoal #2E2E2E
-
     return (
-        <div className="min-h-screen bg-[#F4F6F9] font-sans flex flex-col">
-            {/* Header / Navigation Bar */}
-            <header className="bg-gradient-to-r from-white via-blue-50 to-[#1F3C88] text-white shadow-lg sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+        <div className="min-h-screen bg-[#F8FAFC] font-sans flex overflow-hidden">
+            {/* Sidebar Component */}
+            <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                        {/* Logo & Brand */}
-                        <div className="flex items-center gap-3">
-                            <img src="/civicsetu-logo.png" alt="CivicSetu Logo" className="h-12 w-auto" />
-                            <div className="flex flex-col">
-                                <span className="font-bold text-xl tracking-tight leading-tight text-gray-800">CivicSetu</span>
-                                <span className="text-xs text-gray-600 font-medium">Admin Portal</span>
+            <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+                {/* Clean Header Bar */}
+                <header className="bg-white border-b border-gray-100 h-16 sticky top-0 z-50 flex items-center px-4 sm:px-6 lg:px-8">
+                    <div className="flex-1 flex justify-between items-center">
+                        
+                        {/* Mobile Menu & Search (Left) */}
+                        <div className="flex items-center gap-4">
+                            <button 
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="md:hidden p-2 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+                            >
+                                <FontAwesomeIcon icon={sidebarOpen ? faTimes : faBars} />
+                            </button>
+                            <div className="hidden lg:flex flex-col">
+                                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Active View</span>
+                                <h1 className="text-sm font-extrabold text-[#1F3C88] capitalize">
+                                    {location.pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
+                                </h1>
                             </div>
                         </div>
 
-                        {/* Navigation Links */}
-                        <nav className="hidden md:flex items-center space-x-1">
-                            {menuItems.map((item) => (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    className={({ isActive }) => `
-                                        px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
-                                        ${isActive
-                                            ? 'bg-[#00A8A8] text-white shadow-md'
-                                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'}
-                                    `}
-                                >
-                                    {item.name}
-                                </NavLink>
-                            ))}
-                        </nav>
+                        {/* Right Section: Notifications & Profile */}
+                        <div className="flex items-center gap-3">
+                            <button className="p-2 w-10 h-10 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-[#1F3C88] transition-all relative">
+                                <FontAwesomeIcon icon={faBell} />
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                            </button>
 
-                        {/* User Profile & Actions */}
-                        <div className="flex items-center gap-4">
+                            <div className="h-8 w-[1px] bg-gray-100 mx-2 hidden sm:block"></div>
+
                             {/* Profile Dropdown */}
                             <div className="relative">
                                 <button
                                     onClick={() => setProfileOpen(!profileOpen)}
-                                    className="flex items-center gap-3 focus:outline-none hover:bg-white/5 px-3 py-2 rounded-lg transition"
+                                    className="flex items-center gap-3 p-1.5 pr-3 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
                                 >
-                                    <div className="text-right">
-                                        <p className="text-sm font-bold text-white leading-tight">
+                                    <div className="w-8 h-8 rounded-lg bg-[#1F3C88] text-white flex items-center justify-center font-bold text-sm">
+                                        {user?.name?.charAt(0) || 'A'}
+                                    </div>
+                                    <div className="hidden sm:block text-left">
+                                        <p className="text-xs font-extrabold text-gray-800 leading-none mb-0.5">
                                             {user?.name || 'Admin Officer'}
                                         </p>
-                                        <p className="text-xs text-[#00A8A8] font-medium tracking-wide">
-                                            {user?.role === 'admin' ? 'Super Admin' : 'Officer'}
+                                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">
+                                            {user?.role || 'Admin'}
                                         </p>
                                     </div>
-                                    <span className={`text-xs text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`}>▼</span>
+                                    <FontAwesomeIcon 
+                                        icon={faChevronDown} 
+                                        className={`text-[10px] text-gray-400 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} 
+                                    />
                                 </button>
 
                                 <AnimatePresence>
                                     {profileOpen && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 text-gray-800 z-50 border border-gray-100"
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-blue-900/10 py-2 text-gray-800 z-[60] border border-gray-100"
                                         >
-                                            <div className="px-4 py-3 border-b border-gray-100 mb-2">
+                                            <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Account</p>
                                                 <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
                                                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                                             </div>
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                                                className="w-full text-left px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
                                             >
-                                                Logout
+                                                <FontAwesomeIcon icon={faSignOutAlt} className="text-xs" />
+                                                Sign Out
                                             </button>
                                         </motion.div>
                                     )}
@@ -133,35 +115,21 @@ const AdminLayout = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </header>
 
-                {/* Mobile Navigation */}
-                <div className="md:hidden bg-[#162d66] px-2 py-2 flex flex-wrap gap-2 justify-center">
-                    {menuItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) => `
-                                 px-3 py-1 rounded text-xs text-white
-                                 ${isActive ? 'bg-[#00A8A8]' : 'bg-white/5'}
-                             `}
-                        >
-                            {item.name}
-                        </NavLink>
-                    ))}
-                </div>
-            </header>
-
-            {/* Main Content Area */}
-            <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <Outlet />
-                </motion.div>
-            </main>
+                {/* Main Content Area - Scrollable */}
+                <main className="flex-1 overflow-y-auto bg-[#F8FAFC] p-4 sm:p-6 lg:p-8">
+                    <motion.div
+                        key={location.pathname}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                        className="max-w-7xl mx-auto"
+                    >
+                        <Outlet />
+                    </motion.div>
+                </main>
+            </div>
         </div>
     );
 };

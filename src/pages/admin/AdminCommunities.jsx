@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminCommunities = () => {
@@ -8,17 +8,12 @@ const AdminCommunities = () => {
     const [selectedCommunity, setSelectedCommunity] = useState(null);
     const [detailsLoading, setDetailsLoading] = useState(false);
 
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-
     const fetchCommunities = async () => {
         setLoading(true);
         try {
             const res = await api.get('/admin/communities');
-            if (res.data.success) {
-                setCommunities(res.data.data);
+            if (res.success) {
+                setCommunities(res.data);
             }
         } catch (error) {
             console.error('Error fetching communities:', error);
@@ -35,8 +30,8 @@ const AdminCommunities = () => {
         setDetailsLoading(true);
         try {
             const res = await api.get(`/admin/communities/${id}`);
-            if (res.data.success) {
-                setSelectedCommunity(res.data.data);
+            if (res.success) {
+                setSelectedCommunity(res.data);
             }
         } catch (error) {
             console.error(error);
@@ -48,7 +43,7 @@ const AdminCommunities = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this community?')) return;
         try {
-            await api.delete(`/communities/${id}`);
+            await api.delete(`/admin/communities/${id}`);
             fetchCommunities();
         } catch (error) {
             console.error('Delete failed', error);

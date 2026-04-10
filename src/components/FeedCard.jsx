@@ -50,15 +50,17 @@ const FeedCard = ({ post, onLike, onComment, onDeleteComment, onDeletePost }) =>
         >
             {/* User Header */}
             <div className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-bold">
-                    {post.user?.profilePicture ? (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white font-bold overflow-hidden">
+                    {(post.user?.profilePicture && !post.user.profilePicture.includes('default-avatar.png')) ? (
                         <img
                             src={post.user.profilePicture}
                             alt={post.user?.name}
-                            className="w-full h-full rounded-full object-cover"
+                            className="w-full h-full object-cover"
                         />
                     ) : (
-                        <FontAwesomeIcon icon={faUser} />
+                        <span className="text-sm">
+                            {post.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                        </span>
                     )}
                 </div>
                 <div className="flex-1">
@@ -207,15 +209,15 @@ const FeedCard = ({ post, onLike, onComment, onDeleteComment, onDeletePost }) =>
                         {post.comments && post.comments.length > 0 ? (
                             post.comments.map((comment) => (
                                 <div key={comment._id} className="flex gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                        {comment.user?.profilePicture ? (
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden">
+                                        {(comment.user?.profilePicture && !comment.user.profilePicture.includes('default-avatar.png')) ? (
                                             <img
                                                 src={comment.user.profilePicture}
                                                 alt={comment.user?.name}
-                                                className="w-full h-full rounded-full object-cover"
+                                                className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            comment.user?.name?.[0] || '?'
+                                            <span>{comment.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 1) || '?'}</span>
                                         )}
                                     </div>
                                     <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">

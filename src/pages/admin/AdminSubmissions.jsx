@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminSubmissions = () => {
@@ -10,17 +10,12 @@ const AdminSubmissions = () => {
     const [points, setPoints] = useState(50);
     const [notes, setNotes] = useState('');
 
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-
     const fetchSubmissions = async () => {
         setLoading(true);
         try {
             const res = await api.get(`/admin/submissions?status=${filterStatus}`);
-            if (res.data.success) {
-                setSubmissions(res.data.data);
+            if (res.success) {
+                setSubmissions(res.data);
             }
         } catch (error) {
             console.error("Error fetching submissions:", error);

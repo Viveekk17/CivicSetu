@@ -1,24 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import api from '../../services/api';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-    });
-
     useEffect(() => {
         const fetchStats = async () => {
             try {
                 const res = await api.get('/admin/stats');
-                if (res.data.success) {
-                    setStats(res.data.data);
+                if (res.success) {
+                    setStats(res.data);
                 }
             } catch (error) {
                 console.error('Error fetching stats:', error);

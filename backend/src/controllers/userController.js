@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -57,12 +58,14 @@ exports.searchUsers = async (req, res) => {
 // @access  Private
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, phoneNumber, profilePicture } = req.body;
 
     const user = await User.findById(req.user.id);
 
     if (name) user.name = name;
     if (email) user.email = email;
+    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+    if (profilePicture) user.profilePicture = profilePicture;
 
     await user.save();
 
@@ -99,6 +102,40 @@ exports.getUserStats = async (req, res) => {
         totalSubmissions: submissions,
         recentTransactions: transactions
       }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Upload profile picture
+// @route   POST /api/users/avatar
+// @access  Private
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload a file'
+      });
+    }
+
+    // Upload to Cloudinary
+    const imageUrl = await uploadToCloudinary(req.file.path, 'users/avatars');
+
+    // Update user in DB
+    const user = await User.findById(req.user.id);
+    user.profilePicture = imageUrl;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile picture updated successfully',
+      data: user
     });
   } catch (error) {
     res.status(500).json({

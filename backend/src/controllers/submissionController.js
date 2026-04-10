@@ -252,98 +252,55 @@ exports.createSubmission = async (req, res) => {
       cap: capPerPerson
     });
 
-    // Create submission with Cloudinary URLs (or local paths as fallback)
+    // Create submission — always saved as 'pending' requiring admin approval.
+    // Credits are NOT awarded now; they will be credited when the admin approves.
+    // AI-suggested credits are stored in verificationDetails for admin reference.
     const submission = await Submission.create({
       user: req.user.id,
-      type: verification.category || type, // Use AI-detected category
+      type: verification.category || type,
       photos: cloudinaryUrls.length > 0 ? cloudinaryUrls : photoRelativePaths,
-      imageHashes: imageHashes ? JSON.parse(imageHashes) : [], // Expecting JSON array string if sent via FormData
-      weight: verification.weight || weight || 1, // Use verified weight if available
+      imageHashes: imageHashes ? JSON.parse(imageHashes) : [],
+      weight: verification.weight || weight || 1,
       location: JSON.parse(location),
       description,
-      status: verification.verified ? 'verified' : 'rejected',
-      creditsAwarded: finalCreditsPerPerson,
+      status: 'pending',           // Always pending — admin must review
+      creditsAwarded: 0,            // No credits until admin approves
       verificationDetails: {
-        verifiedAt: new Date(),
-        verrifiedBy: 'AI',
+        verifiedAt: null,           // Will be set when admin approves
+        verifiedBy: 'Pending Admin Review',
         confidence: verification.confidence,
         notes: verification.notes,
         co2Saved: verification.co2Saved,
         trashWeight: verification.trashWeight,
         category: verification.category,
         suggestedDescription: verification.suggestedDescription,
+        suggestedCredits: finalCreditsPerPerson, // AI suggestion for admin
         memberCount: membersForCredit,
         totalPool: Math.ceil(totalPool),
-        taggingMode: taggingMode || 'members' // Store tagging mode
+        taggingMode: taggingMode || 'members',
+        taggedUsers: taggingMode === 'members' ? tags : [],
+        taggedCommunities: (taggingMode === 'community' || taggingMode === 'ngo') ? tags : []
       }
     });
 
-    console.log(`💾 Submission saved with ${cloudinaryUrls.length > 0 ? 'Cloudinary' : 'local'} URLs:`, submission.photos);
+    console.log(`💾 Submission saved as PENDING (awaiting admin review) with ${cloudinaryUrls.length > 0 ? 'Cloudinary' : 'local'} URLs:`, submission.photos);
+    console.log(`ℹ️  AI suggested ${finalCreditsPerPerson} credits — will be awarded upon admin approval.`);
 
-    // If verified, award credits to user (Primary Uploader)
-    if (verification.verified) {
-      // 1. Award to Uploader and track environmental impact
-      const user = await User.findById(req.user.id);
-
-      // Increment credits
-      user.credits += finalCreditsPerPerson;
-
-      // Track pollution saved from this activity
-      if (verification.trashWeight) {
-        user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
-        user.impact.pollutionSaved += verification.trashWeight;
-        console.log(`✅ Added ${verification.trashWeight}kg to pollution saved. Total: ${user.impact.pollutionSaved}kg`);
-      }
-
-      await user.save();
-      console.log(`✅ Awarded ${finalCreditsPerPerson} credits to uploader (${user.username})`);
-
-      // 2. Award to tagged users (if in members mode)
-      if (taggingMode === 'members' && tags.length > 0) {
-        console.log(`Distributing credits to ${tags.length} tagged users...`);
-        for (const userId of tags) {
-          // Skip if self (shouldn't happen due to frontend filter but safety first)
-          if (userId === req.user.id) continue;
-
-          const taggedUser = await User.findById(userId);
-          if (taggedUser) {
-            taggedUser.credits += finalCreditsPerPerson;
-            await taggedUser.save();
-
-            await Transaction.create({
-              user: userId,
-              type: 'earned',
-              amount: finalCreditsPerPerson,
-              description: `Credits earned from ${type} submission (Shared Activity)`,
-              metadata: {
-                submissionId: submission._id,
-                sharedBy: req.user.id
-              }
-            });
-            console.log(`✅ Awarded ${finalCreditsPerPerson} credits to tagged user (${taggedUser.username})`);
-          } else {
-            console.warn(`Tagged user with ID ${userId} not found.`);
-          }
-        }
-      }
-
-      // 3. Create transaction for uploader
-      await Transaction.create({
-        user: req.user.id,
-        type: 'earned',
-        amount: finalCreditsPerPerson,
-        description: `Credits earned from ${type} submission (${membersForCredit} members)`,
-        metadata: { submissionId: submission._id }
+    // ── SEND EMAIL NOTIFICATION (ASYNC) ──
+    const { sendSubmissionEmail } = require('../utils/mailService');
+    const userToNotify = await User.findById(req.user.id);
+    if (userToNotify && userToNotify.email) {
+      // Fire and forget, don't wait for email to respond to client
+      sendSubmissionEmail(userToNotify, submission).catch(err => {
+        console.error('📧 Email background error:', err);
       });
     }
 
     res.status(201).json({
       success: true,
-      message: verification.verified
-        ? 'Submission verified and uploaded to cloud storage'
-        : 'Submission rejected by AI verification',
+      message: 'Submission received and sent to authorities for review. Credits will be credited upon approval.',
       data: submission,
-      creditsAwarded: finalCreditsPerPerson
+      creditsAwarded: finalCreditsPerPerson // Inform front-end of AI estimate (not yet awarded)
     });
   } catch (error) {
     console.error('Submission error:', error);

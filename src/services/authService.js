@@ -8,8 +8,42 @@ import {
   signOut,
   updateProfile,
   RecaptchaVerifier,
-  signInWithPhoneNumber
+  signInWithPhoneNumber,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth';
+
+// User Account Management
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("No user logged in");
+
+    // Pre-requisite: Re-authenticate for security
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    // Proceed with password update
+    await updatePassword(user, newPassword);
+    return { success: true, message: "Password updated successfully" };
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    if (error.code === 'auth/wrong-password') {
+      throw new Error("Current password is incorrect");
+    }
+    throw error;
+  }
+};
+
+// OTP Verification (Backend)
+export const sendEmailOtp = async (email) => {
+  return await api.post('/auth/send-otp', { email });
+};
+
+export const verifyEmailOtp = async (email, otp) => {
+  return await api.post('/auth/verify-otp', { email, otp });
+};
 
 // Register new user (Firebase -> Backend Sync)
 export const searchUsers = async (query) => {

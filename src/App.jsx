@@ -21,11 +21,13 @@ import AdminTreeRequests from './pages/admin/AdminTreeRequests';
 import AdminFeed from './pages/admin/AdminFeed';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSubmissions from './pages/admin/AdminSubmissions';
+import AdminSubmissionReviews from './pages/admin/AdminSubmissionReviews';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCommunities from './pages/admin/AdminCommunities';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import PublicFeed from './pages/PublicFeed';
 import AboutUs from './pages/AboutUs';
+import Profile from './pages/Profile';
 
 const App = () => {
   const { pathname } = useLocation();
@@ -47,6 +49,7 @@ const App = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
 
           <Route path="submissions" element={<AdminSubmissions />} />
+          <Route path="submission-reviews" element={<AdminSubmissionReviews />} />
           <Route path="requests" element={<AdminRequests />} />
           <Route path="tree-requests" element={<AdminTreeRequests />} />
           <Route path="feed" element={<AdminFeed />} />
@@ -68,6 +71,7 @@ const App = () => {
           <Route path="community" element={<Community />} />
           <Route path="report-issue" element={<ReportIssue />} />
           <Route path="about" element={<AboutUs />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="blockchain" element={
             <Placeholder
               title="Blockchain"

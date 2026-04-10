@@ -6,13 +6,14 @@ const {
   getAQI,
   getDetailedAnalytics,
   getSubmissionsByCategory,
-  getProgressTimeline
+  getProgressTimeline,
+  getGlobalImpactStats
 } = require('../controllers/analyticsController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Public routes
-// Public routes
 router.get('/aqi', getAQI);
+router.get('/global-impact', getGlobalImpactStats);
 
 // Protected routes
 router.get('/leaderboard', protect, getLeaderboard);

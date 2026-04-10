@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSeedling, faFilter, faSearch, faSync } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import api from '../../services/api';
 
 const AdminTreeRequests = () => {
     const [redemptions, setRedemptions] = useState([]);
@@ -19,15 +19,12 @@ const AdminTreeRequests = () => {
     const fetchRedemptions = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const url = `${import.meta.env.VITE_API_URL}/admin/tree-redemptions${filterStatus ? `?status=${filterStatus}` : ''}`;
+            const url = `/admin/tree-redemptions${filterStatus ? `?status=${filterStatus}` : ''}`;
 
-            const response = await axios.get(url, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get(url);
 
-            if (response.data.success) {
-                setRedemptions(response.data.data);
+            if (response.success) {
+                setRedemptions(response.data);
             }
         } catch (error) {
             console.error('Error fetching redemptions:', error);
@@ -38,14 +35,10 @@ const AdminTreeRequests = () => {
 
     const fetchStats = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/admin/tree-redemptions/stats`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const response = await api.get('/admin/tree-redemptions/stats');
 
-            if (response.data.success) {
-                setStats(response.data.data);
+            if (response.success) {
+                setStats(response.data);
             }
         } catch (error) {
             console.error('Error fetching stats:', error);
@@ -55,15 +48,13 @@ const AdminTreeRequests = () => {
     const updateStatus = async (redemptionId, newStatus, notes = '') => {
         try {
             setUpdatingStatus(redemptionId);
-            const token = localStorage.getItem('token');
 
-            const response = await axios.patch(
-                `${import.meta.env.VITE_API_URL}/admin/tree-redemptions/${redemptionId}/status`,
-                { status: newStatus, notes },
-                { headers: { Authorization: `Bearer ${token}` } }
+            const response = await api.patch(
+                `/admin/tree-redemptions/${redemptionId}/status`,
+                { status: newStatus, notes }
             );
 
-            if (response.data.success) {
+            if (response.success) {
                 // Refresh data
                 await fetchRedemptions();
                 await fetchStats();

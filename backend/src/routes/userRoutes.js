@@ -4,9 +4,11 @@ const {
   getProfile,
   updateProfile,
   getUserStats,
-  searchUsers
+  searchUsers,
+  uploadAvatar
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // All routes are protected
 router.use(protect);
@@ -14,6 +16,7 @@ router.use(protect);
 router.get('/search', searchUsers); // Add search route
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
+router.post('/avatar', upload.single('avatar'), uploadAvatar);
 router.get('/stats', getUserStats);
 
 module.exports = router;

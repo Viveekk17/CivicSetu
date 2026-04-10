@@ -54,7 +54,25 @@ const submissionSchema = new mongoose.Schema({
       default: 'AI'
     },
     confidence: Number,
-    notes: String
+    notes: String,
+    suggestedCredits: Number,
+    taggingMode: {
+      type: String,
+      enum: ['members', 'community', 'ngo'],
+      default: 'members'
+    },
+    taggedUsers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    taggedCommunities: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Community'
+    }],
+    co2Saved: Number,
+    trashWeight: Number,
+    category: String,
+    suggestedDescription: String
   }
 }, {
   timestamps: true

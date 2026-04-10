@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { motion } from 'framer-motion';
 
 const AdminTransactions = () => {
     const [transactions, setTransactions] = useState({ all: [], earned: [], redeemed: [] });
     const [loading, setLoading] = useState(true);
 
-    const api = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
                 const res = await api.get('/admin/transactions');
-                if (res.data.success) {
-                    setTransactions(res.data.data);
+                if (res.success) {
+                    setTransactions(res.data);
                 }
             } catch (error) {
                 console.error('Error fetching transactions:', error);

@@ -52,7 +52,7 @@ const HeroBanner = ({ globalImpact }) => {
       {/* Toggle Arrow */}
       <button 
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute right-6 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-slate-800 transition-colors border border-white/5 text-white/70 hover:text-white"
+        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-slate-800 transition-colors border border-white/5 text-white/70 hover:text-white cursor-pointer"
       >
         <FontAwesomeIcon icon={isExpanded ? faChevronUp : faChevronDown} fontSize={9} />
       </button>

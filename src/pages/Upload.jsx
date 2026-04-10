@@ -946,10 +946,7 @@ const Upload = () => {
                     Processing...(we are still working on Analysing AI and Fake Images)
                   </>
                 ) : (
-                  <>
-                    <FontAwesomeIcon icon={faLeaf} />
-                    Upload
-                  </>
+                  'Submit'
                 )}
               </button>
 

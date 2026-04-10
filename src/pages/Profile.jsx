@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUser, faEnvelope, faPhone, faCamera, faShieldAlt, 
-  faCheckCircle, faTree, faCoins, faLeaf, faSave, faLock, faSpinner 
+  faCheckCircle, faTree, faCoins, faLeaf, faSave, faLock, faSpinner,
+  faCrown, faAward, faEarthAmericas, faPencilAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { getStoredUser, changePassword } from '../services/authService';
 import { updateProfile, getProfile, uploadAvatar } from '../services/userService';
@@ -26,7 +27,6 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    // Fetch fresh profile data to ensure phone number etc. are loaded
     const fetchProfile = async () => {
       try {
         const response = await getProfile();
@@ -70,7 +70,6 @@ const Profile = () => {
       if (response.success) {
         setUser(response.data);
         setMessage({ type: 'success', text: 'Profile picture updated!' });
-        // Sync header
         window.dispatchEvent(new CustomEvent('creditsUpdated', { detail: {} }));
       }
     } catch (err) {
@@ -96,7 +95,6 @@ const Profile = () => {
         setUser(response.data);
         setEditMode(false);
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        // Sync with Header etc.
         window.dispatchEvent(new CustomEvent('creditsUpdated', { detail: {} }));
       }
     } catch (err) {
@@ -133,31 +131,25 @@ const Profile = () => {
   };
 
   const stats = [
-    { label: 'Trees Planted', value: user?.impact?.treesPlanted || 0, icon: faTree, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { label: 'CO2 Saved', value: `${user?.impact?.pollutionSaved || 0}kg`, icon: faLeaf, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { label: 'Credits Balance', value: user?.credits || 0, icon: faCoins, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { label: 'Platform Rank', value: 'Eco Warrior', icon: faCheckCircle, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { label: 'Trees Planted', value: user?.impact?.treesPlanted || 0, icon: faTree, color: '#10B981', bg: 'rgba(16, 185, 129, 0.08)' },
+    { label: 'CO2 Offset', value: `${user?.impact?.pollutionSaved || 0}kg`, icon: faEarthAmericas, color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.08)' },
+    { label: 'Credits', value: user?.credits || 0, icon: faCoins, color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.08)' },
+    { label: 'Rank', value: 'Eco Expert', icon: faCrown, color: '#6366F1', bg: 'rgba(99, 102, 241, 0.08)' },
   ];
 
   return (
-    <div className="min-h-screen pb-12">
-      {/* Profile Header Banner */}
-      <div className="h-48 md:h-64 w-full relative overflow-hidden bg-slate-900">
-        <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%)' }}></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),transparent)]"></div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="min-h-screen pb-20 bg-white text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column: Avatar & Quick Stats */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Left Column: Profile Card (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center shadow-2xl"
+              className="bg-white border border-slate-100 rounded-[2.5rem] p-8 text-center shadow-2xl shadow-slate-200/40 relative overflow-hidden group"
             >
-              <div className="relative inline-block group mb-6">
+              <div className="relative inline-block mb-10">
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -166,155 +158,169 @@ const Profile = () => {
                   onChange={handleFileChange} 
                 />
                 
+                {/* Moving Colors Animated Rings */}
+                <div className="absolute inset-[-10px] rounded-full border border-slate-50 shadow-sm" />
+                <div className="absolute inset-[-10px] rounded-full border-t-2 border-emerald-500 animate-[spin_3s_linear_infinite]" />
+                <div className="absolute inset-[-10px] rounded-full border-r-2 border-blue-500/50 animate-[spin_5s_linear_infinite] delay-75" />
+                <div className="absolute inset-[-10px] rounded-full border-b-2 border-amber-500/30 animate-[spin_8s_linear_infinite] delay-150" />
+
                 <div 
                   onClick={handleAvatarClick}
-                  className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-4xl font-black text-white shadow-inner border-4 border-slate-900 group-hover:scale-105 transition-all overflow-hidden cursor-pointer relative"
+                  className="w-36 h-36 rounded-full bg-slate-50 flex items-center justify-center text-4xl font-black shadow-inner border-4 border-white group-hover:scale-105 transition-all duration-500 overflow-hidden cursor-pointer relative z-10 mx-auto"
                 >
                   {avatarLoading ? (
                     <motion.div 
                       animate={{ rotate: 360 }}
                       transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
                     >
-                      <FontAwesomeIcon icon={faSpinner} />
+                      <FontAwesomeIcon icon={faSpinner} className="text-slate-300" />
                     </motion.div>
                   ) : (user?.profilePicture && !user.profilePicture.includes('default-avatar.png')) ? (
                     <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    getInitials(user?.name)
+                    <span className="bg-gradient-to-br from-emerald-500 to-blue-600 bg-clip-text text-transparent">
+                      {getInitials(user?.name)}
+                    </span>
                   )}
                   
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <FontAwesomeIcon icon={faCamera} className="text-white text-xl" />
+                  <div className="absolute inset-0 bg-white/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                    <FontAwesomeIcon icon={faCamera} className="text-slate-700 text-2xl" />
                   </div>
                 </div>
                 
                 <button 
                   onClick={handleAvatarClick}
-                  className="absolute bottom-1 right-1 w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-900 text-white hover:bg-slate-700 transition-colors shadow-lg"
+                  className="absolute bottom-1 right-1 w-11 h-11 bg-white text-emerald-600 rounded-full flex items-center justify-center border border-slate-100 shadow-lg hover:bg-slate-50 transition-all z-20 scale-90 group-hover:scale-100"
                 >
-                  {avatarLoading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" size="sm" /> : <FontAwesomeIcon icon={faCamera} size="sm" />}
+                  <FontAwesomeIcon icon={faPencilAlt} size="sm" />
                 </button>
               </div>
 
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">{user?.name}</h2>
-              <p className="text-slate-500 text-sm font-medium mb-6">{user?.email}</p>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">{user?.name}</h2>
+              <div className="flex items-center justify-center gap-2 mb-8">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <p className="text-slate-500 text-sm font-semibold">{user?.email}</p>
+              </div>
               
-              <div className="pt-6 border-t border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Impact Scorecard</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {stats.slice(0, 2).map((stat, i) => (
-                    <div key={i} className={`${stat.bg} p-4 rounded-2xl border border-slate-100`}>
-                      <FontAwesomeIcon icon={stat.icon} className={`${stat.color} mb-2`} />
-                      <p className="text-lg font-bold text-slate-900">{stat.value}</p>
-                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-tighter">{stat.label}</p>
+              <div className="pt-8 border-t border-slate-100 grid grid-cols-2 gap-4">
+                {stats.map((stat, i) => (
+                  <div key={i} className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100 hover:bg-slate-50 transition-colors group/stat text-left">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3 group-hover/stat:scale-110 transition-transform" style={{ background: stat.bg }}>
+                      <FontAwesomeIcon icon={stat.icon} style={{ color: stat.color }} className="text-sm" />
                     </div>
-                  ))}
-                </div>
+                    <p className="text-xl font-bold text-slate-900 mb-0.5">{stat.value}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">{stat.label}</p>
+                  </div>
+                ))}
               </div>
             </motion.div>
 
-            {/* Platform Badges Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white border border-slate-100 rounded-3xl p-6 hidden lg:block shadow-lg"
+              className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-xl shadow-slate-200/40"
             >
-              <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FontAwesomeIcon icon={faShieldAlt} className="text-blue-500" />
-                Achievement Badges
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <FontAwesomeIcon icon={faAward} className="text-indigo-500" />
+                Your Achievements
               </h3>
               <div className="flex flex-wrap gap-2">
-                {['Early Adopter', 'Waste Warrior', 'Green Citizen'].map((badge, i) => (
-                  <span key={i} className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold text-slate-600">
-                    {badge}
+                {[
+                  { name: 'Early Adopter', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+                  { name: 'Waste Warrior', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+                  { name: 'Pure Green', color: 'bg-indigo-50 text-indigo-600 border-indigo-100' }
+                ].map((badge, i) => (
+                  <span key={i} className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all hover:scale-105 cursor-default ${badge.color}`}>
+                    {badge.name}
                   </span>
                 ))}
               </div>
             </motion.div>
           </div>
 
-          {/* Right Column: Settings Sections */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Right Column: Information Forms (8 cols) */}
+          <div className="lg:col-span-8 space-y-6">
             <AnimatePresence>
               {message.text && (
                 <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className={`p-4 rounded-2xl flex items-center gap-3 font-medium ${
-                    message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  initial={{ opacity: 0, scale: 0.95 }} 
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className={`p-5 rounded-3xl flex items-center gap-4 font-bold shadow-xl border ${
+                    message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'
                   }`}
                 >
-                  <FontAwesomeIcon icon={faCheckCircle} />
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${message.type === 'success' ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                    <FontAwesomeIcon icon={message.type === 'success' ? faCheckCircle : faShieldAlt} />
+                  </div>
                   {message.text}
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Profile Information Section */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-xl"
+              className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40"
             >
-              <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
+              <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-xl border border-blue-100">
                     <FontAwesomeIcon icon={faUser} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Personal Information</h3>
-                    <p className="text-xs text-slate-500">Public data for your civic profile</p>
+                    <h3 className="text-xl font-bold text-slate-900">Personal Details</h3>
+                    <p className="text-sm text-slate-500">Your information across CivicSetu</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setEditMode(!editMode)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    editMode ? 'bg-slate-800 text-white' : 'bg-blue-600 text-white hover:bg-blue-500'
+                  className={`px-6 py-3 rounded-2xl text-sm font-black transition-all active:scale-95 ${
+                    editMode ? 'bg-slate-100 text-slate-500' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200'
                   }`}
                 >
-                  {editMode ? 'Cancel' : 'Edit Profile'}
+                  {editMode ? 'Cancel Edit' : 'Modify Profile'}
                 </button>
               </div>
 
               <div className="p-8">
-                <form onSubmit={handleUpdateProfile} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-widest px-1">Full Name</label>
-                      <div className="relative">
-                        <FontAwesomeIcon icon={faUser} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <form onSubmit={handleUpdateProfile} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Display Name</label>
+                      <div className="relative group/input">
+                        <FontAwesomeIcon icon={faUser} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-emerald-500" />
                         <input 
                           type="text" 
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
                           disabled={!editMode}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 transition-all font-medium"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-300 outline-none focus:border-emerald-500 focus:bg-white focus:ring-[6px] focus:ring-emerald-500/10 disabled:opacity-50 transition-all font-semibold"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-widest px-1">Email Address</label>
-                      <div className="relative">
-                        <FontAwesomeIcon icon={faEnvelope} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Primary Email</label>
+                      <div className="relative group/input">
+                        <FontAwesomeIcon icon={faEnvelope} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-blue-500" />
                         <input 
                           type="email" 
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
                           disabled={!editMode}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 transition-all font-medium"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-300 outline-none focus:border-blue-500 focus:bg-white focus:ring-[6px] focus:ring-blue-500/10 disabled:opacity-50 transition-all font-semibold"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-widest px-1">Phone Number</label>
-                      <div className="relative">
-                        <FontAwesomeIcon icon={faPhone} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Mobile Reference</label>
+                      <div className="relative group/input">
+                        <FontAwesomeIcon icon={faPhone} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-indigo-500" />
                         <input 
                           type="tel" 
                           name="phoneNumber"
@@ -322,69 +328,73 @@ const Profile = () => {
                           onChange={handleChange}
                           disabled={!editMode}
                           placeholder="+91 00000 00000"
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 transition-all font-medium"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-300 outline-none focus:border-indigo-500 focus:bg-white focus:ring-[6px] focus:ring-indigo-500/10 disabled:opacity-50 transition-all font-semibold"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {editMode && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
-                      <button 
-                        type="submit"
-                        disabled={loading}
-                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                  <AnimatePresence>
+                    {editMode && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }} 
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden pt-4"
                       >
-                        {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : <><FontAwesomeIcon icon={faSave} /> Save Changes</>}
-                      </button>
-                    </motion.div>
-                  )}
+                        <button 
+                          type="submit"
+                          disabled={loading}
+                          className="w-full md:w-auto flex items-center justify-center gap-3 bg-slate-900 hover:bg-black text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-slate-900/10 active:scale-95 disabled:opacity-50"
+                        >
+                          {loading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> : <><FontAwesomeIcon icon={faSave} /> Save Profile Changes</>}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </form>
               </div>
             </motion.div>
 
-            {/* Security Section (Password) */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-xl"
+              className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40"
             >
-              <div className="p-6 border-b border-white/5 bg-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
-                    <FontAwesomeIcon icon={faShieldAlt} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Security & Password</h3>
-                    <p className="text-xs text-slate-500">Keep your account protected</p>
-                  </div>
+              <div className="p-8 border-b border-slate-100 flex items-center gap-4">
+                <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 text-xl border border-amber-100">
+                  <FontAwesomeIcon icon={faLock} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Password Management</h3>
+                  <p className="text-sm text-slate-500">Keep your account access secure</p>
                 </div>
               </div>
 
               <div className="p-8">
-                <form onSubmit={handleChangePassword} className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Current Password</label>
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faLock} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                <form onSubmit={handleChangePassword} className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Current Password</label>
+                    <div className="relative group/input">
+                      <FontAwesomeIcon icon={faShieldAlt} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-200 transition-colors group-focus-within/input:text-amber-500" />
                       <input 
                         type="password" 
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleChange}
                         required
-                        placeholder="Verify current password"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                        placeholder="••••••••"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-200 outline-none focus:border-amber-500 focus:bg-white focus:ring-[6px] focus:ring-amber-500/10 transition-all font-semibold"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">New Password</label>
-                        <div className="relative">
-                          <FontAwesomeIcon icon={faLock} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">New Password</label>
+                        <div className="relative group/input">
+                          <FontAwesomeIcon icon={faLock} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-200 transition-colors group-focus-within/input:text-emerald-500" />
                           <input 
                             type="password" 
                             name="newPassword"
@@ -392,23 +402,23 @@ const Profile = () => {
                             onChange={handleChange}
                             required
                             placeholder="Min 6 characters"
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-amber-500/50 transition-all font-medium"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-200 outline-none focus:border-emerald-500 focus:bg-white focus:ring-[6px] focus:ring-emerald-500/10 transition-all font-semibold"
                           />
                         </div>
                     </div>
                     
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Confirm New Password</label>
-                        <div className="relative">
-                          <FontAwesomeIcon icon={faLock} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                    <div className="space-y-3">
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Confirm New Password</label>
+                        <div className="relative group/input">
+                          <FontAwesomeIcon icon={faShieldAlt} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-200 transition-colors group-focus-within/input:text-indigo-500" />
                           <input 
                             type="password" 
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             required
-                            placeholder="Repeat new password"
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-amber-500/50 transition-all font-medium"
+                            placeholder="Repeat new secret"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-200 outline-none focus:border-indigo-500 focus:bg-white focus:ring-[6px] focus:ring-indigo-500/10 transition-all font-semibold"
                           />
                         </div>
                     </div>
@@ -417,9 +427,9 @@ const Profile = () => {
                   <button 
                     type="submit"
                     disabled={loading || !formData.newPassword || !formData.currentPassword}
-                    className="flex items-center gap-2 bg-slate-100 hover:bg-white text-slate-900 font-black py-4 px-10 rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed"
+                    className="w-full md:w-auto flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 px-12 rounded-2xl transition-all shadow-xl shadow-indigo-200 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed"
                   >
-                    {loading ? <span className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></span> : 'Update Password'}
+                    {loading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> : 'Update Password'}
                   </button>
                 </form>
               </div>

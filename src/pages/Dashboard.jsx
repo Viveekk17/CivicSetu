@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-    faCoins, faTree, faLeaf, faEarthAmericas, faCloud, 
-    faRecycle, faCheckCircle, faUsers, faHeart, faBrain
+import {
+  faCoins, faTree, faCloud, faRecycle, faCamera, faBullhorn,
+  faArrowRight, faExternalLinkAlt
 } from '@fortawesome/free-solid-svg-icons';
 import StatsCard from '../components/common/StatsCard';
 import HeroBanner from '../components/dashboard/HeroBanner';
@@ -16,6 +16,119 @@ import { getGlobalImpact } from '../services/api';
 import { getStoredUser } from '../services/authService';
 import { useLanguage } from '../context/LanguageContext';
 
+const PORTALS = [
+  { href: 'https://swachhbharatmission.gov.in/', label: 'Swachh Bharat Mission', sub: 'Government of India' },
+  { href: 'https://ngodarpan.gov.in/',           label: 'NGO Darpan Portal',     sub: 'Directory of NGOs' },
+  { href: 'https://mohua.gov.in/',               label: 'MoHUA',                 sub: 'Urban Affairs & Subsidies' },
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+const itemVariants = {
+  hidden: { y: 16, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
+
+const WelcomeCard = ({ user, credits, onUpload, onRedeem, onReport }) => (
+  <div className="card p-6 md:p-7 relative overflow-hidden">
+    <div className="grid md:grid-cols-5 gap-6 items-center relative z-10">
+      <div className="md:col-span-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
+          Welcome back
+        </p>
+        <h2 className="text-2xl md:text-3xl font-bold mt-1.5" style={{ color: 'var(--text-primary)' }}>
+          {user?.name || 'Citizen'}
+        </h2>
+        <p className="text-sm mt-2 max-w-md" style={{ color: 'var(--text-secondary)' }}>
+          Continue your civic journey. Every photo, report, and tree counts toward a cleaner India.
+        </p>
+        <div className="flex flex-wrap gap-2 mt-5">
+          <button onClick={onUpload} className="btn btn-primary">
+            <FontAwesomeIcon icon={faCamera} /> Upload cleanup
+          </button>
+          <button onClick={onReport} className="btn btn-outline">
+            <FontAwesomeIcon icon={faBullhorn} /> Report issue
+          </button>
+        </div>
+      </div>
+
+      <div
+        className="md:col-span-2 rounded-2xl p-5 flex flex-col gap-3 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #1e3aa8 100%)', color: '#fff' }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Credit balance
+          </span>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+            <FontAwesomeIcon icon={faCoins} className="text-amber-300 text-sm" />
+          </div>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-black tabular-nums">{credits.toLocaleString()}</span>
+          <span className="text-xs opacity-80">credits</span>
+        </div>
+        <button
+          onClick={onRedeem}
+          className="mt-1 self-start text-xs font-semibold rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 transition-colors"
+          style={{ backgroundColor: 'rgba(255,255,255,0.18)', color: '#fff' }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.28)')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.18)')}
+        >
+          Redeem for trees <FontAwesomeIcon icon={faArrowRight} className="text-[10px]" />
+        </button>
+
+        <div
+          className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(212,194,252,0.25), transparent 70%)' }}
+        />
+      </div>
+    </div>
+  </div>
+);
+
+const PortalsStrip = () => (
+  <div className="card p-5">
+    <div className="flex items-center justify-between mb-3">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-tertiary)' }}>
+        Official Portals
+      </h3>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      {PORTALS.map(({ href, label, sub }) => (
+        <a
+          key={href}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 p-3 rounded-xl border transition-colors group"
+          style={{ borderColor: 'var(--border-light)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary-lighter)')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+        >
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: 'var(--primary-lighter)', color: 'var(--primary)' }}
+          >
+            <FontAwesomeIcon icon={faRecycle} className="text-xs" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-xs truncate" style={{ color: 'var(--text-primary)' }}>{label}</p>
+            <p className="text-[10px] truncate" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
+          </div>
+          <FontAwesomeIcon
+            icon={faExternalLinkAlt}
+            className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ color: 'var(--primary)' }}
+          />
+        </a>
+      ))}
+    </div>
+  </div>
+);
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -23,20 +136,13 @@ const Dashboard = () => {
   const [globalImpact, setGlobalImpact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [localDrafts, setLocalDrafts] = useState([]);
   const user = getStoredUser();
 
   useEffect(() => {
     fetchAllStats();
-  }, []);
-
-  const [localDrafts, setLocalDrafts] = useState([]);
-
-  useEffect(() => {
-    // Load drafts
     const saved = localStorage.getItem('eco_trace_drafts');
-    if (saved) {
-      setLocalDrafts(JSON.parse(saved));
-    }
+    if (saved) setLocalDrafts(JSON.parse(saved));
   }, []);
 
   const fetchAllStats = async () => {
@@ -44,31 +150,23 @@ const Dashboard = () => {
       setLoading(true);
       const [userStats, platformStats] = await Promise.all([
         getDashboardStats(),
-        getGlobalImpact()
+        getGlobalImpact(),
       ]);
 
       if (userStats.success) {
         setStats(userStats.data);
 
-        // Sync localStorage credits with database value
         const currentUser = getStoredUser();
         if (currentUser && userStats.data.stats.currentBalance !== currentUser.credits) {
-          const updatedUser = {
-            ...currentUser,
-            credits: userStats.data.stats.currentBalance
-          };
+          const updatedUser = { ...currentUser, credits: userStats.data.stats.currentBalance };
           localStorage.setItem('user', JSON.stringify(updatedUser));
-
-          // Dispatch event to update header
           window.dispatchEvent(new CustomEvent('creditsUpdated', {
-            detail: { credits: userStats.data.stats.currentBalance }
+            detail: { credits: userStats.data.stats.currentBalance },
           }));
         }
       }
-      
-      if (platformStats?.success) {
-        setGlobalImpact(platformStats.data);
-      }
+
+      if (platformStats?.success) setGlobalImpact(platformStats.data);
     } catch (err) {
       console.error('Dashboard error:', err);
       setError(err.message || 'Failed to load dashboard data');
@@ -77,27 +175,15 @@ const Dashboard = () => {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3" style={{ borderColor: '#14248a', borderTopColor: 'transparent' }}></div>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading dashboard...</p>
+          <div
+            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3"
+            style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }}
+          />
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading dashboard…</p>
         </div>
       </div>
     );
@@ -108,17 +194,14 @@ const Dashboard = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={fetchAllStats}
-            className="px-6 py-2 rounded-lg text-white"
-            style={{ background: '#14248a' }}
-          >
-            Retry
-          </button>
+          <button onClick={fetchAllStats} className="btn btn-primary">Retry</button>
         </div>
       </div>
     );
   }
+
+  const balance = stats.stats.currentBalance || 0;
+  const impact = stats.stats.impact || {};
 
   return (
     <motion.div
@@ -128,168 +211,87 @@ const Dashboard = () => {
       animate="visible"
     >
       <HeroBanner globalImpact={globalImpact} />
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      {/* Welcome + Balance */}
+      <motion.div variants={itemVariants}>
+        <WelcomeCard
+          user={user}
+          credits={balance}
+          onUpload={() => navigate('/upload')}
+          onRedeem={() => navigate('/redeem')}
+          onReport={() => navigate('/report-issue')}
+        />
+      </motion.div>
+
+      {/* Impact Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
           <StatsCard
-            title={t.dash_credits}
-            value={stats.stats.currentBalance.toLocaleString()}
+            title={t.dash_credits || 'Credits'}
+            value={balance.toLocaleString()}
             icon={faCoins}
-            color="#FBBF24"
-            trend={stats.stats.currentBalance > 0 ? 15 : 0}
+            color="primary"
+            trend={balance > 0 ? 15 : 0}
           />
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <div className="card p-4 h-full flex flex-col justify-center relative overflow-hidden">
-            <div className="flex items-center gap-2 mb-3 z-10">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-blue-500" style={{ backgroundColor: 'rgba(20, 36, 138, 0.1)' }}>
-                <FontAwesomeIcon icon={faEarthAmericas} />
-              </div>
-              <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t.dash_impact}</h3>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 z-10">
-              {/* CO2 Saved */}
-              <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'rgba(20, 36, 138, 0.05)' }}>
-                <div className="text-blue-500 mb-1"><FontAwesomeIcon icon={faCloud} /></div>
-                <div className="font-bold text-lg leading-none" style={{ color: 'var(--text-primary)' }}>
-                  {stats.stats.impact?.co2Saved || 0}
-                </div>
-                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>{t.dash_co2}</div>
-              </div>
-
-              {/* Trees */}
-              <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'rgba(153, 143, 199, 0.05)' }}>
-                <div className="text-green-500 mb-1"><FontAwesomeIcon icon={faLeaf} /></div>
-                <div className="font-bold text-lg leading-none" style={{ color: 'var(--text-primary)' }}>
-                  {stats.stats.impact?.trees || 0}
-                </div>
-                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>Trees</div>
-              </div>
-
-              {/* Waste */}
-              <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'rgba(249, 115, 22, 0.05)' }}>
-                <div className="text-orange-500 mb-1"><FontAwesomeIcon icon={faRecycle} /></div>
-                <div className="font-bold text-lg leading-none" style={{ color: 'var(--text-primary)' }}>
-                  {stats.stats.impact?.waste || 0}
-                </div>
-                <div className="text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>{t.dash_waste}</div>
-              </div>
-            </div>
-
-            {/* Decorative Background */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-green-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          </div>
         </motion.div>
         <motion.div variants={itemVariants}>
           <StatsCard
-            title={t.dash_activities}
-            value={stats.stats.totalSubmissions.toString()}
+            title={t.dash_co2 || 'CO₂ Saved'}
+            value={impact.co2Saved || 0}
+            suffix="kg"
+            icon={faCloud}
+            color="info"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title={t.dash_activities || 'Trees Planted'}
+            value={impact.trees || 0}
             icon={faTree}
-            color="#998fc7"
-            trend={stats.stats.totalSubmissions > 5 ? 25 : 10}
+            color="success"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title={t.dash_waste || 'Waste Cleared'}
+            value={impact.waste || 0}
+            suffix="kg"
+            icon={faRecycle}
+            color="secondary"
           />
         </motion.div>
       </div>
 
-      {/* Main Content Row */}
+      {/* Live widgets row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (Span 2): Widgets + Leaderboard */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Top Widgets Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Quick Actions Banner */}
-            <motion.div variants={itemVariants}>
-              <div className="rounded-xl p-6 flex flex-col justify-between h-[240px]" style={{ backgroundColor: '#14248a', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div>
-                  <h2 className="text-xl font-bold mb-1" style={{ color: '#ffffff' }}>Start a cleanup activity</h2>
-                  <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.65)' }}>Upload photos or redeem your credits.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: 'Upload', path: '/upload', solid: true },
-                    { label: 'Redeem', path: '/redeem', solid: false },
-                    { label: 'Feed',   path: '/feed',   solid: false },
-                    { label: 'About',  path: '/about',  solid: false },
-                  ].map(({ label, path, solid }) => (
-                    <button
-                      key={label}
-                      onClick={() => navigate(path)}
-                      className="py-2 rounded-lg text-sm font-semibold transition-colors"
-                      style={solid
-                        ? { backgroundColor: '#ffffff', color: '#14248a' }
-                        : { backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }
-                      }
-                      onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* AQI Widget */}
-            <motion.div variants={itemVariants} className="h-[240px]">
-              <AQIWidget />
-            </motion.div>
-          </div>
-
-          {/* Leaderboard Widget */}
-          <motion.div variants={itemVariants}>
-            <LeaderboardWidget />
-          </motion.div>
-        </div>
-
-        {/* Right Column (Span 1): Activity Feed */}
-        <motion.div className="lg:col-span-1 flex flex-col gap-6" variants={itemVariants}>
-          <div className="flex-1">
-            <ActivityFeed
-              activities={[
-                ...localDrafts.map(d => ({
-                  _id: d.id,
-                  type: 'draft',
-                  description: `Draft: ${d.locationName || 'Cleanup'}`,
-                  amount: 0,
-                  createdAt: d.timestamp,
-                  isDraft: true,
-                  rawDraft: d
-                })),
-                ...(stats.recentActivity || [])
-              ]}
-            />
-          </div>
-
-          {/* Government Resources Card */}
-          <div className="card p-5">
-            <h3 className="font-semibold text-sm mb-3 uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Official Portals</h3>
-            <div className="space-y-1.5">
-              {[
-                { href: 'https://swachhbharatmission.gov.in/', label: 'Swachh Bharat Mission', sub: 'Government of India' },
-                { href: 'https://ngodarpan.gov.in/', label: 'NGO Darpan Portal', sub: 'Directory of NGOs' },
-                { href: 'https://mohua.gov.in/', label: 'MoHUA', sub: 'Urban Affairs & Subsidies' },
-              ].map(({ href, label, sub }) => (
-                <a key={href} href={href} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-2.5 rounded-lg transition-colors"
-                  style={{ color: 'var(--text-primary)' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--primary-lighter)'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: 'var(--border-light)' }}>
-                    <FontAwesomeIcon icon={faRecycle} style={{ color: '#14248a', fontSize: '13px' }} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>{label}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
+        <motion.div variants={itemVariants} className="h-full">
+          <AQIWidget />
+        </motion.div>
+        <motion.div variants={itemVariants} className="h-full">
+          <ActivityFeed
+            activities={[
+              ...localDrafts.map((d) => ({
+                _id: d.id,
+                type: 'draft',
+                description: `Draft: ${d.locationName || 'Cleanup'}`,
+                amount: 0,
+                createdAt: d.timestamp,
+                isDraft: true,
+                rawDraft: d,
+              })),
+              ...(stats.recentActivity || []),
+            ]}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants} className="h-full">
+          <LeaderboardWidget />
         </motion.div>
       </div>
 
+      {/* Footer strip */}
+      <motion.div variants={itemVariants}>
+        <PortalsStrip />
+      </motion.div>
     </motion.div>
   );
 };

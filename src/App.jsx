@@ -29,6 +29,7 @@ import PublicFeed from './pages/PublicFeed';
 import AboutUs from './pages/AboutUs';
 import Profile from './pages/Profile';
 import MyTickets from './pages/MyTickets';
+import MyTransactions from './pages/MyTransactions';
 
 const App = () => {
   const { pathname } = useLocation();
@@ -72,6 +73,7 @@ const App = () => {
           <Route path="community" element={<Community />} />
           <Route path="report-issue" element={<ReportIssue />} />
           <Route path="my-tickets" element={<MyTickets />} />
+          <Route path="my-transactions" element={<MyTransactions />} />
           <Route path="about" element={<AboutUs />} />
           <Route path="profile" element={<Profile />} />
           <Route path="blockchain" element={

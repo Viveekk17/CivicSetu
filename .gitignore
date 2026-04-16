@@ -39,3 +39,4 @@ dist-ssr
 *.gen.*
 *.autogen.*
 *.generated.*
+CLAUDE.md

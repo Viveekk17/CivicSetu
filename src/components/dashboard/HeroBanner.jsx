@@ -1,155 +1,267 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-    faCheckCircle, faUsers, faTree, faCoins, 
-    faChevronDown, faChevronUp 
+import {
+  faCheckCircle, faUsers, faTree, faCoins,
+  faChevronDown, faChevronUp,
 } from '@fortawesome/free-solid-svg-icons';
+
+const STATS = [
+  { key: 'civicActions',     label: 'Actions',  icon: faCheckCircle, accent: '#34d399' },
+  { key: 'activeCitizens',   label: 'Citizens', icon: faUsers,       accent: '#60a5fa' },
+  { key: 'treesPlanted',     label: 'Trees',    icon: faTree,        accent: '#4ade80' },
+  { key: 'creditsRedeemed',  label: 'Credits',  icon: faCoins,       accent: '#fbbf24' },
+];
+
+// Architectural arc — evokes a bridge / Indo-Saracenic doorway. Pure SVG, no assets.
+const BridgeArc = ({ className, opacity = 0.08 }) => (
+  <svg viewBox="0 0 600 200" className={className} preserveAspectRatio="none" aria-hidden>
+    <defs>
+      <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="#998fc7" stopOpacity="0" />
+        <stop offset="50%" stopColor="#d4c2fc" stopOpacity="1" />
+        <stop offset="100%" stopColor="#998fc7" stopOpacity="0" />
+      </linearGradient>
+    </defs>
+    {[0, 1, 2, 3].map((i) => (
+      <path
+        key={i}
+        d={`M 50 200 Q 300 ${40 + i * 20} 550 200`}
+        fill="none"
+        stroke="url(#arcGrad)"
+        strokeWidth="1"
+        opacity={opacity * (1 - i * 0.18)}
+      />
+    ))}
+    {/* Cable lines (bridge struts) */}
+    {Array.from({ length: 11 }).map((_, i) => {
+      const x = 50 + i * 50;
+      const t = (i - 5) / 5;
+      const archY = 80 + Math.abs(t) * t * 60;
+      return (
+        <line
+          key={i}
+          x1={x}
+          y1={archY}
+          x2={x}
+          y2="200"
+          stroke="#d4c2fc"
+          strokeWidth="0.5"
+          opacity={opacity * 1.5}
+        />
+      );
+    })}
+  </svg>
+);
 
 const HeroBanner = ({ globalImpact }) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsExpanded(false);
-    }, 4000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsExpanded(false), 5000);
+    return () => clearTimeout(t);
   }, []);
 
-  // Smooth, uniform transition for that "Premium Curtain" feel
-  const smoothTransition = {
-    duration: 0.6,
-    ease: [0.4, 0, 0.2, 1] // Standard Material-style smooth ease
-  };
+  const smooth = { duration: 0.55, ease: [0.4, 0, 0.2, 1] };
 
   return (
     <motion.section
-      animate={{ 
-        height: isExpanded ? 'auto' : 64,
-        paddingTop: isExpanded ? 40 : 14,
-        paddingBottom: isExpanded ? 40 : 14
-      }}
-      transition={smoothTransition}
-      className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-8"
-      style={{ 
-        background: '#14248a',
+      animate={{ height: isExpanded ? 'auto' : 64 }}
+      transition={smooth}
+      className="relative rounded-3xl overflow-hidden border"
+      style={{
+        background:
+          'linear-gradient(120deg, #0e1a66 0%, #14248a 45%, #1e2b95 100%)',
+        borderColor: 'rgba(212,194,252,0.18)',
+        boxShadow: '0 20px 50px -20px rgba(20,36,138,0.55)',
       }}
     >
-      {/* Decorative background elements */}
-      <motion.div 
-        animate={{ opacity: isExpanded ? 0.1 : 0 }}
-        transition={{ duration: 0.6 }}
-        className="absolute top-0 left-0 w-80 h-80 rounded-full blur-[100px] pointer-events-none" 
-        style={{ background: '#14248a', transform: 'translate(-50%,-50%)' }} 
-      />
-      <motion.div 
-        animate={{ opacity: isExpanded ? 0.1 : 0 }}
-        transition={{ duration: 0.6 }}
-        className="absolute bottom-0 right-0 w-80 h-80 rounded-full blur-[100px] pointer-events-none" 
-        style={{ background: '#998fc7', transform: 'translate(50%,50%)' }} 
-      />
+      {/* Architectural arc background */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            key="arc"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0 pointer-events-none"
+          >
+            <BridgeArc className="absolute bottom-0 left-0 w-full h-2/3" opacity={0.18} />
+            {/* Soft radial glows */}
+            <div
+              className="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-[120px]"
+              style={{ background: 'radial-gradient(circle, rgba(212,194,252,0.35), transparent 70%)' }}
+            />
+            <div
+              className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-[120px]"
+              style={{ background: 'radial-gradient(circle, rgba(153,143,199,0.30), transparent 70%)' }}
+            />
+            {/* Faint geometric grid */}
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+                backgroundSize: '40px 40px',
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Toggle Arrow */}
-      <button 
+      {/* Toggle */}
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-slate-800 transition-colors border border-white/5 text-white/70 hover:text-white cursor-pointer"
+        className="absolute right-4 top-4 z-30 w-7 h-7 flex items-center justify-center rounded-full border border-white/15 bg-white/5 hover:bg-white/15 backdrop-blur-sm text-white/70 hover:text-white transition-all"
       >
         <FontAwesomeIcon icon={isExpanded ? faChevronUp : faChevronDown} fontSize={9} />
       </button>
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center">
+      <div className="relative z-10">
         <AnimatePresence mode="wait">
           {isExpanded ? (
-            <motion.div 
-              key="expanded"
-              initial={{ opacity: 0, y: 10 }}
+            <motion.div
+              key="open"
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center w-full px-6 text-center"
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
+              className="grid md:grid-cols-12 gap-6 md:gap-8 px-6 md:px-10 py-10 md:py-12 items-center"
             >
-              {/* Built for Bharat Badge */}
-              <div className="flex items-center gap-3 px-4 py-1.5 rounded-full mb-6 border border-white/10 bg-white/10">
-                <div className="flex gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF9933' }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FFFFFF' }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#138808' }} />
+              {/* Left: Identity */}
+              <div className="md:col-span-7">
+                {/* Civic seal */}
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm border"
+                    style={{
+                      background: 'linear-gradient(135deg, #d4c2fc, #998fc7)',
+                      color: '#14248a',
+                      borderColor: 'rgba(255,255,255,0.2)',
+                    }}
+                  >
+                    से
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/60 leading-none">
+                      An initiative for
+                    </span>
+                    <span className="text-[11px] font-bold tracking-wide text-white/90 mt-0.5">
+                      Bharat 🇮🇳 · Est. 2025
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-100">
-                  Built for Bharat
-                </span>
+
+                {/* Bilingual masthead */}
+                <h1 className="font-black tracking-tight leading-[0.95] mb-5">
+                  <span className="block text-[44px] md:text-[56px] text-white">
+                    Civic<span style={{ color: '#d4c2fc' }}>Setu</span>
+                  </span>
+                  <span
+                    className="block text-2xl md:text-3xl mt-1 font-bold"
+                    style={{ color: '#998fc7', fontFamily: 'serif' }}
+                  >
+                    सेतु — a bridge for change
+                  </span>
+                </h1>
+
+                <p className="text-sm md:text-base text-white/70 max-w-lg leading-relaxed">
+                  Connecting citizens, communities and government through verified
+                  environmental action. Every photo is proof. Every credit, real impact.
+                </p>
+
+                {/* Live pulse */}
+                <div className="flex items-center gap-2 mt-6">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300/90">
+                    Live · community impact
+                  </span>
+                </div>
               </div>
 
-              {/* Branded Title */}
-              <h1 className="text-4xl md:text-5xl font-black mb-4 leading-tight text-white tracking-tight">
-                <span style={{ color: '#998fc7' }}>CIVIC</span>
-                <span style={{ color: '#d4c2fc' }}>सेतु</span>
-              </h1>
-
-              {/* Mission Statement */}
-              <p className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-8 text-slate-300 font-medium opacity-90">
-                India's first AI-powered <span className="text-emerald-400">civic participation </span> 
-                platform that rewards citizens for real environmental actions.
-              </p>
-
-              {/* 4 Core Platform Stats Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl px-4 py-5 rounded-2xl bg-white/5 border border-white/10">
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-400 text-[10px]" />
-                    <span className="text-xl font-bold text-white">{globalImpact?.civicActions?.toLocaleString() || 0}</span>
+              {/* Right: Stats cluster */}
+              <div className="md:col-span-5">
+                <div
+                  className="rounded-2xl p-5 backdrop-blur-sm border"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    borderColor: 'rgba(212,194,252,0.18)',
+                  }}
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    {STATS.map(({ key, label, icon, accent }) => (
+                      <div key={key} className="relative">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <FontAwesomeIcon icon={icon} className="text-[10px]" style={{ color: accent }} />
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-[0.16em]"
+                            style={{ color: `${accent}cc` }}
+                          >
+                            {label}
+                          </span>
+                        </div>
+                        <div className="text-2xl font-black tabular-nums text-white leading-none">
+                          {(globalImpact?.[key] ?? 0).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-[11px] font-bold text-emerald-400/60 uppercase tracking-widest">Actions</p>
-                </div>
 
-                <div className="flex flex-col items-center border-l border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FontAwesomeIcon icon={faUsers} className="text-blue-400 text-[10px]" />
-                    <span className="text-xl font-bold text-white">{globalImpact?.activeCitizens?.toLocaleString() || 0}</span>
+                  <div className="mt-4 pt-3 border-t flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+                      Updated just now
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: '#d4c2fc' }}>
+                      v1.0
+                    </span>
                   </div>
-                  <p className="text-[11px] font-bold text-blue-400/60 uppercase tracking-widest">Citizens</p>
-                </div>
-
-                <div className="flex flex-col items-center border-l border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FontAwesomeIcon icon={faTree} className="text-emerald-300 text-[10px]" />
-                    <span className="text-xl font-bold text-white">{globalImpact?.treesPlanted?.toLocaleString() || 0}</span>
-                  </div>
-                  <p className="text-[11px] font-bold text-emerald-300/60 uppercase tracking-widest">Trees</p>
-                </div>
-
-                <div className="flex flex-col items-center border-l border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FontAwesomeIcon icon={faCoins} className="text-amber-400 text-[10px]" />
-                    <span className="text-xl font-bold text-white text-amber-500">{globalImpact?.creditsRedeemed?.toLocaleString() || 0}</span>
-                  </div>
-                  <p className="text-[11px] font-bold text-amber-400/60 uppercase tracking-widest">Credits</p>
                 </div>
               </div>
             </motion.div>
           ) : (
-            <motion.div 
-              key="collapsed"
+            <motion.div
+              key="closed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex items-center justify-center gap-4 w-full px-6"
+              transition={{ duration: 0.3 }}
+              className="flex items-center justify-between px-6 h-16"
             >
-              <div className="flex gap-1 mr-1">
-                <span className="w-2 h-2 rounded-full" style={{ background: '#FF9933' }} />
-                <span className="w-2 h-2 rounded-full" style={{ background: '#FFFFFF' }} />
-                <span className="w-2 h-2 rounded-full" style={{ background: '#138808' }} />
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs"
+                  style={{ background: 'linear-gradient(135deg, #d4c2fc, #998fc7)', color: '#14248a' }}
+                >
+                  से
+                </div>
+                <span className="text-base font-black text-white tracking-tight">
+                  Civic<span style={{ color: '#d4c2fc' }}>Setu</span>
+                </span>
+                <div className="w-px h-4 bg-white/20" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+                  Bridge for change
+                </span>
               </div>
-              <h1 className="text-xl font-black text-white tracking-widest">
-                <span style={{ color: '#998fc7' }}>CIVIC</span>
-                <span style={{ color: '#d4c2fc' }}>सेतु</span>
-              </h1>
-              <div className="w-px h-4 bg-white/20 mx-2" />
-              <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
-                Built for Bharat
-              </span>
-              <div className="w-8 ml-4 pointer-events-none" />
+
+              <div className="flex items-center gap-4">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                </span>
+                <div className="hidden md:flex items-center gap-3 text-[11px] font-bold text-white/80">
+                  {STATS.map(({ key, label, accent }) => (
+                    <span key={key} className="tabular-nums">
+                      <span style={{ color: accent }}>{(globalImpact?.[key] ?? 0).toLocaleString()}</span>
+                      <span className="text-white/40 ml-1">{label}</span>
+                    </span>
+                  ))}
+                </div>
+                <div className="w-7" />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx eslint *)",
+      "Bash(npx vite *)",
+      "Bash(node -e \"const l=Object.keys\\(require\\('lucide-react'\\)\\); console.log\\(l.filter\\(n=>/Receipt|History|List|Wallet|Coins|FileText|ArrowUpDown/i.test\\(n\\)\\).join\\('\\\\n'\\)\\)\")"
+    ]
+  }
+}

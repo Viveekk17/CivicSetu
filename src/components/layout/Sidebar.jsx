@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Upload, Rss, Gift, BarChart2,
   Users, MessageSquare, AlertTriangle, Ticket, Info,
-  X, LogOut
+  Receipt, X, LogOut
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: '/community',     labelKey: 'nav_community',   icon: MessageSquare },
   { path: '/report-issue',  labelKey: 'nav_report_issue',icon: AlertTriangle },
   { path: '/my-tickets',    labelKey: null, label: 'My Tickets', icon: Ticket },
+  { path: '/my-transactions', labelKey: null, label: 'My Transactions', icon: Receipt },
   { path: '/about',          labelKey: null, label: 'About Us',  icon: Info },
 ];
 

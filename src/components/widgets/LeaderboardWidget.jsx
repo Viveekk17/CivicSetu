@@ -6,11 +6,12 @@ import { getStoredUser } from '../../services/authService';
 
 const PAGE_SIZE = 5;
 
-// Medal colors for top 3
+// Top-3 rank text colors (gold / silver / bronze).
+// All ranks use the same #N text format — only the color changes.
 const RANK_COLORS = {
-  1: { bg: '#FFD700', text: '#78581a', label: '1st' },
-  2: { bg: '#C0C0C0', text: '#555555', label: '2nd' },
-  3: { bg: '#CD7F32', text: '#5a320a', label: '3rd' },
+  1: '#D4A017', // gold
+  2: '#7C8B9C', // silver
+  3: '#B45309', // bronze
 };
 
 const LeaderboardWidget = () => {
@@ -35,18 +36,12 @@ const LeaderboardWidget = () => {
     }
   };
 
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    const parts = name.split(' ');
-    return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
   const totalPages = Math.ceil(leaderboard.length / PAGE_SIZE);
   const pageData = leaderboard.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   if (loading) {
     return (
-      <div className="card p-6 flex items-center justify-center py-16">
+      <div className="card p-6 h-full flex items-center justify-center">
         <Loader2 size={22} className="animate-spin" style={{ color: 'var(--primary)' }} />
       </div>
     );
@@ -54,14 +49,14 @@ const LeaderboardWidget = () => {
 
   if (error) {
     return (
-      <div className="card p-6 text-center">
+      <div className="card p-6 h-full text-center">
         <p className="text-sm text-red-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="card p-6">
+    <div className="card p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
@@ -113,7 +108,7 @@ const LeaderboardWidget = () => {
             {pageData.map((user, index) => {
               const rank = user.rank || (page * PAGE_SIZE + index + 1);
               const isCurrentUser = user._id === currentUser?.id;
-              const rankStyle = RANK_COLORS[rank];
+              const rankColor = isCurrentUser ? '#fff' : (RANK_COLORS[rank] || 'var(--text-secondary)');
 
               return (
                 <motion.div
@@ -127,26 +122,11 @@ const LeaderboardWidget = () => {
                     border: isCurrentUser ? '1.5px solid #14248a' : '1.5px solid var(--border-light)',
                   }}
                 >
-                  {/* Rank badge */}
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
-                    style={rankStyle
-                      ? { backgroundColor: rankStyle.bg, color: rankStyle.text }
-                      : { backgroundColor: 'var(--border-light)', color: 'var(--text-secondary)' }
-                    }
-                  >
-                    {rankStyle ? rankStyle.label : rank}
-                  </div>
-
-                  {/* Avatar */}
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 overflow-hidden"
-                    style={{ backgroundColor: isCurrentUser ? 'rgba(255,255,255,0.2)' : '#14248a', color: '#fff' }}
-                  >
-                    {(user.profilePicture && !user.profilePicture.includes('default-avatar.png'))
-                      ? <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
-                      : getInitials(user.name)
-                    }
+                  {/* Rank text — same #N format for all, color shifts for top 3 */}
+                  <div className="w-9 flex items-center justify-center flex-shrink-0">
+                    <span className="text-base font-black tabular-nums tracking-tight" style={{ color: rankColor }}>
+                      #{rank}
+                    </span>
                   </div>
 
                   {/* Name */}
@@ -161,13 +141,13 @@ const LeaderboardWidget = () => {
                   <div className="flex items-center gap-3 flex-shrink-0 text-xs">
                     <div className="flex items-center gap-1">
                       <Wind size={11} style={{ color: isCurrentUser ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)' }} />
-                      <span className="font-bold" style={{ color: isCurrentUser ? '#fff' : 'var(--primary)' }}>
+                      <span className="font-bold tabular-nums" style={{ color: isCurrentUser ? '#fff' : 'var(--primary)' }}>
                         {(user.impact?.pollutionSaved || user.pollutionSaved || 0).toFixed(1)} kg
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <TreePine size={11} style={{ color: isCurrentUser ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)' }} />
-                      <span className="font-bold" style={{ color: isCurrentUser ? '#fff' : '#998fc7' }}>
+                      <span className="font-bold tabular-nums" style={{ color: isCurrentUser ? '#fff' : '#998fc7' }}>
                         {user.impact?.treesPlanted || user.treesPlanted || 0}
                       </span>
                     </div>

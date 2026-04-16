@@ -145,6 +145,29 @@ body {
   line-height: 1.5;
 }
 
+/* Suppress phantom text caret on non-editable surfaces.
+   Real inputs/textareas keep their caret via the override below. */
+*:not(input):not(textarea):not([contenteditable="true"]) {
+  caret-color: transparent;
+}
+input, textarea, [contenteditable="true"] {
+  caret-color: auto;
+}
+
+/* UI chrome should not behave like selectable text.
+   Long-form content (paragraphs, .selectable) opts back in. */
+.card, button, [role="button"], a,
+h1, h2, h3, h4, h5, h6,
+nav, header, aside, label {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input, textarea, [contenteditable="true"],
+p, .selectable, code, pre {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -308,5 +331,21 @@ button {
   background: none;
   -webkit-background-clip: unset;
   background-clip: unset;
+}
+
+/* ---- AQI gauge ambient particles ----
+   Particles drift up + sway sideways to evoke air movement.
+   Density and speed are driven from JS via inline style. */
+@keyframes aqi-particle-rise {
+  0%   { transform: translate3d(0, 0, 0) scale(0.8); opacity: 0; }
+  15%  { opacity: var(--p-op, 0.4); }
+  50%  { transform: translate3d(var(--p-sway, 8px), -50%, 0) scale(1); }
+  85%  { opacity: var(--p-op, 0.4); }
+  100% { transform: translate3d(0, -110%, 0) scale(0.6); opacity: 0; }
+}
+
+@keyframes aqi-haze-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(1.08); }
 }
 

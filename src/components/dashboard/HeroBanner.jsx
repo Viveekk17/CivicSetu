@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -56,17 +56,36 @@ const BridgeArc = ({ className, opacity = 0.08 }) => (
 
 const HeroBanner = ({ globalImpact }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  // Cache the natural open-state height as a pixel value. Animating from a
+  // fixed pixel target is far smoother than animating to `'auto'`, which
+  // forces framer-motion to re-measure the layout each frame.
+  const [openHeight, setOpenHeight] = useState(null);
+  const openRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setIsExpanded(false), 5000);
     return () => clearTimeout(t);
   }, []);
 
+  // Measure the open content while it's mounted; resize observer keeps us
+  // in sync with viewport / font-loading reflows.
+  useLayoutEffect(() => {
+    const el = openRef.current;
+    if (!el || !isExpanded) return;
+    const update = () => setOpenHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isExpanded]);
+
   const smooth = { duration: 0.55, ease: [0.4, 0, 0.2, 1] };
+  const targetHeight = isExpanded ? (openHeight ?? 'auto') : 64;
 
   return (
     <motion.section
-      animate={{ height: isExpanded ? 'auto' : 64 }}
+      initial={false}
+      animate={{ height: targetHeight }}
       transition={smooth}
       className="relative rounded-3xl overflow-hidden border"
       style={{
@@ -74,6 +93,7 @@ const HeroBanner = ({ globalImpact }) => {
           'linear-gradient(120deg, #0e1a66 0%, #14248a 45%, #1e2b95 100%)',
         borderColor: 'rgba(212,194,252,0.18)',
         boxShadow: '0 20px 50px -20px rgba(20,36,138,0.55)',
+        willChange: 'height',
       }}
     >
       {/* Architectural arc background */}
@@ -123,10 +143,11 @@ const HeroBanner = ({ globalImpact }) => {
           {isExpanded ? (
             <motion.div
               key="open"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
+              ref={openRef}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="grid md:grid-cols-12 gap-6 md:gap-8 px-6 md:px-10 py-10 md:py-12 items-center"
             >
               {/* Left: Identity */}

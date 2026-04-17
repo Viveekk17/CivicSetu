@@ -85,7 +85,7 @@ exports.sendSubmissionEmail = async (user, submission) => {
 
         <div style="margin-top: 30px; padding: 20px; background: #e6fffa; border-left: 4px solid #38b2ac; border-radius: 4px;">
           <p style="margin: 0; font-weight: bold; color: #2c7a7b;">What's Next?</p>
-          <p style="margin: 10px 0 0; font-size: 14px;">Your submission will be reviewed by our admin team within <strong>24 - 48 hours</strong>. Once approved, the corresponding credits will be automatically added to your account.</p>
+          <p style="margin: 10px 0 0; font-size: 14px;">Your ticket <strong>${submission.ticketId}</strong> will be reviewed by our admin team <strong>within 24 hours</strong>. Once approved, the corresponding credits will be automatically added to your account and you'll receive a follow-up email with the verdict.</p>
         </div>
 
         <p style="margin-top: 30px; font-size: 12px; color: #999; text-align: center;">
@@ -105,8 +105,18 @@ exports.sendSubmissionEmail = async (user, submission) => {
 exports.sendStatusUpdateEmail = async (user, submission) => {
   if (!user.email) return;
 
-  const isApproved = submission.status === 'verified';
+  const isApproved = submission.status === 'verified' || submission.status === 'approved';
   const subject = isApproved ? 'Submission Approved! ✅ - CivicSetu' : 'Submission Update - CivicSetu';
+
+  // Schema uses perPersonCreditsAwarded / totalCreditsAwarded and weightKg —
+  // fall back across legacy field names so older docs still render correctly.
+  const creditsEarned = submission.perPersonCreditsAwarded
+    ?? submission.totalCreditsAwarded
+    ?? submission.creditsAwarded
+    ?? 0;
+  const weightKg = submission.weightKg ?? submission.weight ?? 0;
+  const ticketId = submission.ticketId || '';
+  const adminRemark = submission.verificationDetails?.notes;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
@@ -114,22 +124,29 @@ exports.sendStatusUpdateEmail = async (user, submission) => {
         <img src="https://civic-setu-woad.vercel.app/civicsetu-logo.png" alt="CivicSetu Logo" style="width: 80px; height: auto; margin-bottom: 15px;" />
         <h1 style="margin: 0; font-size: 24px;">CIVIC सेतु</h1>
         <p style="margin: 5px 0 0; opacity: 0.8;">${isApproved ? 'Verification Successful' : 'Submission Status Updated'}</p>
+        ${ticketId ? `<p style="margin: 8px 0 0; font-size: 12px; opacity: 0.75; letter-spacing: 1px;">Ticket ${ticketId}</p>` : ''}
       </div>
       <div style="padding: 30px; color: #333;">
         <h2 style="color: ${isApproved ? '#059669' : '#1e293b'};">Hello ${user.name},</h2>
-        
+
         ${isApproved ? `
           <p>Great news! Your recent submission has been <strong>approved</strong> by the admin team.</p>
           <div style="text-align: center; padding: 30px; background: #f0fff4; border: 2px dashed #68d391; border-radius: 15px; margin: 25px 0;">
-            <p style="margin: 0; font-size: 14px; text-transform: uppercase; tracking: 1px; color: #2f855a;">Credits Earned</p>
-            <h1 style="margin: 10px 0; font-size: 48px; color: #276749;">${submission.creditsAwarded}</h1>
+            <p style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #2f855a;">Credits Earned</p>
+            <h1 style="margin: 10px 0; font-size: 48px; color: #276749;">${creditsEarned}</h1>
             <p style="margin: 0; color: #2f855a;">Coins have been added to your balance!</p>
           </div>
-          <p>This contribution helped save <strong>${submission.weight} kg</strong> of pollution. Keep going!</p>
+          <p>This contribution helped save <strong>${Number(weightKg).toFixed(1)} kg</strong> of pollution. Keep going!</p>
+          ${adminRemark ? `
+            <div style="background: #f0fdf4; padding: 16px 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #059669;">
+              <p style="margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #047857;">Admin Remark</p>
+              <p style="margin: 0; color: #1f2937;">${adminRemark}</p>
+            </div>
+          ` : ''}
         ` : `
           <p>Your submission status has been updated. Unfortunately, it could not be verified at this time.</p>
           <div style="background: #fff5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f56565;">
-            <p style="margin: 0;"><strong>Reason/Notes:</strong> ${submission.verificationDetails?.notes || 'No specific notes provided.'}</p>
+            <p style="margin: 0;"><strong>Reason / Admin Remark:</strong> ${adminRemark || 'No specific notes provided.'}</p>
           </div>
           <p>You can try submitting again with more clear photos or following the guidelines in the About section.</p>
         `}
@@ -228,10 +245,13 @@ exports.sendTicketConfirmationEmail = async (user, ticket) => {
         </div>
 
         <div style="text-align: center; margin-top: 35px;">
-          <a href="${process.env.FRONTEND_URL}/my-tickets" 
-             style="display: inline-block; padding: 12px 30px; background: #0f172a; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background 0.2s;">
-             Tracker Dashboard
+          <a href="${process.env.FRONTEND_URL || 'https://civic-setu-woad.vercel.app'}/my-tickets/${ticket.ticketId}"
+             style="display: inline-block; padding: 12px 30px; background: #14248a; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background 0.2s;">
+             Track this ticket
           </a>
+          <p style="margin: 12px 0 0; font-size: 12px; color: #94a3b8;">
+            Or open <a href="${process.env.FRONTEND_URL || 'https://civic-setu-woad.vercel.app'}/my-tickets" style="color: #2563eb; text-decoration: none;">all your tickets</a>.
+          </p>
         </div>
 
         <p style="margin-top: 40px; font-size: 12px; color: #94a3b8; text-align: center;">

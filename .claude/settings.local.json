@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx eslint *)",
       "Bash(npx vite *)",
-      "Bash(node -e \"const l=Object.keys\\(require\\('lucide-react'\\)\\); console.log\\(l.filter\\(n=>/Receipt|History|List|Wallet|Coins|FileText|ArrowUpDown/i.test\\(n\\)\\).join\\('\\\\n'\\)\\)\")"
+      "Bash(node -e \"const l=Object.keys\\(require\\('lucide-react'\\)\\); console.log\\(l.filter\\(n=>/Receipt|History|List|Wallet|Coins|FileText|ArrowUpDown/i.test\\(n\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node --check src/utils/aiVerification.js)",
+      "Bash(node --check src/utils/metadataService.js)",
+      "Bash(node --check src/controllers/submissionController.js)",
+      "Bash(python -m py_compile app.py)"
     ]
   }
 }

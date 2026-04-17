@@ -138,6 +138,7 @@ exports.register = async (req, res) => {
           email: user.email,
           credits: user.credits,
           role: user.role,
+          profilePicture: user.profilePicture,
           impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
         },
         token
@@ -192,6 +193,7 @@ exports.login = async (req, res) => {
           email: user.email,
           credits: user.credits,
           role: user.role,
+          profilePicture: user.profilePicture,
           impact: user.impact || { pollutionSaved: 0, treesPlanted: 0 }
         },
         token
@@ -265,6 +267,14 @@ exports.firebaseLogin = async (req, res) => {
           phone_number
         });
       }
+    }
+
+    // Always refresh the profile picture from the Google/Firebase token on every
+    // login. Many users were stuck with an empty profilePicture because we only
+    // wrote it once at link-time and never on subsequent Google sign-ins.
+    if (picture && user.profilePicture !== picture) {
+      user.profilePicture = picture;
+      await user.save();
     }
 
     // Existing user login

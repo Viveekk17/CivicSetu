@@ -3,6 +3,19 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const { verifySubmission } = require('../utils/aiVerification');
 
+// Tolerant JSON parse: accepts already-parsed values, returns fallback on
+// invalid input. Several form fields arrive as JSON strings from multipart
+// uploads, but malformed payloads were throwing 500s.
+const safeJsonParse = (value, fallback) => {
+  if (value == null || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
 // @desc    Analyze photos with AI (preview only, don't save)
 // @route   POST /api/submissions/analyze
 // @access  Private
@@ -92,7 +105,16 @@ exports.checkDuplicate = async (req, res) => {
 // @access  Private
 exports.createSubmission = async (req, res) => {
   try {
-    const { type, weight, location, description, imageHashes, memberCount } = req.body;
+    const { type, weight, location, description, imageHashes, memberCount, wasteType, submissionType, weightKg, participantCount, areaCriticality } = req.body;
+    // `type` is the high-level submission category (enum: garbage/water/methane/restoration).
+    // `wasteType` is the granular sub-category (organic/general/plastic/...).
+    // Validate `type` against the enum so a stray AI-detected wasteType can't bleed into it.
+    const SUBMISSION_TYPES = ['garbage', 'water', 'methane', 'restoration'];
+    const WASTE_TYPES = ['organic', 'general', 'construction', 'plastic', 'drain', 'hazardous'];
+    const SUBMISSION_KINDS = ['individual', 'group', 'community'];
+    const safeType = SUBMISSION_TYPES.includes(type) ? type : 'garbage';
+    const safeWasteType = WASTE_TYPES.includes(wasteType) ? wasteType : 'general';
+    const safeSubmissionType = SUBMISSION_KINDS.includes(submissionType) ? submissionType : 'individual';
 
     // Check if files are uploaded
     if (!req.files || req.files.length === 0) {
@@ -174,17 +196,12 @@ exports.createSubmission = async (req, res) => {
     // Total Pool = Base * (1 + (Members - 1) * 0.1)
     // Per Person = Total Pool / Members
 
-    const members = (parseInt(memberCount) || 0) > 0 ? parseInt(memberCount) : 1;
-    // memberCount from req.body usually comes from the form.
-    // However, if taggedUsers was sent, meaningful count should be taggedUsers.length + 1
-    // Front end sends `memberCount` as `taggedUsers.length + 1` correctly.
+    const members = (parseInt(memberCount) || parseInt(participantCount) || 0) > 0
+      ? (parseInt(memberCount) || parseInt(participantCount))
+      : 1;
 
     const {
-      // type, // Already declared above
-      // weight, // Already declared above
-      // location, // Already declared above
-      // description, // Already declared above
-      // memberCount, // Already declared above
+      participantIds: rawParticipantIds,
       taggedUsers,
       taggingMode,
       taggedCommunities
@@ -228,15 +245,17 @@ exports.createSubmission = async (req, res) => {
     const capPerPerson = creditCaps[taggingMode] || 1000;
 
     if (taggingMode === 'members') {
-      // Members mode: Split credits among tagged users + self
-      const parsedTaggedUsers = taggedUsers ? JSON.parse(taggedUsers) : [];
-      membersForCredit = parsedTaggedUsers.length + 1; // Uploader + tagged users
-      tags = parsedTaggedUsers;
+      // Members mode: Split credits among tagged users + self.
+      // Frontend sends `participantIds`; legacy field `taggedUsers` accepted as fallback.
+      const parsedTagged = safeJsonParse(rawParticipantIds, null) ?? safeJsonParse(taggedUsers, []);
+      const safeTagged = Array.isArray(parsedTagged) ? parsedTagged.filter(Boolean) : [];
+      membersForCredit = safeTagged.length + 1; // Uploader + tagged users
+      tags = safeTagged;
     } else if (taggingMode === 'community' || taggingMode === 'ngo') {
       // Community/NGO mode: All credits go to submitter only
       membersForCredit = 1;
-      const parsedCommunities = taggedCommunities ? JSON.parse(taggedCommunities) : [];
-      tags = parsedCommunities;
+      const parsedCommunities = safeJsonParse(taggedCommunities, []);
+      tags = Array.isArray(parsedCommunities) ? parsedCommunities : [];
     }
 
     // Apply mode-specific cap
@@ -256,17 +275,45 @@ exports.createSubmission = async (req, res) => {
     const randomNum = Math.floor(100000 + Math.random() * 900000);
     const ticketId = `TKT-${randomNum}`;
 
+    // Parse the multipart string fields up-front so we never throw on bad input
+    // mid-write. `location` is required; reject early with a 400 if it's missing
+    // or malformed rather than surfacing a generic 500.
+    const parsedHashes = safeJsonParse(imageHashes, []);
+    const parsedLocation = safeJsonParse(location, null);
+    if (!parsedLocation || typeof parsedLocation !== 'object') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or missing location payload',
+      });
+    }
+
     // Create submission — always saved as 'pending' requiring admin approval.
     // Credits are NOT awarded now; they will be credited when the admin approves.
     // AI-suggested credits are stored in verificationDetails for admin reference.
+    // Effective submission kind: bump to 'group' when there are tagged co-participants
+    // so the credit calculator divides the total pool across them.
+    const effectiveSubmissionType = (taggingMode === 'members' && membersForCredit > 1 && safeSubmissionType === 'individual')
+      ? 'group'
+      : safeSubmissionType;
+
+    // Only members-mode tags are real co-participants who should receive credits.
+    // Community/NGO tags are organisational pointers, not credit recipients.
+    const memberParticipantIds = taggingMode === 'members' ? tags : [];
+
     const submission = await Submission.create({
       user: req.user.id,
       ticketId,
-      type: verification.category || type,
+      type: safeType,
+      wasteType: safeWasteType,
+      submissionType: effectiveSubmissionType,
+      participantCount: membersForCredit,
+      participantIds: memberParticipantIds,
+      areaCriticality: areaCriticality || 'low',
       photos: cloudinaryUrls.length > 0 ? cloudinaryUrls : photoRelativePaths,
-      imageHashes: imageHashes ? JSON.parse(imageHashes) : [],
-      weight: verification.trashWeight || weight || 0.5,
-      location: JSON.parse(location),
+      imageHashes: Array.isArray(parsedHashes) ? parsedHashes : [],
+      weight: verification.trashWeight || weightKg || weight || 0.5,
+      weightKg: Number(weightKg || weight || verification.trashWeight) || 0.5,
+      location: parsedLocation,
       description,
       status: 'pending',           // Always pending — admin must review
       creditsAwarded: 0,            // No credits until admin approves
@@ -445,14 +492,11 @@ exports.uploadReverification = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    // Check phase and deadline
-    if (submission.approvalPhase !== 1) {
-      return res.status(400).json({ success: false, message: 'Submission is not in re-verification phase' });
-    }
-
-    if (new Date() > submission.reverificationDeadline) {
-      return res.status(400).json({ success: false, message: 'Re-verification window (48h) has expired' });
-    }
+    // Re-verification flow is deprecated — admin approval now grants 100% credits in one step.
+    return res.status(410).json({
+      success: false,
+      message: 'Re-verification is no longer required. Credits are granted in full on admin approval.'
+    });
 
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload a photo' });

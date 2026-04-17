@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(cat eslint.config.js)",
+      "Bash(cat .eslintrc*)"
+    ]
+  }
+}

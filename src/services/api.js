@@ -38,21 +38,19 @@ api.interceptors.response.use(
     console.log('Status:', error.response?.status);
     console.log('Error data:', error.response?.data);
 
-    const isAuthPage = window.location.pathname === '/login' || 
-                       window.location.pathname === '/register' || 
-                       window.location.pathname === '/admin/login';
+    const path = window.location.pathname;
+    // Don't bounce off the landing or admin login when their own auth probes fail
+    const isAuthSurface = path === '/' || path === '/admin/login';
 
-    if (error.response?.status === 401 && !isAuthPage) {
+    if (error.response?.status === 401 && !isAuthSurface) {
       console.log(' 401 Unauthorized - clearing auth and redirecting');
-      // Unauthorized - clear token and redirect to login (only if not on auth pages)
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
-      // If on an admin page, redirect to admin login
-      if (window.location.pathname.startsWith('/admin')) {
+
+      if (path.startsWith('/admin')) {
         window.location.href = '/admin/login';
       } else {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
 

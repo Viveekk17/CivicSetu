@@ -1,5 +1,5 @@
 const express = require('express');
-const { createReport, getMyReports, lookupTicket, getMyTickets } = require('../controllers/reportController');
+const { createReport, getMyReports, lookupTicket, getMyTickets, getMyTicketById } = require('../controllers/reportController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
@@ -18,5 +18,8 @@ router.route('/all-my-tickets')
 
 router.route('/me')
     .get(getMyReports);
+
+router.route('/ticket/:ticketId')
+    .get(getMyTicketById);
 
 module.exports = router;

@@ -16,8 +16,10 @@ const AdminSubmissions = () => {
         try {
             setLoading(true);
             const res = await api.get(`/admin/submissions?status=${filterStatus}&location=${filterLocation}`);
-            if (res.success) {
-                setSubmissions(res.data);
+            if (res?.success) {
+                setSubmissions(Array.isArray(res.data) ? res.data : []);
+            } else {
+                setSubmissions([]);
             }
         } catch (error) {
             console.error("Error fetching submissions:", error);
@@ -29,9 +31,10 @@ const AdminSubmissions = () => {
     const fetchLocations = async () => {
         try {
             const res = await api.get('/admin/submissions/locations');
-            setLocations(res.data.data);
+            setLocations(Array.isArray(res?.data) ? res.data : []);
         } catch (error) {
             console.error("Error fetching locations:", error);
+            setLocations([]);
         }
     };
 
@@ -187,7 +190,7 @@ const AdminSubmissions = () => {
                             ))}
                             {submissions.length === 0 && (
                                 <tr>
-                                    <td colSpan="5" className="p-8 text-center text-gray-500">No submissions found.</td>
+                                    <td colSpan="6" className="p-8 text-center text-gray-500">No submissions found.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -357,7 +360,7 @@ const AdminSubmissions = () => {
 
                             {/* Admin Management Actions */}
                             <div className="border-t pt-4 mt-4">
-                                <h4 className="font-bold mb-3 text-red-700">️ Admin Management</h4>
+                                <h4 className="font-bold mb-3 text-red-700">Admin Management</h4>
                                 <div className="space-y-3">
                                     {/* Update Credits */}
                                     <div className="flex gap-2 items-center p-3 bg-blue-50 rounded">
@@ -388,7 +391,7 @@ const AdminSubmissions = () => {
                                             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-full font-bold"
                                             onClick={handleDeleteSubmission}
                                         >
-                                            ️ Delete Submission
+                                            Delete Submission
                                         </button>
                                     </div>
                                 </div>

@@ -13,7 +13,7 @@ const BaseLayout = () => {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login');
+      navigate('/', { replace: true });
     } else {
       // Refresh user profile to ensure sync (credits, impact, etc.)
       refreshUserProfile();

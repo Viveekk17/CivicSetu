@@ -39,8 +39,9 @@ exports.createPost = asyncHandler(async (req, res) => {
         .populate('user', 'name profilePicture')
         .populate({
             path: 'submission',
-            select: 'photos location type createdAt'
+            select: 'photos location type wasteType weight weightKg perPersonCreditsAwarded creditsAwarded verificationDetails createdAt'
         })
+        .populate('tags', 'name')
         .populate('comments.user', 'name profilePicture');
 
     res.status(201).json({
@@ -61,8 +62,9 @@ exports.getPosts = asyncHandler(async (req, res) => {
         .populate('user', 'name profilePicture')
         .populate({
             path: 'submission',
-            select: 'photos location type createdAt'
+            select: 'photos location type wasteType weight weightKg perPersonCreditsAwarded creditsAwarded verificationDetails createdAt'
         })
+        .populate('tags', 'name')
         .populate('comments.user', 'name profilePicture')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -94,8 +96,9 @@ exports.getUserPosts = asyncHandler(async (req, res) => {
         .populate('user', 'name profilePicture')
         .populate({
             path: 'submission',
-            select: 'photos location type createdAt'
+            select: 'photos location type wasteType weight weightKg perPersonCreditsAwarded creditsAwarded verificationDetails createdAt'
         })
+        .populate('tags', 'name')
         .populate('comments.user', 'name profilePicture')
         .sort({ createdAt: -1 })
         .skip(skip)

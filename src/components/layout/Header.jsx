@@ -9,6 +9,7 @@ import { getStoredUser } from '../../services/authService';
 import { getInventory, useItem } from '../../services/treeService';
 import { useLanguage } from '../../context/LanguageContext';
 import axios from 'axios';
+import BrandLogo from '../common/BrandLogo';
 
 const Header = ({ onMenuClick, isSidebarOpen }) => {
   const navigate = useNavigate();
@@ -152,15 +153,15 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             <Menu size={18} />
           </button>
         )}
-        <div className="hidden md:flex items-center gap-2.5">
-          <img src="/logo.png" alt="CivicSetu Logo" className="h-9 w-auto object-contain" />
+        <Link to="/dashboard" className="hidden md:flex items-center gap-2.5 cursor-pointer">
+          <BrandLogo size={40} />
           <div>
             <h2 className="text-base font-bold leading-none" style={{ color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
               <span style={{ color: '#14248a' }}>CIVIC</span><span style={{ color: '#998fc7' }}>सेतु</span>
             </h2>
             <p className="text-[10px] font-medium mt-0.5" style={{ color: 'var(--text-tertiary)' }}>स्वच्छ भारत अपना भारत</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Right: actions */}
@@ -375,7 +376,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
             className="flex items-center gap-2 p-1.5 rounded-lg transition-colors"
             style={{ color: 'var(--text-secondary)' }}
             onMouseEnter={iconBtnHover} onMouseLeave={iconBtnLeave}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm overflow-hidden"
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm overflow-hidden ring-1 ring-white/40"
               style={{ backgroundColor: '#14248a' }}>
               {(user?.profilePicture && !user.profilePicture.includes('default-avatar.png'))
                 ? <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
@@ -391,7 +392,7 @@ const Header = ({ onMenuClick, isSidebarOpen }) => {
               {/* User info */}
               <div className="p-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0"
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0 ring-1 ring-white/40"
                     style={{ backgroundColor: '#14248a' }}>
                     {(user?.profilePicture && !user.profilePicture.includes('default-avatar.png'))
                       ? <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
@@ -475,7 +476,7 @@ const getRole = (credits) => {
 const handleLogout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/login';
+  window.location.href = '/';
 };
 
 const formatTime = (timestamp) => {

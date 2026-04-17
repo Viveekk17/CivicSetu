@@ -232,7 +232,7 @@ export const logout = async () => {
     await signOut(auth);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.href = '/';
   } catch (error) {
     console.error("Logout Error:", error);
   }

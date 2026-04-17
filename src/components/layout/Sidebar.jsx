@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Upload, Rss, Gift, BarChart2,
   Users, MessageSquare, AlertTriangle, Ticket, Info,
   Receipt, X, LogOut
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import BrandLogo from '../common/BrandLogo';
 
 const NAV_ITEMS = [
-  { path: '/',               labelKey: 'nav_dashboard',   icon: LayoutDashboard },
+  { path: '/dashboard',      labelKey: 'nav_dashboard',   icon: LayoutDashboard },
   { path: '/upload',         labelKey: 'nav_upload',      icon: Upload },
   { path: '/feed',           labelKey: null, label: 'Public Feed', icon: Rss },
   { path: '/redeem',         labelKey: 'nav_redeem',      icon: Gift },
@@ -46,10 +47,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-5 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--border-light)' }}>
-          <h1 className="text-lg font-bold tracking-tight">
-            <span style={{ color: '#14248a' }}>CIVIC</span>
-            <span style={{ color: '#998fc7' }}>सेतु</span>
-          </h1>
+          <Link to="/dashboard" className="flex items-center gap-2.5 cursor-pointer">
+            <BrandLogo size={36} />
+            <h1 className="text-lg font-bold tracking-tight">
+              <span style={{ color: '#14248a' }}>CIVIC</span>
+              <span style={{ color: '#998fc7' }}>सेतु</span>
+            </h1>
+          </Link>
           <button
             onClick={onClose}
             className="p-2 rounded-lg transition-colors"
@@ -103,7 +107,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid var(--border-light)' }}>
           <button
-            onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login'; }}
+            onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/'; }}
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-white"
             style={{ backgroundColor: '#ef4444' }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = '#dc2626'}

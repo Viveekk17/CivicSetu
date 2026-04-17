@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import BaseLayout from './components/layout/BaseLayout';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import Upload from './pages/Upload';
 import Redeem from './pages/Redeem';
 import Submissions from './pages/Submissions';
@@ -21,7 +19,6 @@ import AdminTreeRequests from './pages/admin/AdminTreeRequests';
 import AdminFeed from './pages/admin/AdminFeed';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSubmissions from './pages/admin/AdminSubmissions';
-import AdminSubmissionReviews from './pages/admin/AdminSubmissionReviews';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCommunities from './pages/admin/AdminCommunities';
 import AdminTransactions from './pages/admin/AdminTransactions';
@@ -30,6 +27,7 @@ import AboutUs from './pages/AboutUs';
 import Profile from './pages/Profile';
 import MyTickets from './pages/MyTickets';
 import MyTransactions from './pages/MyTransactions';
+import Landing from './pages/Landing';
 
 const App = () => {
   const { pathname } = useLocation();
@@ -41,17 +39,20 @@ const App = () => {
   return (
     <LanguageProvider>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Landing IS the entry / login surface */}
+        <Route path="/" element={<Landing />} />
+
+        {/* Legacy redirects — old auth paths now collapse into the landing */}
+        <Route path="/landing" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
-
           <Route path="submissions" element={<AdminSubmissions />} />
-          <Route path="submission-reviews" element={<AdminSubmissionReviews />} />
           <Route path="requests" element={<AdminRequests />} />
           <Route path="tree-requests" element={<AdminTreeRequests />} />
           <Route path="feed" element={<AdminFeed />} />
@@ -62,27 +63,32 @@ const App = () => {
           <Route path="settings" element={<div className="p-8 text-center text-gray-500">Settings Page Placeholder</div>} />
         </Route>
 
-        <Route path="/" element={<BaseLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="upload" element={<Upload />} />
-          <Route path="redeem" element={<Redeem />} />
-          <Route path="submissions" element={<Submissions />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="feed" element={<PublicFeed />} />
-          <Route path="ngos" element={<NGODashboard />} />
-          <Route path="community" element={<Community />} />
-          <Route path="report-issue" element={<ReportIssue />} />
-          <Route path="my-tickets" element={<MyTickets />} />
-          <Route path="my-transactions" element={<MyTransactions />} />
-          <Route path="about" element={<AboutUs />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="blockchain" element={
+        {/* Authed app — BaseLayout itself guards and bounces unauthenticated users back to "/" */}
+        <Route element={<BaseLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/upload" element={<Upload />} />
+          <Route path="/redeem" element={<Redeem />} />
+          <Route path="/submissions" element={<Submissions />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/feed" element={<PublicFeed />} />
+          <Route path="/ngos" element={<NGODashboard />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/report-issue" element={<ReportIssue />} />
+          <Route path="/my-tickets" element={<MyTickets />} />
+          <Route path="/my-tickets/:ticketId" element={<MyTickets />} />
+          <Route path="/my-transactions" element={<MyTransactions />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/blockchain" element={
             <Placeholder
               title="Blockchain"
               message="Not available for now ."
             />
           } />
         </Route>
+
+        {/* Catch-all → home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </LanguageProvider>
   );

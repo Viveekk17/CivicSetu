@@ -96,7 +96,7 @@ const AdminUsers = () => {
     };
 
     const handleDeleteUser = async (userId) => {
-        if (!window.confirm('️ WARNING: This will permanently delete the user and ALL their data:\n• All submissions\n• All transactions\n• Community memberships\n• All reports\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?')) {
+        if (!window.confirm('WARNING: This will permanently delete the user and ALL their data:\n• All submissions\n• All transactions\n• Community memberships\n• All reports\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?')) {
             return;
         }
         try {
@@ -338,9 +338,9 @@ const AdminUsers = () => {
                                         <div className="space-y-6">
                                             <h4 className="text-lg font-bold text-gray-700">Manage User</h4>
                                             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                                                <h5 className="font-bold text-red-800 mb-2">️ Danger Zone</h5>
+                                                <h5 className="font-bold text-red-800 mb-2">Danger Zone</h5>
                                                 <p className="text-sm text-red-700 mb-4">Deleting this user will permanently remove all submissions, transactions, memberships, and reports.</p>
-                                                <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition">️ Delete User Permanently</button>
+                                                <button onClick={() => handleDeleteUser(selectedUser._id)} className="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition">Delete User Permanently</button>
                                             </div>
                                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                                                 <h5 className="font-bold text-blue-800 mb-3">Send Notification</h5>

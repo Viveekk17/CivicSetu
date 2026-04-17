@@ -145,83 +145,73 @@ exports.updateSubmissionStatus = asyncHandler(async (req, res) => {
         return res.status(404).json({ success: false, message: 'Submission not found' });
     }
 
-    // Allow processing if it's pending OR if it's already approved in phase 1 (waiting for final verification)
-    const canProcess = submission.status === 'pending' || (submission.status === 'approved' && submission.approvalPhase === 1);
-    
-    if (!canProcess) {
-        return res.status(400).json({ success: false, message: 'Submission already fully processed or rejected' });
+    // Single-shot approval: only pending submissions can be approved or rejected.
+    if (submission.status !== 'pending') {
+        return res.status(400).json({ success: false, message: 'Submission already processed' });
     }
 
     if (status === 'approved' || status === 'verified') {
-        const isPhase1 = submission.approvalPhase === 0;
-        const isPhase2 = submission.approvalPhase === 1;
+        // 1. Calculate full credit award (100% per person, no phasing)
+        const calcResult = calculateCredits({
+            weightKg: submission.weightKg || submission.weight || 0,
+            wasteType: submission.wasteType || 'general',
+            submissionType: submission.submissionType || 'individual',
+            areaCriticality: submission.areaCriticality || 'low',
+            participantCount: submission.participantCount || (submission.participantIds?.length || 0) + 1
+        });
 
-        // 1. Calculate Total Credits (only once in phase 1 or if not already set)
-        if (!submission.totalCreditsAwarded || isPhase1) {
-            const calcResult = calculateCredits({
-                weightKg: submission.weightKg || submission.weight || 0,
-                wasteType: submission.wasteType || 'general',
-                submissionType: submission.submissionType || 'individual',
-                areaCriticality: submission.areaCriticality || 'low',
-                participantCount: submission.participantCount || (submission.participantIds?.length || 0) + 1
-            });
+        submission.totalCreditsAwarded = calcResult.totalCredits;
+        submission.perPersonCreditsAwarded = calcResult.perPersonCredits;
+        submission.creditBreakdown = calcResult.breakdown;
 
-            submission.totalCreditsAwarded = calcResult.totalCredits;
-            submission.perPersonCreditsAwarded = calcResult.perPersonCredits;
-            submission.creditBreakdown = calcResult.breakdown;
-        }
+        // Admin override — if the request body specifies points, that's the
+        // authoritative per-person award (allows the admin to tune the AI suggestion).
+        const overrideRaw = req.body?.points;
+        const overridePoints = overrideRaw === undefined || overrideRaw === null || overrideRaw === ''
+            ? null
+            : parseInt(overrideRaw, 10);
+        const creditsToAwardNow = Number.isFinite(overridePoints) && overridePoints >= 0
+            ? overridePoints
+            : submission.perPersonCreditsAwarded;
 
-        // 2. Determine how much to award now (50% per phase)
-        const creditsToAwardNow = isPhase1 
-            ? Math.ceil(submission.perPersonCreditsAwarded / 2) 
-            : (submission.perPersonCreditsAwarded - Math.ceil(submission.perPersonCreditsAwarded / 2));
+        submission.creditsAwarded = creditsToAwardNow;
+        submission.status = 'verified';
+        submission.approvalPhase = 2; // mark fully completed for legacy UI checks
 
-        if (isPhase1) {
-            submission.approvalPhase = 1;
-            submission.reverificationDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
-            submission.status = 'approved';
-        } else if (isPhase2) {
-            submission.approvalPhase = 2;
-            submission.status = 'verified';
-        }
-
-        // 3. Award credits to all participants
+        // 2. Award credits to all participants
         const participantIds = [submission.user, ...(submission.participantIds || [])];
         const uniqueParticipants = [...new Set(participantIds.map(id => id.toString()))];
 
         for (const userId of uniqueParticipants) {
             const user = await User.findById(userId);
-            if (user) {
-                user.credits += creditsToAwardNow;
-                
-                // Track environmental impact (Awarded in first phase)
-                if (isPhase1 && submission.type === 'garbage') {
-                    user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
-                    const impactShare = userId === submission.user.toString() 
-                        ? (submission.weightKg || submission.weight || 0) 
-                        : (submission.weightKg || submission.weight || 0) / uniqueParticipants.length;
-                    user.impact.pollutionSaved += impactShare;
-                }
+            if (!user) continue;
 
-                await user.save();
+            user.credits += creditsToAwardNow;
 
-                // Create transaction record
-                await Transaction.create({
-                    user: userId,
-                    type: 'earned',
-                    amount: creditsToAwardNow,
-                    description: `Credits earned (${isPhase1 ? '50% Initial' : '50% Final'}) from ${submission.ticketId || 'cleanup'}`,
-                    metadata: { 
-                        submissionId: submission._id,
-                        ticketId: submission.ticketId,
-                        phase: isPhase1 ? 1 : 2
-                    }
-                });
+            if (submission.type === 'garbage') {
+                user.impact = user.impact || { pollutionSaved: 0, treesPlanted: 0 };
+                const impactShare = userId === submission.user.toString()
+                    ? (submission.weightKg || submission.weight || 0)
+                    : (submission.weightKg || submission.weight || 0) / uniqueParticipants.length;
+                user.impact.pollutionSaved += impactShare;
             }
+
+            await user.save();
+
+            await Transaction.create({
+                user: userId,
+                type: 'earned',
+                amount: creditsToAwardNow,
+                description: `Credits earned from ${submission.ticketId || 'cleanup'}`,
+                metadata: {
+                    submissionId: submission._id,
+                    ticketId: submission.ticketId,
+                }
+            });
         }
 
-        // 4. Ticketing Integration
-        if (submission.approvalPhase === 2 && submission.ticketId) {
+        // 3. Resolve linked complaint ticket if any
+        if (submission.ticketId) {
             await Report.findOneAndUpdate(
                 { ticketId: submission.ticketId },
                 { status: 'resolved' }
@@ -229,6 +219,16 @@ exports.updateSubmissionStatus = asyncHandler(async (req, res) => {
         }
     } else if (status === 'rejected') {
         submission.status = 'rejected';
+    }
+
+    // Persist admin remark so the user-facing rejection/approval email can show
+    // it (mailService reads `submission.verificationDetails.notes`).
+    if (typeof notes === 'string' && notes.trim()) {
+        submission.verificationDetails = submission.verificationDetails || {};
+        submission.verificationDetails.notes = notes.trim();
+        submission.verificationDetails.verifiedAt = new Date();
+        submission.verificationDetails.verifiedBy = req.user?.email || req.user?._id?.toString() || 'admin';
+        submission.markModified('verificationDetails');
     }
 
     await submission.save();
@@ -277,39 +277,90 @@ exports.getAllTickets = asyncHandler(async (req, res) => {
 
     const subStatusMap = {
         'open': 'pending',
+        'in-progress': 'approved',
         'resolved': 'verified',
         'closed': 'rejected'
     };
 
-    if (!type || type === 'cleanup') {
-        const subQuery = status && subStatusMap[status] ? { status: subStatusMap[status] } : {};
+    if (!type || type === 'all' || type === 'cleanup') {
+        const subQuery = status && status !== 'All' && subStatusMap[status]
+            ? { status: subStatusMap[status] }
+            : {};
         submissions = await Submission.find(subQuery)
             .populate('user', 'name email profilePicture')
-            .sort({ createdAt: -1 });
+            .populate('participantIds', 'name username email')
+            .populate('verificationDetails.taggedUsers', 'name username email')
+            .populate('verificationDetails.taggedCommunities', 'name')
+            .sort({ createdAt: -1 })
+            .lean();
     }
 
-    if (!type || type === 'complaint') {
+    if (!type || type === 'all' || type === 'complaint') {
         const reportQuery = status && status !== 'All' ? { status: status.toLowerCase() } : {};
         reports = await Report.find(reportQuery)
             .populate('user', 'name email')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
     }
 
     // Merge and format
     const allTickets = [
         ...submissions.map(s => ({
+            // Identity
             id: s._id,
+            _id: s._id,
             ticketId: s.ticketId,
+            rawType: 'Submission',
+            category: 'cleanup',
+
+            // User (full object so modal can render avatar/email)
             user: s.user?.name || 'Anonymous',
             userEmail: s.user?.email || '',
-            category: 'cleanup',
+            userObj: s.user || null,
+
+            // Classification
             issueType: s.type,
-            status: s.status === 'pending' ? 'open' : (s.status === 'verified' ? 'resolved' : 'closed'),
+            type: s.type,
+            wasteType: s.wasteType,
+            submissionType: s.submissionType,
+
+            // Status: map submission lifecycle into ticket lifecycle
+            status: s.status === 'pending'
+                ? 'open'
+                : s.status === 'approved'
+                    ? 'in-progress'
+                    : s.status === 'verified'
+                        ? 'resolved'
+                        : 'closed',
+            rawStatus: s.status,
+            approvalPhase: s.approvalPhase || 0,
+
+            // Priority + dates
             priority: s.priority || 'medium',
             date: s.createdAt,
+            createdAt: s.createdAt,
+
+            // Rich payload for the modal
+            photos: s.photos || [],
             image: s.photos?.[0] || null,
+            reverificationPhoto: s.reverificationPhoto || null,
+            weight: s.weight,
+            weightKg: s.weightKg,
+            location: s.location,
+            description: s.description,
             message: s.description,
-            rawType: 'Submission'
+
+            // Credits
+            creditsAwarded: s.creditsAwarded || 0,
+            totalCreditsAwarded: s.totalCreditsAwarded || 0,
+            perPersonCreditsAwarded: s.perPersonCreditsAwarded || 0,
+
+            // Participant info (for per-person credit split)
+            participantCount: s.participantCount || ((s.participantIds?.length || 0) + 1),
+            participantIds: s.participantIds || [],
+
+            // Verification details (AI + admin)
+            verificationDetails: s.verificationDetails || null,
         })),
         ...reports.map(r => ({
             id: r._id,

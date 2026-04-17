@@ -53,6 +53,15 @@ exports.protect = async (req, res, next) => {
       });
     }
 
+    // Keep the stored email in sync with the verified Firebase identity.
+    // Without this, a user who changes their Firebase email after sign-up
+    // would still have notifications routed to the original (stale) address.
+    if (decodedToken.email && user.email !== decodedToken.email) {
+      console.log(`🔄 Syncing email: ${user.email} → ${decodedToken.email}`);
+      user.email = decodedToken.email;
+      await user.save();
+    }
+
     req.user = user;
     return next();
   } catch (firebaseError) {

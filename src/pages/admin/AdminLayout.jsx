@@ -4,25 +4,54 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faSignOutAlt,
     faBars,
-    faTimes,
     faChevronDown,
-    faBell
+    faBell,
+    faSearch,
+    faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from '../../components/layout/AdminSidebar';
+
+const PAGE_LABELS = {
+    'dashboard': 'Overview',
+    'feed': 'Public Feed',
+    'submission-reviews': 'Action Reviews',
+    'submissions': 'Verified Submissions',
+    'requests': 'Helpdesk Tickets',
+    'tree-requests': 'Tree Requests',
+    'communities': 'Communities',
+    'transactions': 'Transactions',
+    'users': 'Users',
+    'analytics': 'Analytics',
+    'settings': 'Settings',
+};
 
 const AdminLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState(null);
     const [profileOpen, setProfileOpen] = useState(false);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    // Mobile drawer open state (off-canvas under md)
+    const [mobileOpen, setMobileOpen] = useState(false);
+    // Desktop collapsed state (mini rail at md and up)
+    const [collapsed, setCollapsed] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(
+        typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+    );
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+    }, []);
+
+    useEffect(() => {
+        const onResize = () => {
+            const d = window.innerWidth >= 768;
+            setIsDesktop(d);
+            if (d) setMobileOpen(false);
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
     }, []);
 
     const handleLogout = () => {
@@ -31,80 +60,150 @@ const AdminLayout = () => {
         navigate('/admin/login');
     };
 
-    return (
-        <div className="min-h-screen bg-[#F8FAFC] font-sans flex overflow-hidden">
-            {/* Sidebar Component */}
-            <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    const handleHamburger = () => {
+        if (isDesktop) setCollapsed((c) => !c);
+        else setMobileOpen((o) => !o);
+    };
 
-            <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                {/* Clean Header Bar */}
-                <header className="bg-white border-b border-gray-100 h-16 sticky top-0 z-50 flex items-center px-4 sm:px-6 lg:px-8">
-                    <div className="flex-1 flex justify-between items-center">
-                        
-                        {/* Mobile Menu & Search (Left) */}
-                        <div className="flex items-center gap-4">
-                            <button 
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                className="md:hidden p-2 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+    const segments = location.pathname.split('/').filter(Boolean);
+    const activeKey = segments[1] || 'dashboard';
+    const activeLabel = PAGE_LABELS[activeKey] || 'Overview';
+
+    return (
+        <div className="admin-portal min-h-screen flex">
+            <AdminSidebar
+                isDesktop={isDesktop}
+                collapsed={collapsed}
+                mobileOpen={mobileOpen}
+                onMobileClose={() => setMobileOpen(false)}
+            />
+
+            <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+                {/* Topbar */}
+                <header
+                    className="h-16 sticky top-0 z-40 flex items-center px-4 sm:px-6 lg:px-8"
+                    style={{
+                        background: 'var(--a-surface)',
+                        borderBottom: '1px solid var(--a-border)',
+                    }}
+                >
+                    <div className="flex-1 flex items-center justify-between gap-4 min-w-0">
+                        {/* Left: hamburger + breadcrumb */}
+                        <div className="flex items-center gap-3 min-w-0">
+                            <button
+                                onClick={handleHamburger}
+                                className="a-btn a-btn-ghost a-btn-icon"
+                                aria-label="Toggle sidebar"
                             >
-                                <FontAwesomeIcon icon={sidebarOpen ? faTimes : faBars} />
+                                <FontAwesomeIcon icon={faBars} />
                             </button>
-                            <div className="hidden lg:flex flex-col">
-                                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Active View</span>
-                                <h1 className="text-sm font-extrabold text-[#1F3C88] capitalize">
-                                    {location.pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
-                                </h1>
+                            <nav className="hidden sm:flex items-center gap-2 text-sm min-w-0">
+                                <span style={{ color: 'var(--a-text-3)' }}>Admin</span>
+                                <FontAwesomeIcon
+                                    icon={faChevronRight}
+                                    className="text-[10px]"
+                                    style={{ color: 'var(--a-text-3)' }}
+                                />
+                                <span
+                                    className="font-semibold truncate"
+                                    style={{ color: 'var(--a-text-1)' }}
+                                >
+                                    {activeLabel}
+                                </span>
+                            </nav>
+                        </div>
+
+                        {/* Center: search */}
+                        <div className="hidden lg:flex items-center flex-1 max-w-md">
+                            <div className="relative w-full">
+                                <FontAwesomeIcon
+                                    icon={faSearch}
+                                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+                                    style={{ color: 'var(--a-text-3)' }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Search submissions, users, tickets"
+                                    className="a-input a-input-search"
+                                />
                             </div>
                         </div>
 
-                        {/* Right Section: Notifications & Profile */}
-                        <div className="flex items-center gap-3">
-                            <button className="p-2 w-10 h-10 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-[#1F3C88] transition-all relative">
+                        {/* Right: notifications + profile */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                className="a-btn a-btn-ghost a-btn-icon relative"
+                                aria-label="Notifications"
+                            >
                                 <FontAwesomeIcon icon={faBell} />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                                <span
+                                    className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
+                                    style={{ background: 'var(--a-danger)' }}
+                                />
                             </button>
 
-                            <div className="h-8 w-[1px] bg-gray-100 mx-2 hidden sm:block"></div>
+                            <div
+                                className="h-6 w-px mx-1 hidden sm:block"
+                                style={{ background: 'var(--a-border)' }}
+                            />
 
-                            {/* Profile Dropdown */}
                             <div className="relative">
                                 <button
                                     onClick={() => setProfileOpen(!profileOpen)}
-                                    className="flex items-center gap-3 p-1.5 pr-3 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
+                                    className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg transition-colors"
+                                    style={{
+                                        background: profileOpen ? 'var(--a-surface-2)' : 'transparent',
+                                    }}
                                 >
-                                    <div className="w-8 h-8 rounded-lg bg-[#1F3C88] text-white flex items-center justify-center font-bold text-sm">
-                                        {user?.name?.charAt(0) || 'A'}
+                                    <div className="a-avatar" style={{ width: 32, height: 32, fontSize: '0.75rem' }}>
+                                        {user?.name?.charAt(0)?.toUpperCase() || 'A'}
                                     </div>
-                                    <div className="hidden sm:block text-left">
-                                        <p className="text-xs font-extrabold text-gray-800 leading-none mb-0.5">
-                                            {user?.name || 'Admin Officer'}
+                                    <div className="hidden sm:block text-left leading-tight">
+                                        <p
+                                            className="text-xs font-semibold truncate max-w-[140px]"
+                                            style={{ color: 'var(--a-text-1)' }}
+                                        >
+                                            {user?.name || 'Admin'}
                                         </p>
-                                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">
-                                            {user?.role || 'Admin'}
+                                        <p
+                                            className="text-[10px] uppercase tracking-wider font-semibold"
+                                            style={{ color: 'var(--a-text-3)' }}
+                                        >
+                                            {user?.role || 'Administrator'}
                                         </p>
                                     </div>
-                                    <FontAwesomeIcon 
-                                        icon={faChevronDown} 
-                                        className={`text-[10px] text-gray-400 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} 
+                                    <FontAwesomeIcon
+                                        icon={faChevronDown}
+                                        className={`text-[10px] transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`}
+                                        style={{ color: 'var(--a-text-3)' }}
                                     />
                                 </button>
 
                                 <AnimatePresence>
                                     {profileOpen && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            initial={{ opacity: 0, y: 6, scale: 0.98 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-blue-900/10 py-2 text-gray-800 z-[60] border border-gray-100"
+                                            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute right-0 mt-2 w-60 z-50 a-card a-card-flush"
+                                            style={{ boxShadow: 'var(--a-shadow-lg)' }}
                                         >
-                                            <div className="px-4 py-3 border-b border-gray-50 mb-1">
-                                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Account</p>
-                                                <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
-                                                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                                            <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--a-border)' }}>
+                                                <p className="a-eyebrow mb-1">Account</p>
+                                                <p className="text-sm font-semibold truncate" style={{ color: 'var(--a-text-1)' }}>
+                                                    {user?.name || 'Admin'}
+                                                </p>
+                                                <p className="text-xs truncate" style={{ color: 'var(--a-text-2)' }}>
+                                                    {user?.email || 'admin@civicsetu.org'}
+                                                </p>
                                             </div>
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full text-left px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
+                                                className="w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center gap-2 transition-colors"
+                                                style={{ color: 'var(--a-danger)' }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--a-danger-soft)')}
+                                                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                                             >
                                                 <FontAwesomeIcon icon={faSignOutAlt} className="text-xs" />
                                                 Sign Out
@@ -117,14 +216,17 @@ const AdminLayout = () => {
                     </div>
                 </header>
 
-                {/* Main Content Area - Scrollable */}
-                <main className="flex-1 overflow-y-auto bg-[#F8FAFC] p-4 sm:p-6 lg:p-8">
+                {/* Workspace */}
+                <main
+                    className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8"
+                    style={{ background: 'var(--a-bg)' }}
+                >
                     <motion.div
                         key={location.pathname}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        className="max-w-7xl mx-auto"
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className="max-w-[1400px] mx-auto"
                     >
                         <Outlet />
                     </motion.div>

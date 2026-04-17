@@ -333,6 +333,252 @@ button {
   background-clip: unset;
 }
 
+/* ============================================================
+   ADMIN PORTAL DESIGN SYSTEM
+   Scoped under .admin-portal so it never leaks into the user app.
+   Professional slate/indigo palette — dark sidebar, light workspace.
+   ============================================================ */
+.admin-portal {
+  /* Workspace — clean, paper-like */
+  --a-bg:           #F6F7F9;
+  --a-surface:      #FFFFFF;
+  --a-surface-2:    #F4F5F8;
+
+  /* Sidebar — refined deep slate (not pure black, not navy) */
+  --a-sidebar:      #11141C;
+  --a-sidebar-2:    #181C26;
+  --a-sidebar-text: #9AA3B2;
+  --a-sidebar-text-strong: #F3F4F8;
+  --a-sidebar-hover: rgba(255,255,255,0.045);
+  --a-sidebar-active-bg: rgba(96,165,250,0.10);
+  --a-sidebar-active-bar: #60A5FA;
+
+  /* Accent — refined sky/blue (cool, professional, not aggressive indigo) */
+  --a-accent:       #2563EB;
+  --a-accent-2:     #1D4ED8;
+  --a-accent-soft:  #EFF4FF;
+
+  /* Text — high contrast */
+  --a-text-1:       #111827;
+  --a-text-2:       #4B5563;
+  --a-text-3:       #9CA3AF;
+
+  /* Borders — soft, neutral */
+  --a-border:       #E6E8EC;
+  --a-border-2:     #D5D8DE;
+
+  /* Status — desaturated, refined */
+  --a-success:      #059669;
+  --a-success-soft: #ECFDF5;
+  --a-warning:      #D97706;
+  --a-warning-soft: #FFFBEB;
+  --a-danger:       #DC2626;
+  --a-danger-soft:  #FEF2F2;
+  --a-info:         #0284C7;
+  --a-info-soft:    #F0F9FF;
+
+  --a-shadow-sm: 0 1px 2px rgba(17,20,28,0.04);
+  --a-shadow-md: 0 1px 3px rgba(17,20,28,0.05), 0 6px 16px rgba(17,20,28,0.04);
+  --a-shadow-lg: 0 12px 32px rgba(17,20,28,0.08);
+
+  font-family: var(--font-family);
+  color: var(--a-text-1);
+  background-color: var(--a-bg);
+}
+
+/* ---- Lucid card ---- */
+.admin-portal .a-card {
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: 14px;
+  box-shadow: var(--a-shadow-sm);
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+}
+.admin-portal .a-card:hover {
+  box-shadow: var(--a-shadow-md);
+  border-color: var(--a-border-2);
+}
+.admin-portal .a-card-flush { padding: 0; overflow: hidden; }
+.admin-portal .a-card-pad   { padding: 1.25rem 1.5rem; }
+
+.admin-portal .a-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--a-border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--a-surface);
+}
+.admin-portal .a-card-title {
+  font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--a-text-1);
+}
+.admin-portal .a-card-subtitle {
+  font-size: 0.75rem; color: var(--a-text-3); font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ---- Section heading ---- */
+.admin-portal .a-eyebrow {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--a-text-3);
+}
+.admin-portal .a-page-title {
+  font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--a-text-1); line-height: 1.15;
+}
+.admin-portal .a-page-sub {
+  font-size: 0.875rem; color: var(--a-text-2); margin-top: 4px;
+}
+
+/* ---- Sleek buttons ---- */
+.admin-portal .a-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-size: 0.8125rem; font-weight: 600;
+  letter-spacing: 0.005em;
+  border: 1px solid transparent;
+  transition: background-color .15s ease, color .15s ease,
+              border-color .15s ease, transform .08s ease, box-shadow .15s ease;
+  cursor: pointer; line-height: 1; white-space: nowrap;
+}
+.admin-portal .a-btn:active { transform: translateY(0.5px); }
+
+.admin-portal .a-btn-primary {
+  background: var(--a-text-1);
+  color: #fff;
+}
+.admin-portal .a-btn-primary:hover { background: #1E293B; }
+
+.admin-portal .a-btn-accent {
+  background: var(--a-accent);
+  color: #fff;
+}
+.admin-portal .a-btn-accent:hover { background: #4338CA; }
+
+.admin-portal .a-btn-ghost {
+  background: var(--a-surface);
+  color: var(--a-text-1);
+  border-color: var(--a-border);
+}
+.admin-portal .a-btn-ghost:hover {
+  background: var(--a-surface-2);
+  border-color: var(--a-border-2);
+}
+
+.admin-portal .a-btn-soft {
+  background: var(--a-surface-2);
+  color: var(--a-text-2);
+  border-color: transparent;
+}
+.admin-portal .a-btn-soft:hover { background: #EEF2F7; color: var(--a-text-1); }
+
+.admin-portal .a-btn-danger {
+  background: var(--a-danger); color: #fff;
+}
+.admin-portal .a-btn-danger:hover { background: #DC2626; }
+
+.admin-portal .a-btn-success {
+  background: var(--a-success); color: #fff;
+}
+.admin-portal .a-btn-success:hover { background: #059669; }
+
+.admin-portal .a-btn-icon {
+  width: 36px; height: 36px; padding: 0; border-radius: 10px;
+}
+
+.admin-portal .a-btn-sm {
+  padding: 0.4rem 0.75rem; font-size: 0.75rem; border-radius: 8px;
+}
+
+/* ---- Input ---- */
+.admin-portal .a-input,
+.admin-portal .a-select,
+.admin-portal .a-textarea {
+  width: 100%;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: 10px;
+  font-size: 0.875rem; color: var(--a-text-1);
+  font-family: var(--font-family);
+  transition: border-color .15s ease, box-shadow .15s ease;
+  outline: none;
+}
+/* Search variant — leave room for prefix icon */
+.admin-portal .a-input-search {
+  padding-left: 2.5rem;
+}
+.admin-portal .a-input:focus,
+.admin-portal .a-select:focus,
+.admin-portal .a-textarea:focus {
+  border-color: var(--a-accent);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+}
+.admin-portal .a-input::placeholder { color: var(--a-text-3); }
+
+/* ---- Chips / status pills ---- */
+.admin-portal .a-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  text-transform: capitalize;
+}
+.admin-portal .a-chip-success { background: var(--a-success-soft); color: #047857; border-color: #A7F3D0; }
+.admin-portal .a-chip-warning { background: var(--a-warning-soft); color: #B45309; border-color: #FDE68A; }
+.admin-portal .a-chip-danger  { background: var(--a-danger-soft);  color: #B91C1C; border-color: #FECACA; }
+.admin-portal .a-chip-info    { background: var(--a-info-soft);    color: #0369A1; border-color: #BAE6FD; }
+.admin-portal .a-chip-neutral { background: var(--a-surface-2);    color: var(--a-text-2); border-color: var(--a-border); }
+.admin-portal .a-chip-accent  { background: var(--a-accent-soft);  color: #4338CA; border-color: #C7D2FE; }
+
+/* ---- Tables (consistent across admin pages) ---- */
+.admin-portal .a-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  font-size: 0.875rem;
+}
+.admin-portal .a-table thead th {
+  text-align: left;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--a-text-3);
+  background: var(--a-surface-2);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--a-border);
+}
+.admin-portal .a-table tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--a-border);
+  color: var(--a-text-1); vertical-align: middle;
+}
+.admin-portal .a-table tbody tr:last-child td { border-bottom: none; }
+.admin-portal .a-table tbody tr:hover { background: var(--a-surface-2); }
+
+/* Avatar token */
+.admin-portal .a-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--a-accent-soft); color: var(--a-accent);
+  font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+}
+
+/* Divider */
+.admin-portal .a-divider {
+  height: 1px; background: var(--a-border); width: 100%;
+}
+
+/* Scrollbar polish (workspace area) */
+.admin-portal *::-webkit-scrollbar { width: 10px; height: 10px; }
+.admin-portal *::-webkit-scrollbar-thumb {
+  background: #CBD5E1; border-radius: 999px; border: 2px solid var(--a-bg);
+}
+.admin-portal *::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+.admin-portal *::-webkit-scrollbar-track { background: transparent; }
+
 /* ---- AQI gauge ambient particles ----
    Particles drift up + sway sideways to evoke air movement.
    Density and speed are driven from JS via inline style. */

@@ -40,16 +40,17 @@ exports.createReport = asyncHandler(async (req, res) => {
 
     const report = await Report.create(reportData);
 
-    // Send confirmation email (Async)
-    try {
-        const user = await User.findById(req.user.id);
-        if (user && user.email) {
-            sendTicketConfirmationEmail(user, report).catch(err => {
-                console.error('📧 Ticket Confirmation Email error:', err);
-            });
-        }
-    } catch (mailErr) {
-        console.error('📧 Mail service initialization error:', mailErr);
+    // Send confirmation email to the *currently authenticated* user. We use
+    // req.user directly (populated by authMiddleware from the verified token)
+    // so the mail always lands at the email tied to the active session — not
+    // a stale record fetched again from the DB.
+    if (req.user && req.user.email) {
+        console.log(`📧 Ticket ${ticketId} confirmation → ${req.user.email}`);
+        sendTicketConfirmationEmail(req.user, report).catch(err => {
+            console.error('📧 Ticket Confirmation Email error:', err);
+        });
+    } else {
+        console.warn(`⚠️ Skipping confirmation email — no email on req.user for ticket ${ticketId}`);
     }
 
     res.status(201).json({
@@ -88,6 +89,28 @@ exports.lookupTicket = asyncHandler(async (req, res) => {
 
     if (!report) {
         return res.status(404).json({ success: false, message: 'Ticket not found' });
+    }
+
+    res.json({
+        success: true,
+        data: report
+    });
+});
+
+// @desc    Get full details for a single owned ticket
+// @route   GET /api/reports/ticket/:ticketId
+// @access  Private
+exports.getMyTicketById = asyncHandler(async (req, res) => {
+    const { ticketId } = req.params;
+
+    const report = await Report.findOne({ ticketId, user: req.user.id })
+        .populate('user', 'name email profilePicture');
+
+    if (!report) {
+        return res.status(404).json({
+            success: false,
+            message: 'Ticket not found'
+        });
     }
 
     res.json({

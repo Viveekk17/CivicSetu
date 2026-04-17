@@ -1,13 +1,77 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUser, faEnvelope, faPhone, faCamera, faShieldAlt, 
-  faCheckCircle, faTree, faCoins, faLeaf, faSave, faLock, faSpinner,
-  faCrown, faAward, faEarthAmericas, faPencilAlt
+import {
+  faUser, faEnvelope, faPhone, faCamera, faShieldAlt,
+  faCheckCircle, faTree, faCoins, faSave, faLock, faSpinner,
+  faCrown, faAward, faEarthAmericas, faPencilAlt, faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import { getStoredUser, changePassword } from '../services/authService';
 import { updateProfile, getProfile, uploadAvatar } from '../services/userService';
+
+const container = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const item = {
+  hidden: { y: 16, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: [0.4, 0, 0.2, 1] } },
+};
+
+const Eyebrow = ({ children }) => (
+  <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
+    {children}
+  </p>
+);
+
+const StatTile = ({ icon, color, label, value }) => (
+  <div
+    className="rounded-xl md:rounded-2xl p-3 md:p-4 flex items-start gap-2.5 md:gap-3 min-w-0"
+    style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-light)' }}
+  >
+    <div
+      className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0"
+      style={{ background: `${color}1f`, color }}
+    >
+      <FontAwesomeIcon icon={icon} className="text-sm md:text-base" />
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-base md:text-lg font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{value}</p>
+      <p className="text-[10px] md:text-[11px] mt-1 md:mt-1.5 font-semibold uppercase tracking-[0.12em] md:tracking-[0.14em] truncate" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
+    </div>
+  </div>
+);
+
+const Field = ({ icon, label, name, type = 'text', value, onChange, disabled, placeholder, accent = 'var(--primary)' }) => (
+  <div className="space-y-2">
+    <Eyebrow>{label}</Eyebrow>
+    <div className="relative group">
+      <FontAwesomeIcon
+        icon={icon}
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-sm transition-colors"
+        style={{ color: 'var(--text-tertiary)' }}
+      />
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="w-full rounded-xl py-3 pl-11 pr-4 text-sm font-medium outline-none transition-all disabled:opacity-60"
+        style={{
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-light)',
+          color: 'var(--text-primary)',
+          '--tw-ring-color': accent,
+        }}
+        onFocus={(e) => { if (!disabled) e.target.style.borderColor = accent; }}
+        onBlur={(e) => { e.target.style.borderColor = 'var(--border-light)'; }}
+      />
+    </div>
+  </div>
+);
 
 const Profile = () => {
   const [user, setUser] = useState(getStoredUser());
@@ -16,7 +80,7 @@ const Profile = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [editMode, setEditMode] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -131,313 +195,285 @@ const Profile = () => {
   };
 
   const stats = [
-    { label: 'Trees Planted', value: user?.impact?.treesPlanted || 0, icon: faTree, color: '#998fc7', bg: 'rgba(153, 143, 199, 0.08)' },
-    { label: 'CO2 Offset', value: `${user?.impact?.pollutionSaved || 0}kg`, icon: faEarthAmericas, color: '#14248a', bg: 'rgba(20, 36, 138, 0.08)' },
-    { label: 'Credits', value: user?.credits || 0, icon: faCoins, color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.08)' },
-    { label: 'Rank', value: 'Eco Expert', icon: faCrown, color: '#6366F1', bg: 'rgba(99, 102, 241, 0.08)' },
+    { label: 'Trees Planted', value: user?.impact?.treesPlanted || 0, icon: faTree, color: '#22c55e' },
+    { label: 'CO₂ Offset', value: `${user?.impact?.pollutionSaved || 0} kg`, icon: faEarthAmericas, color: '#14248a' },
+    { label: 'Credits', value: user?.credits || 0, icon: faCoins, color: '#f59e0b' },
+    { label: 'Rank', value: 'Eco Expert', icon: faCrown, color: '#998fc7' },
+  ];
+
+  const achievements = [
+    { name: 'Early Adopter', color: '#22c55e' },
+    { name: 'Waste Warrior', color: '#14248a' },
+    { name: 'Pure Green', color: '#998fc7' },
   ];
 
   return (
-    <div className="min-h-screen pb-20 bg-white text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Profile Card (4 cols) */}
-          <div className="lg:col-span-4 space-y-6">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-slate-100 rounded-[2.5rem] p-8 text-center shadow-2xl shadow-slate-200/40 relative overflow-hidden group"
-            >
-              <div className="relative inline-block mb-10">
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*"
-                  onChange={handleFileChange} 
-                />
-                
-                {/* Moving Colors Animated Rings */}
-                <div className="absolute inset-[-10px] rounded-full border border-slate-50 shadow-sm" />
-                <div className="absolute inset-[-10px] rounded-full border-t-2 border-emerald-500 animate-[spin_3s_linear_infinite]" />
-                <div className="absolute inset-[-10px] rounded-full border-r-2 border-blue-500/50 animate-[spin_5s_linear_infinite] delay-75" />
-                <div className="absolute inset-[-10px] rounded-full border-b-2 border-amber-500/30 animate-[spin_8s_linear_infinite] delay-150" />
-
-                <div 
-                  onClick={handleAvatarClick}
-                  className="w-36 h-36 rounded-full bg-slate-50 flex items-center justify-center text-4xl font-black shadow-inner border-4 border-white group-hover:scale-105 transition-all duration-500 overflow-hidden cursor-pointer relative z-10 mx-auto"
-                >
-                  {avatarLoading ? (
-                    <motion.div 
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                    >
-                      <FontAwesomeIcon icon={faSpinner} className="text-slate-300" />
-                    </motion.div>
-                  ) : (user?.profilePicture && !user.profilePicture.includes('default-avatar.png')) ? (
-                    <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="bg-gradient-to-br from-emerald-500 to-blue-600 bg-clip-text text-transparent">
-                      {getInitials(user?.name)}
-                    </span>
-                  )}
-                  
-                  <div className="absolute inset-0 bg-white/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                    <FontAwesomeIcon icon={faCamera} className="text-slate-700 text-2xl" />
-                  </div>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="visible"
+      className="space-y-5 md:space-y-6"
+    >
+      {/* Hero / Welcome Card */}
+      <motion.div variants={item} className="card p-5 md:p-7 relative overflow-hidden">
+        <div
+          className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(212,194,252,0.25), transparent 70%)' }}
+        />
+        <div className="grid md:grid-cols-5 gap-5 md:gap-6 items-center relative z-10">
+          {/* Left: identity */}
+          <div className="md:col-span-3 flex items-center gap-4 md:gap-5">
+            <div className="relative flex-shrink-0">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              <div
+                onClick={handleAvatarClick}
+                className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-xl md:text-2xl font-bold overflow-hidden cursor-pointer relative group ring-2"
+                style={{
+                  background: 'var(--bg-hover)',
+                  borderColor: 'var(--border-light)',
+                  '--tw-ring-color': 'var(--primary)',
+                }}
+              >
+                {avatarLoading ? (
+                  <FontAwesomeIcon icon={faSpinner} spin style={{ color: 'var(--text-tertiary)' }} />
+                ) : (user?.profilePicture && !user.profilePicture.includes('default-avatar.png')) ? (
+                  <img src={user.profilePicture} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span style={{ color: 'var(--primary)' }}>{getInitials(user?.name)}</span>
+                )}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <FontAwesomeIcon icon={faCamera} className="text-white text-lg" />
                 </div>
-                
-                <button 
-                  onClick={handleAvatarClick}
-                  className="absolute bottom-1 right-1 w-11 h-11 bg-white text-emerald-600 rounded-full flex items-center justify-center border border-slate-100 shadow-lg hover:bg-slate-50 transition-all z-20 scale-90 group-hover:scale-100"
-                >
-                  <FontAwesomeIcon icon={faPencilAlt} size="sm" />
-                </button>
               </div>
-
-              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">{user?.name}</h2>
-              <div className="flex items-center justify-center gap-2 mb-8">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <p className="text-slate-500 text-sm font-semibold">{user?.email}</p>
+              <button
+                onClick={handleAvatarClick}
+                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+                style={{ background: 'var(--primary)', color: '#fff' }}
+              >
+                <FontAwesomeIcon icon={faPencilAlt} className="text-xs" />
+              </button>
+            </div>
+            <div className="min-w-0 flex-1">
+              <Eyebrow>Welcome back</Eyebrow>
+              <h1 className="text-lg sm:text-xl md:text-3xl font-bold mt-1 md:mt-1.5 truncate" style={{ color: 'var(--text-primary)' }}>
+                {user?.name || 'Citizen'}
+              </h1>
+              <div className="flex items-center gap-2 mt-1.5 md:mt-2 min-w-0">
+                <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: '#22c55e' }} />
+                <p className="text-xs md:text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
               </div>
-              
-              <div className="pt-8 border-t border-slate-100 grid grid-cols-2 gap-4">
-                {stats.map((stat, i) => (
-                  <div key={i} className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100 hover:bg-slate-50 transition-colors group/stat text-left">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3 group-hover/stat:scale-110 transition-transform" style={{ background: stat.bg }}>
-                      <FontAwesomeIcon icon={stat.icon} style={{ color: stat.color }} className="text-sm" />
-                    </div>
-                    <p className="text-xl font-bold text-slate-900 mb-0.5">{stat.value}</p>
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-xl shadow-slate-200/40"
-            >
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                <FontAwesomeIcon icon={faAward} className="text-indigo-500" />
-                Your Achievements
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { name: 'Early Adopter', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-                  { name: 'Waste Warrior', color: 'bg-blue-50 text-blue-600 border-blue-100' },
-                  { name: 'Pure Green', color: 'bg-indigo-50 text-indigo-600 border-indigo-100' }
-                ].map((badge, i) => (
-                  <span key={i} className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all hover:scale-105 cursor-default ${badge.color}`}>
-                    {badge.name}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
+            </div>
           </div>
 
-          {/* Right Column: Information Forms (8 cols) */}
-          <div className="lg:col-span-8 space-y-6">
+          {/* Right: rank panel */}
+          <div
+            className="md:col-span-2 rounded-2xl p-4 md:p-5"
+            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #1e3aa8 100%)', color: '#fff' }}
+          >
+            <p className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80">Civic Rank</p>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.18)' }}>
+                <FontAwesomeIcon icon={faCrown} className="text-base md:text-lg" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-lg md:text-xl font-bold leading-none">Eco Expert</p>
+                <p className="text-[11px] md:text-xs opacity-80 mt-1">{user?.credits || 0} credits earned</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stats grid */}
+      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {stats.map((s) => (
+          <StatTile key={s.label} {...s} />
+        ))}
+      </motion.div>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="card p-4 flex items-center gap-3"
+            style={{
+              borderLeft: `3px solid ${message.type === 'success' ? '#22c55e' : '#ef4444'}`,
+            }}
+          >
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{
+                background: message.type === 'success' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                color: message.type === 'success' ? '#22c55e' : '#ef4444',
+              }}
+            >
+              <FontAwesomeIcon icon={message.type === 'success' ? faCheckCircle : faShieldAlt} />
+            </div>
+            <p className="text-sm font-medium flex-1" style={{ color: 'var(--text-primary)' }}>{message.text}</p>
+            <button onClick={() => setMessage({ type: '', text: '' })} style={{ color: 'var(--text-tertiary)' }}>
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+        {/* Personal details (2 cols) */}
+        <motion.div variants={item} className="card p-5 md:p-6 lg:col-span-2">
+          <div className="flex items-center justify-between gap-3 mb-5 md:mb-6 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(20, 36, 138, 0.1)', color: 'var(--primary)' }}
+              >
+                <FontAwesomeIcon icon={faUser} />
+              </div>
+              <div className="min-w-0">
+                <Eyebrow>Personal Details</Eyebrow>
+                <h2 className="text-sm md:text-base font-bold mt-0.5 truncate" style={{ color: 'var(--text-primary)' }}>
+                  Account Information
+                </h2>
+              </div>
+            </div>
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className={`${editMode ? 'btn btn-outline' : 'btn btn-primary'} text-xs md:text-sm py-2 px-3 md:py-2.5 md:px-4 flex-shrink-0`}
+            >
+              {editMode ? 'Cancel' : 'Edit Profile'}
+            </button>
+          </div>
+
+          <form onSubmit={handleUpdateProfile} className="space-y-4 md:space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+              <Field
+                icon={faUser} label="Full Name" name="name"
+                value={formData.name} onChange={handleChange} disabled={!editMode}
+                accent="var(--primary)"
+              />
+              <Field
+                icon={faEnvelope} label="Email Address" name="email" type="email"
+                value={formData.email} onChange={handleChange} disabled={!editMode}
+                accent="#14248a"
+              />
+              <Field
+                icon={faPhone} label="Phone Number" name="phoneNumber" type="tel"
+                value={formData.phoneNumber} onChange={handleChange} disabled={!editMode}
+                placeholder="+91 00000 00000" accent="#998fc7"
+              />
+            </div>
+
             <AnimatePresence>
-              {message.text && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }} 
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className={`p-5 rounded-3xl flex items-center gap-4 font-bold shadow-xl border ${
-                    message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'
-                  }`}
+              {editMode && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
                 >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${message.type === 'success' ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                    <FontAwesomeIcon icon={message.type === 'success' ? faCheckCircle : faShieldAlt} />
-                  </div>
-                  {message.text}
+                  <button type="submit" disabled={loading} className="btn btn-primary mt-2 w-full md:w-auto">
+                    {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <><FontAwesomeIcon icon={faSave} /> Save Changes</>}
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
+          </form>
+        </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40"
+        {/* Achievements (1 col) */}
+        <motion.div variants={item} className="card p-5 md:p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(153, 143, 199, 0.15)', color: '#998fc7' }}
             >
-              <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-xl border border-blue-100">
-                    <FontAwesomeIcon icon={faUser} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">Personal Details</h3>
-                    <p className="text-sm text-slate-500">Your information across CivicSetu</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setEditMode(!editMode)}
-                  className={`px-6 py-3 rounded-2xl text-sm font-black transition-all active:scale-95 ${
-                    editMode ? 'bg-slate-100 text-slate-500' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200'
-                  }`}
-                >
-                  {editMode ? 'Cancel Edit' : 'Modify Profile'}
-                </button>
-              </div>
+              <FontAwesomeIcon icon={faAward} />
+            </div>
+            <div>
+              <Eyebrow>Achievements</Eyebrow>
+              <h2 className="text-base font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>
+                Your Badges
+              </h2>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {achievements.map((b) => (
+              <span
+                key={b.name}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-transform hover:scale-105"
+                style={{
+                  background: `${b.color}14`,
+                  color: b.color,
+                  border: `1px solid ${b.color}33`,
+                }}
+              >
+                {b.name}
+              </span>
+            ))}
+          </div>
+          <div className="mt-6 pt-5 border-t" style={{ borderColor: 'var(--border-light)' }}>
+            <Eyebrow>Next milestone</Eyebrow>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              Reach <strong style={{ color: 'var(--text-primary)' }}>500 credits</strong> to unlock the
+              <span style={{ color: '#f59e0b' }}> Eco Champion</span> badge.
+            </p>
+          </div>
+        </motion.div>
+      </div>
 
-              <div className="p-8">
-                <form onSubmit={handleUpdateProfile} className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Display Name</label>
-                      <div className="relative group/input">
-                        <FontAwesomeIcon icon={faUser} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-emerald-500" />
-                        <input 
-                          type="text" 
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          disabled={!editMode}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-300 outline-none focus:border-emerald-500 focus:bg-white focus:ring-[6px] focus:ring-emerald-500/10 disabled:opacity-50 transition-all font-semibold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Primary Email</label>
-                      <div className="relative group/input">
-                        <FontAwesomeIcon icon={faEnvelope} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-blue-500" />
-                        <input 
-                          type="email" 
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          disabled={!editMode}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-300 outline-none focus:border-blue-500 focus:bg-white focus:ring-[6px] focus:ring-blue-500/10 disabled:opacity-50 transition-all font-semibold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Mobile Reference</label>
-                      <div className="relative group/input">
-                        <FontAwesomeIcon icon={faPhone} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within/input:text-indigo-500" />
-                        <input 
-                          type="tel" 
-                          name="phoneNumber"
-                          value={formData.phoneNumber}
-                          onChange={handleChange}
-                          disabled={!editMode}
-                          placeholder="+91 00000 00000"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-300 outline-none focus:border-indigo-500 focus:bg-white focus:ring-[6px] focus:ring-indigo-500/10 disabled:opacity-50 transition-all font-semibold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <AnimatePresence>
-                    {editMode && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }} 
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden pt-4"
-                      >
-                        <button 
-                          type="submit"
-                          disabled={loading}
-                          className="w-full md:w-auto flex items-center justify-center gap-3 bg-slate-900 hover:bg-black text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-slate-900/10 active:scale-95 disabled:opacity-50"
-                        >
-                          {loading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> : <><FontAwesomeIcon icon={faSave} /> Save Profile Changes</>}
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </form>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40"
-            >
-              <div className="p-8 border-b border-slate-100 flex items-center gap-4">
-                <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 text-xl border border-amber-100">
-                  <FontAwesomeIcon icon={faLock} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Password Management</h3>
-                  <p className="text-sm text-slate-500">Keep your account access secure</p>
-                </div>
-              </div>
-
-              <div className="p-8">
-                <form onSubmit={handleChangePassword} className="space-y-8">
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Current Password</label>
-                    <div className="relative group/input">
-                      <FontAwesomeIcon icon={faShieldAlt} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-200 transition-colors group-focus-within/input:text-amber-500" />
-                      <input 
-                        type="password" 
-                        name="currentPassword"
-                        value={formData.currentPassword}
-                        onChange={handleChange}
-                        required
-                        placeholder="••••••••"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-200 outline-none focus:border-amber-500 focus:bg-white focus:ring-[6px] focus:ring-amber-500/10 transition-all font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">New Password</label>
-                        <div className="relative group/input">
-                          <FontAwesomeIcon icon={faLock} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-200 transition-colors group-focus-within/input:text-emerald-500" />
-                          <input 
-                            type="password" 
-                            name="newPassword"
-                            value={formData.newPassword}
-                            onChange={handleChange}
-                            required
-                            placeholder="Min 6 characters"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-200 outline-none focus:border-emerald-500 focus:bg-white focus:ring-[6px] focus:ring-emerald-500/10 transition-all font-semibold"
-                          />
-                        </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] px-2">Confirm New Password</label>
-                        <div className="relative group/input">
-                          <FontAwesomeIcon icon={faShieldAlt} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-200 transition-colors group-focus-within/input:text-indigo-500" />
-                          <input 
-                            type="password" 
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            placeholder="Repeat new secret"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-3xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-200 outline-none focus:border-indigo-500 focus:bg-white focus:ring-[6px] focus:ring-indigo-500/10 transition-all font-semibold"
-                          />
-                        </div>
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    disabled={loading || !formData.newPassword || !formData.currentPassword}
-                    className="w-full md:w-auto flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 px-12 rounded-2xl transition-all shadow-xl shadow-indigo-200 active:scale-95 disabled:opacity-20 disabled:cursor-not-allowed"
-                  >
-                    {loading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> : 'Update Password'}
-                  </button>
-                </form>
-              </div>
-            </motion.div>
+      {/* Password card */}
+      <motion.div variants={item} className="card p-5 md:p-6">
+        <div className="flex items-center gap-3 mb-5 md:mb-6">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}
+          >
+            <FontAwesomeIcon icon={faLock} />
+          </div>
+          <div>
+            <Eyebrow>Security</Eyebrow>
+            <h2 className="text-base font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>
+              Password Management
+            </h2>
           </div>
         </div>
-      </div>
-    </div>
+
+        <form onSubmit={handleChangePassword} className="space-y-4 md:space-y-5">
+          <Field
+            icon={faShieldAlt} label="Current Password" name="currentPassword" type="password"
+            value={formData.currentPassword} onChange={handleChange}
+            placeholder="••••••••" accent="#f59e0b"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+            <Field
+              icon={faLock} label="New Password" name="newPassword" type="password"
+              value={formData.newPassword} onChange={handleChange}
+              placeholder="Min 6 characters" accent="#22c55e"
+            />
+            <Field
+              icon={faShieldAlt} label="Confirm Password" name="confirmPassword" type="password"
+              value={formData.confirmPassword} onChange={handleChange}
+              placeholder="Repeat password" accent="#998fc7"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !formData.newPassword || !formData.currentPassword}
+            className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+          >
+            {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <>Update Password</>}
+          </button>
+        </form>
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserShield, faLock, faIdCard, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { adminLogin } from '../../services/authService';
+import BrandLogo from '../../components/common/BrandLogo';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
@@ -54,13 +55,13 @@ const AdminLogin = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl p-8 shadow-2xl relative z-10"
             >
-                <Link to="/login" className="absolute top-6 left-6 text-slate-400 hover:text-white transition-colors">
+                <Link to="/" className="absolute top-6 left-6 text-slate-400 hover:text-white transition-colors">
                     <FontAwesomeIcon icon={faArrowLeft} />
                 </Link>
 
                 <div className="text-center mb-8">
                     <div className="mx-auto mb-4 flex justify-center">
-                        <img src="/logo.png" alt="CivicSetu" className="h-20 object-contain drop-shadow-lg" />
+                        <BrandLogo size={72} variant="onDark" />
                     </div>
                     <h2 className="text-3xl font-bold mb-1">
                         <span style={{ color: '#14248a' }}>CIVIC</span><span style={{ color: '#998fc7' }}>सेतु</span>

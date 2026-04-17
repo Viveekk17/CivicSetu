@@ -3,236 +3,148 @@ import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faLeaf, faUsers, faCoins, faTree, faShieldAlt,
-  faGlobe, faChartLine, faHandHoldingHeart, faBolt,
+  faGlobe, faChartLine, faHandHoldingHeart,
   faRecycle, faCheckCircle, faArrowRight, faEnvelope,
-  faCode, faMobileAlt, faMapMarkerAlt, faCamera,
+  faCode, faMapMarkerAlt, faCamera,
   faUpload, faSearch, faBrain, faAward, faStar,
   faExclamationCircle, faNewspaper, faHistory,
-  faUserPlus, faSignInAlt, faBus, faGift, faMedal,
-  faLayerGroup, faPaw, faGlobeAmericas, faLightbulb,
-  faRocket, faHeart, faNetworkWired, faDatabase,
+  faUserPlus, faGift, faBolt,
+  faLayerGroup, faRocket, faHeart, faNetworkWired, faDatabase,
   faServer, faLock, faChevronDown, faChevronUp,
   faBuilding, faLaptopCode, faPaperPlane
 } from '@fortawesome/free-solid-svg-icons';
-import { faGithub, faLinkedin, faInstagram } from '@fortawesome/free-brands-svg-icons';
 import { useNavigate } from 'react-router-dom';
 
-/* 
-   Data Constants
- */
+/* Data */
 const STATS = [
-  { value: '10,000+', label: 'Civic Actions Logged', icon: faCheckCircle, color: '#998fc7' },
+  { value: '10,000+', label: 'Civic Actions', icon: faCheckCircle, color: '#998fc7' },
   { value: '5,000+', label: 'Active Citizens', icon: faUsers, color: '#14248a' },
-  { value: '250+', label: 'Trees Planted via NGOs', icon: faTree, color: '#22c55e' },
+  { value: '250+', label: 'Trees Planted', icon: faTree, color: '#22c55e' },
   { value: '₹2L+', label: 'Credits Redeemed', icon: faCoins, color: '#f59e0b' },
   { value: '50+', label: 'Partner NGOs', icon: faHandHoldingHeart, color: '#ec4899' },
-  { value: '99.2%', label: 'AI Verification Accuracy', icon: faBrain, color: '#6366f1' },
+  { value: '99.2%', label: 'AI Accuracy', icon: faBrain, color: '#6366f1' },
 ];
 
 const WORKFLOW_STEPS = [
-  {
-    num: '01', icon: faUserPlus, color: '#14248a',
-    title: 'Register & Verify',
-    desc: 'Create your CivicSetu account using email/password or Google OAuth via Firebase. Your identity is securely verified and a crypto-grade JWT session token is issued to authenticate all future API requests to our Node.js backend.'
-  },
-  {
-    num: '02', icon: faCamera, color: '#ec4899',
-    title: 'Capture Before Photo',
-    desc: 'Head to your cleanup site and use the in-app camera (or gallery upload) to photograph the area BEFORE cleanup. The GPS co-ordinates are automatically tagged from your device. You can save this as a draft in your Activity Feed and return later.'
-  },
-  {
-    num: '03', icon: faRecycle, color: '#f59e0b',
-    title: 'Perform the Cleanup',
-    desc: 'Carry out your civic action — whether it is garbage collection, waterbody cleaning, tree planting, or waste segregation. You can invite friends and tag group members or NGO partners for collaborative activities.'
-  },
-  {
-    num: '04', icon: faCheckCircle, color: '#998fc7',
-    title: 'Capture After Photo & Submit',
-    desc: 'Once done, photograph the same spot AFTER cleanup. Upload both photos together. Our system computes an MD5 hash of each image to detect duplicate submissions before they even reach the AI.'
-  },
-  {
-    num: '05', icon: faBrain, color: '#6366f1',
-    title: 'Google Gemini AI Verification',
-    desc: 'The before+after photo pair is sent to Google Gemini Vision AI which: (a) detects authenticity — rejecting AI-generated or fake images, (b) identifies the cleanup category (garbage, water, methane, restoration), (c) estimates waste weight in kg, (d) calculates CO₂ saved, and (e) allocates a credit score. This happens in ~10 seconds.'
-  },
-  {
-    num: '06', icon: faCoins, color: '#f59e0b',
-    title: 'Credits Hit Your Wallet',
-    desc: 'AI-approved submissions instantly credit your wallet. Badges and multipliers apply for group activities: every additional member adds a group bonus. Large cleanups (>20 kg) must be community/NGO-tagged; cleanups over 50 kg require NGO co-submission.'
-  },
-  {
-    num: '07', icon: faNewspaper, color: '#998fc7',
-    title: 'Share to Public Feed',
-    desc: 'Your verified submission can be shared as a Post to the Public Feed with a custom description. Tag communities you belong to so your ward / colony see your impact. Other users can react and comment, building local civic momentum.'
-  },
-  {
-    num: '08', icon: faGift, color: '#998fc7',
-    title: 'Redeem Rewards',
-    desc: 'Spend your Credits in the Redeem store across 5 categories: Transport (bus/metro vouchers), Utilities (electricity discounts), Goodies (eco-products), Recognition (medals/badges), and Environment (tree planting via NGO partners).'
-  },
+  { num: '01', icon: faUserPlus, color: '#14248a', title: 'Register & Verify', desc: 'Create your CivicSetu account using email/password or Google OAuth via Firebase. A crypto-grade JWT session token is issued to authenticate API requests.' },
+  { num: '02', icon: faCamera, color: '#ec4899', title: 'Capture Before Photo', desc: 'Use the in-app camera to photograph the area BEFORE cleanup. GPS co-ordinates are tagged automatically. Save as a draft in your Activity Feed and return later.' },
+  { num: '03', icon: faRecycle, color: '#f59e0b', title: 'Perform the Cleanup', desc: 'Carry out your civic action — garbage collection, waterbody cleaning, tree planting, or waste segregation. Tag friends or NGO partners for collaborative drives.' },
+  { num: '04', icon: faCheckCircle, color: '#998fc7', title: 'Capture After & Submit', desc: 'Photograph the same spot AFTER cleanup. Upload both photos. We compute an MD5 hash of each image to detect duplicate submissions.' },
+  { num: '05', icon: faBrain, color: '#6366f1', title: 'AI Verification', desc: 'Google Gemini Vision verifies authenticity, identifies the cleanup category, estimates waste weight, calculates CO₂ saved, and allocates credits — in ~10 seconds.' },
+  { num: '06', icon: faCoins, color: '#f59e0b', title: 'Credits to Wallet', desc: 'AI-approved submissions instantly credit your wallet. Group activities apply bonuses; large cleanups (>20 kg) require community/NGO tagging.' },
+  { num: '07', icon: faNewspaper, color: '#998fc7', title: 'Share to Public Feed', desc: 'Publish your verified submission to the Public Feed with a custom description. Tag communities so your ward / colony see your impact.' },
+  { num: '08', icon: faGift, color: '#998fc7', title: 'Redeem Rewards', desc: 'Spend credits across 5 categories: Transport, Utilities, Goodies, Recognition, and Environment (tree planting via partner NGOs).' },
 ];
 
 const HOW_TO_STEPS = [
   {
-    id: 'upload',
-    emoji: '',
-    title: 'How to Upload an Activity',
-    color: '#998fc7',
-    bg: 'rgba(153, 143, 199, 0.06)',
-    border: 'rgba(153, 143, 199, 0.3)',
+    id: 'upload', title: 'Upload an Activity', color: '#998fc7',
     steps: [
-      { icon: faMapMarkerAlt, text: 'Open the "Add Activity" page. The app auto-detects your GPS location using your device\'s Geolocation API and reverse-geocodes it to a readable address.' },
-      { icon: faCamera, text: 'Tap "Before Photo" — either open the in-app camera or choose from your gallery. The photo timestamp is captured automatically.' },
-      { icon: faHistory, text: 'Not ready to upload the After photo yet? Hit "Save Draft". The Before photo is encoded to Base64 and saved to your browser\'s localStorage. It will appear in your Activity Feed so you can Resume later.' },
-      { icon: faRecycle, text: 'After completing the cleanup, come back and tap "Resume" on the draft (or start fresh). Capture the "After Photo" showing the cleaned area.' },
-      { icon: faUsers, text: '(Optional) Enable "Tag Members" to add co-participants. Search for registered users by name — they appear in the credit calculation and earn split credits. Switch to "Community" or "NGO" mode for large group cleanups.' },
-      { icon: faUpload, text: 'Tap "Upload & Verify". The system checks for duplicates via MD5 hash comparison, then sends both photos to Google Gemini AI for analysis.' },
-      { icon: faBrain, text: 'Within seconds, the AI result is shown: category, estimated waste weight (kg), CO₂ saved, and credits to be awarded. Review and Confirm.' },
-      { icon: faCheckCircle, text: 'On confirmation, the submission is saved to MongoDB, your credits wallet is updated, and a real-time notification fires in your Header. You can also post it to the Public Feed with a caption.' },
+      { icon: faMapMarkerAlt, text: 'Open "Add Activity". The app auto-detects your GPS via the Geolocation API and reverse-geocodes it.' },
+      { icon: faCamera, text: 'Tap "Before Photo" — open the in-app camera or pick from your gallery. The photo timestamp is captured automatically.' },
+      { icon: faHistory, text: 'Not ready for the After photo? Hit "Save Draft". The photo is stored in your browser; resume anytime from the Activity Feed.' },
+      { icon: faRecycle, text: 'After completing the cleanup, tap "Resume" on the draft and capture the After Photo of the cleaned area.' },
+      { icon: faUsers, text: '(Optional) Tag co-participants to split credits, or switch to Community/NGO mode for large group cleanups.' },
+      { icon: faUpload, text: 'Tap "Upload & Verify". Both photos go to Gemini AI for analysis after duplicate detection.' },
+      { icon: faBrain, text: 'Within seconds, the AI shows: category, estimated waste, CO₂ saved, credits awarded. Review and Confirm.' },
+      { icon: faCheckCircle, text: 'On confirmation, the submission is saved, your wallet updates, and a notification fires in the Header.' },
     ]
   },
   {
-    id: 'redeem',
-    emoji: '',
-    title: 'How to Redeem Credits',
-    color: '#f59e0b',
-    bg: 'rgba(245,158,11,0.06)',
-    border: 'rgba(245,158,11,0.3)',
+    id: 'redeem', title: 'Redeem Credits', color: '#f59e0b',
     steps: [
-      { icon: faCoins, text: 'Navigate to the "Redeem" page. Your current credit balance is prominently displayed at the top.' },
-      { icon: faLayerGroup, text: 'Choose a category tab: Transport, Utilities, Goodies, Recognition, or Environment. Items are loaded live from the backend database.' },
-      { icon: faSearch, text: 'Browse available items. Each card shows: the item name, description, CO₂ offset value, and credit cost.' },
-      { icon: faGift, text: 'Click "Redeem" on any item you can afford. A confirmation modal appears showing cost, your current balance, and your balance after redemption.' },
-      { icon: faCheckCircle, text: 'Confirm the redemption. The backend deducts credits from your account and logs the redemption. For Environment items (trees), a tree planting request is submitted to the partner NGO.' },
-      { icon: faTree, text: 'Track your tree planting request status in the Header\'s  dropdown: Pending → Sent to NGO → Planting in Progress → Completed.' },
-      { icon: faBolt, text: 'Non-environment items (bus passes, electricity vouchers etc.) appear in your Bag (️ icon in the Header). Use them from there when needed.' },
+      { icon: faCoins, text: 'Open the "Redeem" page. Your current balance is shown at the top.' },
+      { icon: faLayerGroup, text: 'Choose a category: Transport, Utilities, Goodies, Recognition, or Environment.' },
+      { icon: faSearch, text: 'Each card shows item name, description, CO₂ offset value, and credit cost.' },
+      { icon: faGift, text: 'Click "Redeem". A modal confirms cost and your post-redemption balance.' },
+      { icon: faCheckCircle, text: 'On confirm, credits are deducted. Environment items create a tree planting request to a partner NGO.' },
+      { icon: faTree, text: 'Track tree planting status in the Header dropdown: Pending → Sent → In Progress → Completed.' },
+      { icon: faBolt, text: 'Non-environment items (bus passes, vouchers) appear in your Bag — use them when needed.' },
     ]
   },
   {
-    id: 'feed',
-    emoji: '',
-    title: 'How to Use the Public Feed',
-    color: '#14248a',
-    bg: 'rgba(20, 36, 138, 0.06)',
-    border: 'rgba(20, 36, 138, 0.3)',
+    id: 'feed', title: 'Public Feed', color: '#14248a',
     steps: [
-      { icon: faNewspaper, text: 'Open "Public Feed" from the nav. You\'ll see a real-time feed of verified civic actions uploaded by citizens across India.' },
-      { icon: faSearch, text: 'Filter by My Posts (your own submissions) using the toggle in the top-right. You can also filter by location or community.' },
-      { icon: faHeart, text: 'React to posts that inspire you. Each post shows the location, cleanup category, credits earned, and the community tagged.' },
-      { icon: faUsers, text: 'Posts from communities you follow appear highlighted. Discover new cleanup drives and join them.' },
-      { icon: faUpload, text: 'When uploading an activity, toggle "Share to Feed" and add a caption to publish it directly.' },
+      { icon: faNewspaper, text: 'Open "Public Feed" to see real-time verified civic actions across India.' },
+      { icon: faSearch, text: 'Filter by My Posts using the toggle, or by location and community.' },
+      { icon: faHeart, text: 'React to posts. Each shows location, category, credits earned, and tagged community.' },
+      { icon: faUsers, text: 'Posts from communities you follow appear highlighted. Discover and join cleanup drives.' },
+      { icon: faUpload, text: 'When uploading, toggle "Share to Feed" with a caption to publish directly.' },
     ]
   },
   {
-    id: 'report',
-    emoji: '',
-    title: 'How to Report an Issue',
-    color: '#ef4444',
-    bg: 'rgba(239,68,68,0.06)',
-    border: 'rgba(239,68,68,0.3)',
+    id: 'report', title: 'Report an Issue', color: '#ef4444',
     steps: [
-      { icon: faExclamationCircle, text: 'Go to "Report Issue" from the sidebar. First, choose the issue category:' },
-      { icon: faBuilding, text: '"Civic Issue" — for real-world problems: Garbage Dumping, Waterbody Pollution, Government/Civic failures, or Other.' },
-      { icon: faLaptopCode, text: '"Platform Issue" — for app-related problems: Submission errors, Credit discrepancies, App bugs, or Account issues.' },
-      { icon: faSearch, text: 'Select the specific sub-type, then write a detailed description (minimum 10 characters) including location and severity.' },
-      { icon: faCamera, text: 'Attach a photo (max 5 MB) as evidence — a screenshot for platform issues or a real photo for civic ones.' },
-      { icon: faPaperPlane, text: 'Submit. The report is stored in the database and forwarded to the CivicSetu admin panel where our team triages it. Civic reports are escalated to the relevant municipal authority.' },
+      { icon: faExclamationCircle, text: 'Go to "Report Issue" and choose the issue category.' },
+      { icon: faBuilding, text: '"Civic Issue" — for real-world problems: garbage dumping, water pollution, civic failures.' },
+      { icon: faLaptopCode, text: '"Platform Issue" — for app problems: submission errors, credit discrepancies, bugs.' },
+      { icon: faSearch, text: 'Select the sub-type and write a detailed description (min 10 chars).' },
+      { icon: faCamera, text: 'Attach a photo (max 5 MB) — a screenshot for platform issues, or a real photo for civic ones.' },
+      { icon: faPaperPlane, text: 'Submit. The report goes to the admin panel for triage and forwarding.' },
     ]
   },
   {
-    id: 'community',
-    emoji: '',
-    title: 'How to Use Communities',
-    color: '#998fc7',
-    bg: 'rgba(153, 143, 199, 0.06)',
-    border: 'rgba(153, 143, 199, 0.3)',
+    id: 'community', title: 'Communities', color: '#998fc7',
     steps: [
-      { icon: faUsers, text: 'Visit "Community" from the sidebar to discover local civic groups — resident welfare associations, NGO chapters, college eco-clubs, etc.' },
-      { icon: faUserPlus, text: 'Join communities relevant to your ward, city, or interest area. Membership is free and instant.' },
-      { icon: faNewspaper, text: 'Community boards show all shared activity submissions from members, making collective impact visible.' },
-      { icon: faUpload, text: 'Tag a community when uploading an activity to attribute the cleanup to the group and boost the community\'s leaderboard rank.' },
-      { icon: faAward, text: 'Community admins can organise drives and challenges. Top-performing communities get listed on the public Analytics leaderboard.' },
+      { icon: faUsers, text: 'Visit "Community" to discover local groups — RWAs, NGO chapters, college eco-clubs.' },
+      { icon: faUserPlus, text: 'Join communities relevant to your ward, city, or interest. Membership is free and instant.' },
+      { icon: faNewspaper, text: 'Community boards show all submissions from members — collective impact made visible.' },
+      { icon: faUpload, text: 'Tag a community when uploading to attribute the cleanup and boost their leaderboard rank.' },
+      { icon: faAward, text: 'Top-performing communities are listed on the public Analytics leaderboard.' },
     ]
   },
   {
-    id: 'analytics',
-    emoji: '',
-    title: 'How to Read Analytics',
-    color: '#6366f1',
-    bg: 'rgba(99,102,241,0.06)',
-    border: 'rgba(99,102,241,0.3)',
+    id: 'analytics', title: 'Analytics', color: '#6366f1',
     steps: [
-      { icon: faChartLine, text: 'Open "Analytics" to see your personal civic impact dashboard with interactive charts.' },
-      { icon: faLeaf, text: 'Key metrics displayed: Total CO₂ Saved (kg), Total Waste Collected (kg), Trees Planted, and Credits Earned over time.' },
-      { icon: faStar, text: 'The Leaderboard widget on the Dashboard shows your rank among all CivicSetu users. Climb the ranks by submitting more verified activities.' },
-      { icon: faChartLine, text: 'Time-series charts show your activity trend: weekly, monthly, or all-time. Spot your most productive periods.' },
-      { icon: faAward, text: 'Your civic role badge (Eco Beginner → Eco Warrior → Eco Hero → Eco Champion ) is calculated from your total credits and shown on your profile.' },
+      { icon: faChartLine, text: 'Open "Analytics" to see your civic impact dashboard with interactive charts.' },
+      { icon: faLeaf, text: 'Track CO₂ Saved, Waste Collected, Trees Planted, and Credits Earned over time.' },
+      { icon: faStar, text: 'The Leaderboard widget shows your rank among all CivicSetu users.' },
+      { icon: faChartLine, text: 'Time-series charts show your activity trend: weekly, monthly, or all-time.' },
+      { icon: faAward, text: 'Your civic role badge (Beginner → Warrior → Hero → Champion) is calculated from your credits.' },
     ]
   },
 ];
 
 const TECH_STACK = [
-  { label: 'React 18 + Vite', color: '#61dafb', icon: faCode, desc: 'Frontend SPA with hot-reload dev server' },
-  { label: 'Node.js + Express', color: '#68a063', icon: faServer, desc: 'RESTful API backend with JWT auth middleware' },
-  { label: 'MongoDB + Mongoose', color: '#4db33d', icon: faDatabase, desc: 'NoSQL database for flexible civic data models' },
-  { label: 'Firebase Auth', color: '#ff9800', icon: faLock, desc: 'Google OAuth & email authentication' },
-  { label: 'Google Gemini AI', color: '#998fc7', icon: faBrain, desc: 'Vision AI for image verification & fraud detection' },
-  { label: 'Framer Motion', color: '#bb66ff', icon: faRocket, desc: 'Fluid UI animations and page transitions' },
-  { label: 'Cloudinary', color: '#3448c5', icon: faUpload, desc: 'Cloud image storage & optimisation' },
-  { label: 'Tailwind CSS', color: '#38bdf8', icon: faStar, desc: 'Utility-first styling with custom design tokens' },
-  { label: 'SparkMD5', color: '#e11d48', icon: faShieldAlt, desc: 'Client-side image hash for duplicate detection' },
-  { label: 'Vercel', color: '#000000', icon: faGlobe, desc: 'Zero-config frontend deployment & CDN' },
-];
-
-const TEAM = [
-  {
-    name: 'Vivek K',
-    role: 'Founder & Full-Stack Developer',
-    avatar: '‍',
-    gradient: '#14248a',
-    bio: 'Designed and built the entire CivicSetu platform — from the React frontend and Node.js API to the Gemini AI integration and MongoDB data model. Passionate about civic-tech and sustainable India.',
-    links: { github: '#', linkedin: '#', instagram: '#' },
-  },
+  { label: 'React 19 + Vite', color: '#61dafb', icon: faCode },
+  { label: 'Node.js + Express', color: '#68a063', icon: faServer },
+  { label: 'MongoDB', color: '#4db33d', icon: faDatabase },
+  { label: 'Firebase Auth', color: '#ff9800', icon: faLock },
+  { label: 'Gemini AI', color: '#998fc7', icon: faBrain },
+  { label: 'Framer Motion', color: '#bb66ff', icon: faRocket },
+  { label: 'Cloudinary', color: '#3448c5', icon: faUpload },
+  { label: 'Tailwind CSS', color: '#38bdf8', icon: faStar },
+  { label: 'SparkMD5', color: '#e11d48', icon: faShieldAlt },
+  { label: 'Vercel', color: '#1f2937', icon: faGlobe },
 ];
 
 const FAQ = [
-  {
-    q: 'How does the AI know my cleanup is real?',
-    a: 'Google Gemini Vision AI analyses the spatial and contextual differences between your Before and After photos. It looks for verifiable changes in waste volume, cleanliness, and environment consistency. Fake or AI-generated images are also detected and rejected. Additionally, a MD5 hash of each image is checked against our database to prevent duplicate submissions.'
-  },
-  {
-    q: 'How are credits calculated?',
-    a: 'Base credits are determined by the AI: typically 10–50 credits per kg of waste, scaled by cleanup type. Group activities earn a bonus: 10% extra per additional member. Large cleanups (>20 kg) with community/NGO tagging earn an extra multiplier. Credits are added to your wallet instantly on submission confirmation.'
-  },
-  {
-    q: 'What happens after I redeem trees?',
-    a: 'Your tree planting request is sent to a verified partner NGO via the Admin Portal. You can track the status in real-time through the  dropdown in the Header: Pending → Sent to NGO → Planting in Progress → Completed. Each status change triggers a notification.'
-  },
-  {
-    q: 'Is my location data stored?',
-    a: 'GPS co-ordinates are stored with each submission to render geo-tagged reports and maps. This data is used only for civic-purpose mapping and leaderboard locality features. We never sell or share location data with third parties.'
-  },
-  {
-    q: 'Can I use the app offline?',
-    a: 'Partially. You can draft a Before photo offline, which is stored in your browser\'s localStorage. However, AI verification and credit award require an active internet connection. The draft will remain safe until you reconnect.'
-  },
-  {
-    q: 'What qualifies as a valid civic action?',
-    a: 'Any verifiable environmental or sanitation activity: garbage pickup, waterbody cleaning, waste segregation, tree plantation, methane/pollution remediation, or community beautification. The AI must be able to identify a measurable positive change in the photo pair.'
-  },
+  { q: 'How does the AI know my cleanup is real?', a: 'Google Gemini Vision AI analyses spatial and contextual differences between your Before and After photos — looking for verifiable changes in waste volume and cleanliness. Fake or AI-generated images are rejected. Plus, MD5 hashes of each image are checked against our database to prevent duplicate submissions.' },
+  { q: 'How are credits calculated?', a: 'Base credits are determined by the AI (typically 10–50 per kg, scaled by cleanup type). Group activities earn 10% per additional member. Large cleanups (>20 kg) with community/NGO tagging earn an extra multiplier.' },
+  { q: 'What happens after I redeem trees?', a: 'Your tree planting request is sent to a verified partner NGO via the Admin Portal. Track status in real-time through the Header dropdown: Pending → Sent → Planting in Progress → Completed.' },
+  { q: 'Is my location data stored?', a: 'GPS co-ordinates are stored with each submission to render geo-tagged reports. Used only for civic mapping and leaderboard locality features. We never sell or share location data.' },
+  { q: 'Can I use the app offline?', a: 'Partially. You can draft a Before photo offline (stored in your browser). AI verification and credit award require an active connection. The draft remains safe until you reconnect.' },
+  { q: 'What qualifies as a valid civic action?', a: 'Any verifiable environmental or sanitation activity: garbage pickup, waterbody cleaning, waste segregation, tree plantation, or community beautification. The AI must identify a measurable positive change in the photo pair.' },
 ];
 
-/* 
-   Sub-Components
- */
-const SectionLabel = ({ color, children }) => (
-  <span className="text-xs font-bold uppercase tracking-widest" style={{ color }}>
+/* Motion */
+const container = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+const item = {
+  hidden: { y: 16, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: [0.4, 0, 0.2, 1] } },
+};
+
+const Eyebrow = ({ children }) => (
+  <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-tertiary)' }}>
     {children}
-  </span>
+  </p>
 );
 
 const SectionTitle = ({ children }) => (
-  <h2 className="text-3xl md:text-4xl font-black mt-2 mb-4" style={{ color: 'var(--text-primary)' }}>
+  <h2 className="text-2xl md:text-3xl font-bold mt-1.5" style={{ color: 'var(--text-primary)' }}>
     {children}
   </h2>
 );
@@ -241,25 +153,25 @@ const FaqItem = ({ q, a }) => {
   const [open, setOpen] = useState(false);
   return (
     <div
-      className="rounded-2xl overflow-hidden transition-all duration-300"
+      className="rounded-xl overflow-hidden transition-all"
       style={{
-        border: open ? '1.5px solid rgba(153, 143, 199, 0.4)' : '1.5px solid var(--border-light)',
+        border: '1px solid var(--border-light)',
         background: 'var(--bg-surface)',
       }}
     >
       <button
-        className="w-full flex items-center justify-between gap-4 p-5 text-left"
+        className="w-full flex items-center justify-between gap-4 p-4 text-left"
         onClick={() => setOpen(v => !v)}
       >
-        <span className="font-bold text-sm md:text-base" style={{ color: 'var(--text-primary)' }}>{q}</span>
+        <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{q}</span>
         <FontAwesomeIcon
           icon={open ? faChevronUp : faChevronDown}
-          className="flex-shrink-0 text-sm transition-transform"
-          style={{ color: open ? '#998fc7' : 'var(--text-secondary)' }}
+          className="flex-shrink-0 text-xs transition-transform"
+          style={{ color: open ? 'var(--primary)' : 'var(--text-tertiary)' }}
         />
       </button>
       {open && (
-        <div className="px-5 pb-5">
+        <div className="px-4 pb-4">
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{a}</p>
         </div>
       )}
@@ -267,319 +179,311 @@ const FaqItem = ({ q, a }) => {
   );
 };
 
-const fade = {
-  hidden: { opacity: 0, y: 28 },
-  visible: (i = 0) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: 'easeOut' }
-  })
-};
-
-/* 
-   Main Component
- */
 const AboutUs = () => {
   const navigate = useNavigate();
   const [activeHow, setActiveHow] = useState('upload');
-
   const activeSection = HOW_TO_STEPS.find(s => s.id === activeHow);
 
   return (
-    <motion.div className="space-y-20 pb-20" initial="hidden" animate="visible">
+    <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6 md:space-y-8 pb-10 md:pb-12">
 
-      {/*  HERO  */}
-      <motion.section
-        variants={fade} custom={0}
-        className="relative rounded-3xl overflow-hidden px-6 md:px-16 py-20 text-center"
-        style={{ background: '#14248a', boxShadow: '0 30px 60px rgba(0,0,0,0.25)' }}
-      >
-        <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: '#14248a', transform: 'translate(-50%,-50%)' }} />
-        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: '#998fc7', transform: 'translate(50%,50%)' }} />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6"
-            style={{ background: 'rgba(153, 143, 199, 0.2)', color: '#d4c2fc', border: '1px solid rgba(212, 194, 252, 0.3)' }}>
-            <FontAwesomeIcon icon={faLeaf} /> Built for Bharat 
-          </span>
-
-          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight" style={{ color: '#fff' }}>
-            About{' '}
-            <span style={{ color: '#998fc7' }}>CIVIC</span>
-            <span style={{ color: '#d4c2fc' }}>सेतु</span>
-          </h1>
-
-          <p className="text-lg md:text-xl leading-relaxed mb-4 max-w-3xl mx-auto" style={{ color: '#998fc7' }}>
-            CivicSetu is India's first <strong style={{ color: '#d4c2fc' }}>AI-powered civic participation platform</strong> that
-            rewards citizens for real, verified environmental actions — turning everyday cleanups into measurable impact,
-            community trust, and tangible rewards.
-          </p>
-          <p className="text-base leading-relaxed mb-10 max-w-3xl mx-auto" style={{ color: '#8a8590' }}>
-            The name <em style={{ color: '#998fc7' }}>CivicSetu</em> (सेतु = Bridge in Hindi) represents our mission:
-            to build a bridge between motivated Indian citizens and the civic systems, NGOs, and local governments
-            that need their participation to function.
-          </p>
-
-          <p className="text-sm font-bold tracking-widest mb-10" style={{ color: '#d4c2fc' }}>
-            स्वच्छ भारत अपना भारत
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={() => navigate('/upload')}
-              className="flex items-center gap-2 px-7 py-3 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-lg"
-              style={{ background: '#14248a' }}>
-              Start Contributing <FontAwesomeIcon icon={faArrowRight} />
-            </button>
-            <button onClick={() => navigate('/community')}
-              className="flex items-center gap-2 px-7 py-3 rounded-xl font-bold transition-all hover:scale-105"
-              style={{ color: '#fff', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.07)' }}>
-              Join Community <FontAwesomeIcon icon={faUsers} />
-            </button>
+      {/* HERO */}
+      <motion.div variants={item} className="card p-5 md:p-8 relative overflow-hidden">
+        <div
+          className="absolute -bottom-12 -right-12 w-64 h-64 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(212,194,252,0.3), transparent 70%)' }}
+        />
+        <div className="grid md:grid-cols-5 gap-5 md:gap-6 items-center relative z-10">
+          <div className="md:col-span-3">
+            <Eyebrow>About CivicSetu</Eyebrow>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-1 md:mt-1.5 leading-tight" style={{ color: 'var(--text-primary)' }}>
+              India's AI-powered civic{' '}
+              <span style={{ color: 'var(--primary)' }}>participation platform</span>
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base mt-3 max-w-xl" style={{ color: 'var(--text-secondary)' }}>
+              CivicSetu (सेतु = Bridge) connects motivated citizens with the civic systems, NGOs,
+              and local governments that need their participation. Every cleanup is verified by AI,
+              rewarded with credits, and tracked end-to-end.
+            </p>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-4 md:mt-5">
+              <button onClick={() => navigate('/upload')} className="btn btn-primary w-full sm:w-auto">
+                Start Contributing <FontAwesomeIcon icon={faArrowRight} />
+              </button>
+              <button onClick={() => navigate('/community')} className="btn btn-outline w-full sm:w-auto">
+                Join Community <FontAwesomeIcon icon={faUsers} />
+              </button>
+            </div>
+          </div>
+          <div
+            className="md:col-span-2 rounded-2xl p-5 md:p-6 text-center"
+            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #1e3aa8 100%)', color: '#fff' }}
+          >
+            <p className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80">Built for</p>
+            <p className="text-2xl md:text-3xl font-bold mt-2 leading-none">Bharat</p>
+            <p className="text-xs md:text-sm font-semibold tracking-widest mt-3 opacity-90">
+              स्वच्छ भारत अपना भारत
+            </p>
+            <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-2 gap-3">
+              <div className="min-w-0">
+                <p className="text-lg md:text-xl font-bold leading-none">10K+</p>
+                <p className="text-[10px] uppercase tracking-wider opacity-80 mt-1 truncate">Actions</p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-lg md:text-xl font-bold leading-none">5K+</p>
+                <p className="text-[10px] uppercase tracking-wider opacity-80 mt-1 truncate">Citizens</p>
+              </div>
+            </div>
           </div>
         </div>
-      </motion.section>
+      </motion.div>
 
-      {/*  STATS  */}
-      <motion.section variants={fade} custom={1}>
-        <div className="text-center mb-10">
-          <SectionLabel color="#998fc7">Impact in Numbers</SectionLabel>
-          <SectionTitle>CivicSetu by the Numbers</SectionTitle>
+      {/* STATS */}
+      <motion.div variants={item}>
+        <div className="mb-4">
+          <Eyebrow>Impact in Numbers</Eyebrow>
+          <SectionTitle>Platform metrics</SectionTitle>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {STATS.map((s, i) => (
-            <motion.div key={s.label} variants={fade} custom={i * 0.1}
-              className="card p-5 text-center rounded-2xl" style={{ border: `1.5px solid ${s.color}22` }}>
-              <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3"
-                style={{ background: `${s.color}18`, color: s.color }}>
-                <FontAwesomeIcon icon={s.icon} />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+          {STATS.map((s) => (
+            <div
+              key={s.label}
+              className="card p-3 md:p-4 text-center min-w-0"
+              style={{ borderColor: `${s.color}33` }}
+            >
+              <div
+                className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center mx-auto mb-2 md:mb-3"
+                style={{ background: `${s.color}1a`, color: s.color }}
+              >
+                <FontAwesomeIcon icon={s.icon} className="text-sm md:text-base" />
               </div>
-              <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-xs font-medium mt-1" style={{ color: 'var(--text-secondary)' }}>{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/*  PROJECT DESCRIPTION  */}
-      <motion.section variants={fade} custom={2} className="grid md:grid-cols-2 gap-12 items-start">
-        <div>
-          <SectionLabel color="#14248a">The Problem We Solve</SectionLabel>
-          <SectionTitle>Why CivicSetu Exists</SectionTitle>
-          <div className="space-y-4" style={{ color: 'var(--text-secondary)' }}>
-            <p>India generates <strong style={{ color: 'var(--text-primary)' }}>62 million tonnes of municipal solid waste per year</strong> — yet less than 60% is collected and only 15% processed. Littering, open dumping, and waterbody pollution are national crises that local governments alone cannot solve.</p>
-            <p>The missing element is <strong style={{ color: 'var(--text-primary)' }}>citizen participation at scale</strong>. Millions of Indians are willing to act, but have no incentive, no verification mechanism, and no way to prove their contribution.</p>
-            <p>CivicSetu solves this by creating a <strong style={{ color: 'var(--text-primary)' }}>trust layer</strong> between citizens and civic systems. Using AI image verification, blockchain-grade credit accounting, and NGO partnerships, we make every civic action auditable, rewarded, and impactful.</p>
-            <p>We are aligned with Government of India initiatives: <strong style={{ color: 'var(--text-primary)' }}>Swachh Bharat Mission</strong>, <strong style={{ color: 'var(--text-primary)' }}>MoHUA urban planning</strong>, and <strong style={{ color: 'var(--text-primary)' }}>NGO Darpan partnerships</strong>.</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <SectionLabel color="#998fc7">The Solution</SectionLabel>
-          <SectionTitle>How CivicSetu Works</SectionTitle>
-          {[
-            { icon: faBrain, color: '#6366f1', t: 'AI-Verified Impact', d: 'Every upload is analysed by Google Gemini Vision AI — eliminating fake submissions and calculating precise environmental metrics.' },
-            { icon: faCoins, color: '#f59e0b', t: 'Gamified Credit Economy', d: 'Verifiable credits incentivise repeat participation. Group bonuses and multipliers encourage community-scale cleanup drives.' },
-            { icon: faHandHoldingHeart, color: '#ec4899', t: 'NGO Bridge', d: 'credits can be converted to real tree-planting actions via verified NGO partners. We track the full lifecycle: request → planting → completion.' },
-            { icon: faExclamationCircle, color: '#ef4444', t: 'Municipal Reporting', d: 'Large-scale civic issues are reported directly to the admin portal and escalated to local authorities with photo evidence.' },
-            { icon: faNetworkWired, color: '#998fc7', t: 'Community Ecosystem', d: 'Hyperlocal communities connect neighbours, resident groups, and eco-clubs for organised drives and shared recognition.' },
-          ].map(item => (
-            <div key={item.t} className="flex items-start gap-4 p-4 rounded-2xl"
-              style={{ background: `${item.color}08`, border: `1px solid ${item.color}20` }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${item.color}18`, color: item.color }}>
-                <FontAwesomeIcon icon={item.icon} />
-              </div>
-              <div>
-                <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{item.t}</p>
-                <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.d}</p>
-              </div>
+              <p className="text-base md:text-xl font-bold truncate" style={{ color: s.color }}>{s.value}</p>
+              <p className="text-[10px] md:text-[11px] mt-1 font-medium truncate" style={{ color: 'var(--text-tertiary)' }}>{s.label}</p>
             </div>
           ))}
         </div>
-      </motion.section>
+      </motion.div>
 
-      {/*  FULL WORKFLOW  */}
-      <motion.section variants={fade} custom={3}>
-        <div className="text-center mb-12">
-          <SectionLabel color="#6366f1">End-to-End Platform Workflow</SectionLabel>
-          <SectionTitle>The Complete CivicSetu Journey</SectionTitle>
-          <p className="max-w-2xl mx-auto text-sm" style={{ color: 'var(--text-secondary)' }}>
-            From account creation to impact redemption — here is every step of the CivicSetu experience in detail.
-          </p>
+      {/* PROBLEM + SOLUTION */}
+      <motion.div variants={item} className="grid md:grid-cols-2 gap-5 md:gap-6">
+        <div className="card p-5 md:p-7">
+          <Eyebrow>The Problem</Eyebrow>
+          <SectionTitle>Why CivicSetu exists</SectionTitle>
+          <div className="space-y-3 mt-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <p>India generates <strong style={{ color: 'var(--text-primary)' }}>62 million tonnes of municipal waste per year</strong> — yet less than 60% is collected and only 15% processed.</p>
+            <p>The missing element is <strong style={{ color: 'var(--text-primary)' }}>citizen participation at scale</strong>. Millions are willing to act, but have no incentive, no verification, and no way to prove their contribution.</p>
+            <p>CivicSetu solves this by creating a <strong style={{ color: 'var(--text-primary)' }}>trust layer</strong> between citizens and civic systems — using AI verification, credit accounting, and NGO partnerships.</p>
+          </div>
         </div>
 
-        <div className="relative">
-          {/* Vertical connector */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 hidden md:block"
-            style={{ background: '#14248a' }} />
-
-          <div className="space-y-6">
-            {WORKFLOW_STEPS.map((step, i) => (
-              <motion.div key={step.num} variants={fade} custom={i * 0.1}
-                className="flex gap-6 items-start">
-                <div className="relative flex-shrink-0">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg z-10 relative"
-                    style={{ background: `#14248a`, color: '#fff' }}>
-                    <FontAwesomeIcon icon={step.icon} size="lg" />
-                  </div>
-                  <span className="absolute -top-2 -right-2 text-xs font-black px-1.5 py-0.5 rounded-full"
-                    style={{ background: step.color, color: '#fff' }}>{step.num}</span>
+        <div className="card p-5 md:p-7">
+          <Eyebrow>The Solution</Eyebrow>
+          <SectionTitle>How CivicSetu works</SectionTitle>
+          <div className="space-y-3 mt-4">
+            {[
+              { icon: faBrain, color: '#6366f1', t: 'AI-Verified Impact', d: 'Every upload analysed by Gemini Vision — eliminates fakes, calculates precise environmental metrics.' },
+              { icon: faCoins, color: '#f59e0b', t: 'Gamified Credits', d: 'Verifiable credits incentivise repeat participation. Group bonuses encourage community drives.' },
+              { icon: faHandHoldingHeart, color: '#ec4899', t: 'NGO Bridge', d: 'Credits convert to real tree planting via verified NGO partners with full lifecycle tracking.' },
+              { icon: faNetworkWired, color: '#998fc7', t: 'Community Ecosystem', d: 'Hyperlocal communities connect neighbours, RWAs, and eco-clubs for organised drives.' },
+            ].map(it => (
+              <div
+                key={it.t}
+                className="flex items-start gap-3 p-3 rounded-xl"
+                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-light)' }}
+              >
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${it.color}1f`, color: it.color }}
+                >
+                  <FontAwesomeIcon icon={it.icon} />
                 </div>
-                <div className="card p-6 rounded-2xl flex-1" style={{ border: `1px solid ${step.color}22` }}>
-                  <h3 className="font-black text-lg mb-2" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
+                <div>
+                  <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{it.t}</p>
+                  <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{it.d}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
-      </motion.section>
+      </motion.div>
 
-      {/*  HOW TO USE  */}
-      <motion.section variants={fade} custom={4}>
-        <div className="text-center mb-10">
-          <SectionLabel color="#ec4899">Step-by-Step Guides</SectionLabel>
-          <SectionTitle>How to Use CivicSetu</SectionTitle>
-          <p className="max-w-xl mx-auto text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Detailed walkthroughs for every feature — so you can get the most out of every civic action.
-          </p>
+      {/* WORKFLOW */}
+      <motion.div variants={item}>
+        <div className="mb-4 md:mb-5">
+          <Eyebrow>End-to-End Journey</Eyebrow>
+          <SectionTitle>The complete CivicSetu workflow</SectionTitle>
+        </div>
+        <div className="grid md:grid-cols-2 gap-3 md:gap-4">
+          {WORKFLOW_STEPS.map((step) => (
+            <div
+              key={step.num}
+              className="card p-4 md:p-5 flex gap-3 md:gap-4 items-start min-w-0"
+              style={{ borderColor: `${step.color}22` }}
+            >
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: `${step.color}1a`, color: step.color }}
+                >
+                  <FontAwesomeIcon icon={step.icon} className="text-sm md:text-base" />
+                </div>
+                <span
+                  className="absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: step.color, color: '#fff' }}
+                >
+                  {step.num}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm md:text-base" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
+                <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* HOW TO USE */}
+      <motion.div variants={item} className="card p-5 md:p-7">
+        <div className="mb-4 md:mb-5">
+          <Eyebrow>Step-by-Step Guides</Eyebrow>
+          <SectionTitle>How to use CivicSetu</SectionTitle>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
+        <div className="flex gap-2 mb-5 md:mb-6 overflow-x-auto -mx-1 px-1 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0 md:pb-0">
           {HOW_TO_STEPS.map(s => (
-            <button key={s.id} onClick={() => setActiveHow(s.id)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all"
+            <button
+              key={s.id}
+              onClick={() => setActiveHow(s.id)}
+              className="px-3.5 md:px-4 py-2 rounded-lg font-semibold text-xs transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: activeHow === s.id ? s.color : 'var(--bg-surface)',
+                background: activeHow === s.id ? s.color : 'var(--bg-hover)',
                 color: activeHow === s.id ? '#fff' : 'var(--text-secondary)',
-                border: `2px solid ${activeHow === s.id ? s.color : 'var(--border-light)'}`,
-                transform: activeHow === s.id ? 'scale(1.05)' : 'scale(1)',
-                boxShadow: activeHow === s.id ? `0 4px 16px ${s.color}44` : 'none',
-              }}>
-              <span>{s.emoji}</span> {s.title.replace('How to ', '').replace('How to Use ', '').replace('How to Read ', '')}
+                border: `1px solid ${activeHow === s.id ? s.color : 'var(--border-light)'}`,
+              }}
+            >
+              {s.title}
             </button>
           ))}
         </div>
 
-        {/* Active Section */}
         {activeSection && (
-          <motion.div key={activeHow} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
-            className="rounded-3xl p-8 md:p-10"
-            style={{ background: activeSection.bg, border: `2px solid ${activeSection.border}` }}>
-            <div className="flex items-center gap-4 mb-8">
-              <span className="text-5xl">{activeSection.emoji}</span>
-              <div>
-                <h3 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{activeSection.title}</h3>
-                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                  Follow these steps to {activeSection.title.replace('How to ', '').toLowerCase()}.
-                </p>
+          <motion.div
+            key={activeHow}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-2.5 md:space-y-3"
+          >
+            {activeSection.steps.map((step, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2.5 md:gap-3 p-3 rounded-xl min-w-0"
+                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-light)' }}
+              >
+                <div
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold text-[11px] md:text-xs"
+                  style={{ background: activeSection.color }}
+                >
+                  {i + 1}
+                </div>
+                <div className="flex items-start gap-2.5 md:gap-3 flex-1 min-w-0">
+                  <div
+                    className="w-6 h-6 md:w-7 md:h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: `${activeSection.color}1a`, color: activeSection.color }}
+                  >
+                    <FontAwesomeIcon icon={step.icon} className="text-[10px] md:text-xs" />
+                  </div>
+                  <p className="text-xs md:text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{step.text}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="space-y-4">
-              {activeSection.steps.map((step, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.07 }}
-                  className="flex items-start gap-4 p-4 rounded-2xl bg-white shadow-sm"
-                  style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-black text-xs shadow"
-                    style={{ background: activeSection.color }}>
-                    {i + 1}
-                  </div>
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: `${activeSection.color}15`, color: activeSection.color }}>
-                      <FontAwesomeIcon icon={step.icon} className="text-xs" />
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{step.text}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            ))}
           </motion.div>
         )}
-      </motion.section>
+      </motion.div>
 
-      {/*  TECH STACK  */}
-      <motion.section variants={fade} custom={5}>
-        <div className="text-center mb-10">
-          <SectionLabel color="#6366f1">Technology Stack</SectionLabel>
-          <SectionTitle>Built With These Technologies</SectionTitle>
+      {/* TECH STACK */}
+      <motion.div variants={item}>
+        <div className="mb-4">
+          <Eyebrow>Technology Stack</Eyebrow>
+          <SectionTitle>Built with</SectionTitle>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {TECH_STACK.map((tech, i) => (
-            <motion.div key={tech.label} variants={fade} custom={i * 0.07}
-              className="card p-4 rounded-2xl text-center hover:scale-105 transition-transform cursor-default"
-              style={{ border: `1.5px solid ${tech.color}30` }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
-                style={{ background: `${tech.color}18`, color: tech.color === '#000000' ? '#1a1a1a' : tech.color }}>
-                <FontAwesomeIcon icon={tech.icon} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 md:gap-3">
+          {TECH_STACK.map((tech) => (
+            <div
+              key={tech.label}
+              className="card p-3 md:p-4 text-center min-w-0"
+              style={{ borderColor: `${tech.color}33` }}
+            >
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2"
+                style={{ background: `${tech.color}1a`, color: tech.color }}
+              >
+                <FontAwesomeIcon icon={tech.icon} className="text-sm md:text-base" />
               </div>
-              <p className="font-bold text-xs" style={{ color: 'var(--text-primary)' }}>{tech.label}</p>
-              <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>{tech.desc}</p>
-            </motion.div>
+              <p className="font-semibold text-[11px] md:text-xs truncate" style={{ color: 'var(--text-primary)' }}>{tech.label}</p>
+            </div>
           ))}
         </div>
-      </motion.section>
+      </motion.div>
 
-      {/*  ARCHITECTURE  */}
-      <motion.section variants={fade} custom={6}>
-        <div className="text-center mb-10">
-          <SectionLabel color="#f59e0b">System Architecture</SectionLabel>
-          <SectionTitle>How the Platform is Built</SectionTitle>
+      {/* ARCHITECTURE */}
+      <motion.div variants={item}>
+        <div className="mb-4">
+          <Eyebrow>System Architecture</Eyebrow>
+          <SectionTitle>How the platform is built</SectionTitle>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-3 md:gap-4">
           {[
             {
-              title: '️ Frontend (React + Vite)',
+              title: 'Frontend',
               color: '#14248a',
               points: [
-                'Single Page Application with React Router v6',
-                'Framer Motion for page transitions & micro-animations',
-                'Context API for Language (8 langs) and Theme state',
-                'Camera API + Geolocation API for field capture',
-                'SparkMD5 for client-side image hashing',
-                'Axios interceptors with JWT Bearer auth headers',
-                'Deployed on Vercel with automatic CI/CD',
+                'React 19 SPA with React Router v6',
+                'Framer Motion transitions',
+                'Context API for language state',
+                'Camera + Geolocation APIs',
+                'SparkMD5 client-side hashing',
+                'Axios with JWT interceptors',
+                'Vercel deployment with CI/CD',
               ]
             },
             {
-              title: '️ Backend (Node.js + Express)',
+              title: 'Backend',
               color: '#998fc7',
               points: [
-                'RESTful API with JWT middleware on all protected routes',
-                'Firebase Admin SDK verifies Google OAuth tokens',
-                'Multer + Cloudinary for multipart image uploads',
-                'Google Gemini 1.5 Vision API integration',
-                'Mongoose ODM with MongoDB Atlas (cloud)',
-                'MD5 duplicate detection before AI analysis',
-                'Admin-only routes for NGO and submission management',
+                'Express REST API with JWT auth',
+                'Firebase Admin SDK token verification',
+                'Multer + Cloudinary uploads',
+                'Google Gemini 1.5 Vision',
+                'Mongoose ODM (MongoDB Atlas)',
+                'MD5 duplicate detection',
+                'Admin-only NGO management routes',
               ]
             },
             {
-              title: ' Data & Integrations',
-              color: '#998fc7',
+              title: 'Data & Integrations',
+              color: '#6366f1',
               points: [
-                'MongoDB Atlas for all user, submission, and credit data',
-                'Firebase Authentication (email + Google OAuth)',
-                'Cloudinary for image CDN and transformations',
-                'Google Gemini AI Vision for photo verification',
-                'Reverse Geocoding for human-readable location names',
-                'NGO Partner APIs via Admin Portal webhooks',
-                'localStorage for offline draft caching',
+                'MongoDB Atlas (cloud)',
+                'Firebase Auth (email + Google)',
+                'Cloudinary CDN',
+                'Gemini Vision verification',
+                'Reverse Geocoding service',
+                'NGO Partner webhooks',
+                'localStorage offline drafts',
               ]
             },
           ].map(col => (
-            <div key={col.title} className="card p-6 rounded-2xl" style={{ border: `1.5px solid ${col.color}22` }}>
-              <h3 className="font-black text-lg mb-4" style={{ color: 'var(--text-primary)' }}>{col.title}</h3>
-              <ul className="space-y-2">
+            <div key={col.title} className="card p-4 md:p-5" style={{ borderColor: `${col.color}33` }}>
+              <Eyebrow>{col.title}</Eyebrow>
+              <ul className="space-y-2 mt-3">
                 {col.points.map(p => (
-                  <li key={p} className="flex items-start gap-2 text-sm">
-                    <span className="flex-shrink-0 mt-1 w-4 h-4 rounded-full flex items-center justify-center"
-                      style={{ background: `${col.color}18`, color: col.color }}>
-                      <FontAwesomeIcon icon={faCheckCircle} className="text-[8px]" />
-                    </span>
+                  <li key={p} className="flex items-start gap-2 text-xs md:text-sm">
+                    <FontAwesomeIcon
+                      icon={faCheckCircle}
+                      className="text-xs mt-1 flex-shrink-0"
+                      style={{ color: col.color }}
+                    />
                     <span style={{ color: 'var(--text-secondary)' }}>{p}</span>
                   </li>
                 ))}
@@ -587,94 +491,65 @@ const AboutUs = () => {
             </div>
           ))}
         </div>
-      </motion.section>
+      </motion.div>
 
-      {/*  TEAM  */}
-      <motion.section variants={fade} custom={7}>
-        <div className="text-center mb-10">
-          <SectionLabel color="#ec4899">The Team</SectionLabel>
-          <SectionTitle>Built with ️ for Bharat</SectionTitle>
+      {/* FAQ */}
+      <motion.div variants={item}>
+        <div className="mb-4">
+          <Eyebrow>Frequently Asked Questions</Eyebrow>
+          <SectionTitle>Got questions?</SectionTitle>
         </div>
-        <div className="flex flex-wrap justify-center gap-8">
-          {TEAM.map((m, i) => (
-            <motion.div key={m.name} variants={fade} custom={i * 0.15}
-              className="card p-8 rounded-3xl text-center max-w-sm">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-5 text-5xl shadow-xl"
-                style={{ background: m.gradient }}>
-                {m.avatar}
-              </div>
-              <h3 className="font-black text-xl mb-1" style={{ color: 'var(--text-primary)' }}>{m.name}</h3>
-              <p className="text-xs font-semibold mb-4 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{m.role}</p>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>{m.bio}</p>
-              <div className="flex justify-center gap-3">
-                <a href={m.links.github} className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                  style={{ background: '#f1f5f9', color: '#374151' }}>
-                  <FontAwesomeIcon icon={faGithub} />
-                </a>
-                <a href={m.links.linkedin} className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                  style={{ background: '#f9f5ff', color: '#0e1a66' }}>
-                  <FontAwesomeIcon icon={faLinkedin} />
-                </a>
-                <a href={m.links.instagram} className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                  style={{ background: '#fce7f3', color: '#db2777' }}>
-                  <FontAwesomeIcon icon={faInstagram} />
-                </a>
-              </div>
-            </motion.div>
-          ))}
+        <div className="max-w-3xl space-y-2">
+          {FAQ.map(it => <FaqItem key={it.q} {...it} />)}
         </div>
-      </motion.section>
+      </motion.div>
 
-      {/*  FAQ  */}
-      <motion.section variants={fade} custom={8}>
-        <div className="text-center mb-10">
-          <SectionLabel color="#14248a">Frequently Asked Questions</SectionLabel>
-          <SectionTitle>Got Questions?</SectionTitle>
-        </div>
-        <div className="max-w-3xl mx-auto space-y-3">
-          {FAQ.map(item => <FaqItem key={item.q} {...item} />)}
-        </div>
-      </motion.section>
-
-      {/*  CTA  */}
-      <motion.section variants={fade} custom={9}>
-        <div className="rounded-3xl p-12 md:p-16 text-center relative overflow-hidden"
-          style={{ background: '#14248a' }}>
-          <div className="absolute inset-0 opacity-[0.04]"
-            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          <div className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-10 blur-3xl"
-            style={{ background: '#14248a', transform: 'translate(-50%,-50%)' }} />
-          <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-10 blur-3xl"
-            style={{ background: '#998fc7', transform: 'translate(50%,50%)' }} />
-          <div className="relative z-10">
-            <p className="text-6xl mb-5"></p>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              Ready to Build a Cleaner Bharat?
-            </h2>
-            <p className="mb-10 max-w-lg mx-auto text-base" style={{ color: '#998fc7' }}>
-              Join thousands of citizens already making verified, rewarded civic impact —
-              one cleanup at a time. Every action counts. Every credit matters.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <button onClick={() => navigate('/register')}
-                className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-white text-base transition-all hover:scale-105 shadow-xl"
-                style={{ background: '#14248a' }}>
-                Get Started Free <FontAwesomeIcon icon={faArrowRight} />
-              </button>
-              <button onClick={() => navigate('/report-issue')}
-                className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all hover:scale-105"
-                style={{ color: '#fff', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)' }}>
-                Report an Issue <FontAwesomeIcon icon={faExclamationCircle} />
-              </button>
-              <a href="mailto:civicsetu@example.com"
-                className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all hover:scale-105"
-                style={{ color: '#fff', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)' }}>
-                Contact Us <FontAwesomeIcon icon={faEnvelope} />
-              </a>
-            </div>
+      {/* CTA */}
+      <motion.div variants={item} className="card p-6 md:p-10 relative overflow-hidden text-center">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #1e3aa8 100%)' }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+        />
+        <div className="relative z-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80" style={{ color: '#fff' }}>
+            Get involved
+          </p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mt-2 text-white leading-tight">
+            Ready to build a cleaner Bharat?
+          </h2>
+          <p className="text-xs sm:text-sm mt-3 max-w-lg mx-auto" style={{ color: 'rgba(255,255,255,0.85)' }}>
+            Join thousands of citizens making verified, rewarded civic impact —
+            one cleanup at a time.
+          </p>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center gap-3 mt-5 md:mt-6">
+            <button
+              onClick={() => navigate('/register')}
+              className="btn font-semibold px-5 md:px-6 py-2.5 rounded-lg transition-all hover:scale-105 w-full sm:w-auto"
+              style={{ background: '#fff', color: 'var(--primary)' }}
+            >
+              Get Started <FontAwesomeIcon icon={faArrowRight} />
+            </button>
+            <button
+              onClick={() => navigate('/report-issue')}
+              className="btn font-semibold px-5 md:px-6 py-2.5 rounded-lg transition-all hover:scale-105 w-full sm:w-auto"
+              style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}
+            >
+              Report an Issue <FontAwesomeIcon icon={faExclamationCircle} />
+            </button>
+            <a
+              href="mailto:civicsetu@example.com"
+              className="btn font-semibold px-5 md:px-6 py-2.5 rounded-lg transition-all hover:scale-105 inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+              style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}
+            >
+              Contact Us <FontAwesomeIcon icon={faEnvelope} />
+            </a>
           </div>
         </div>
-      </motion.section>
+      </motion.div>
 
     </motion.div>
   );

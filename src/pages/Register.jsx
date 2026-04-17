@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEnvelope, faLock, faArrowRight, faShieldAlt, faRedo } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { register, googleLogin, sendEmailOtp, verifyEmailOtp } from '../services/authService';
+import BrandLogo from '../components/common/BrandLogo';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ const Register = () => {
       >
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 flex justify-center">
-            <img src="/logo.png" alt="CivicSetu" className="h-16 object-contain drop-shadow-md" />
+            <BrandLogo size={60} />
           </div>
           <h1 className="text-3xl font-black mb-1 text-white tracking-tight">
             <span className="text-blue-400">CIVIC</span>

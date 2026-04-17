@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Phone, ShieldCheck, ArrowRight, Loader2, UserCog } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { login, googleLogin, setupRecaptcha, sendOtp, verifyOtp, completePhoneSignup } from '../services/authService';
+import BrandLogo from '../components/common/BrandLogo';
 
 /* ---------- reusable sub-components ---------- */
 const Label = ({ children }) => (
@@ -156,7 +157,7 @@ const Login = () => {
           <div className="p-8">
             {/* Logo + title */}
             <div className="text-center mb-7">
-              <img src="/logo.png" alt="CivicSetu" className="h-20 mx-auto mb-4 object-contain" />
+              <div className="flex justify-center mb-4"><BrandLogo size={72} /></div>
               <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                 {isNewUser ? 'Create Username' : (
                   <><span style={{ color: '#14248a' }}>CIVIC</span><span style={{ color: '#998fc7' }}>सेतु</span></>

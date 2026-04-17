@@ -81,7 +81,7 @@ const AdminTreeRequests = () => {
 
     const getStatusBadge = (status) => {
         const config = {
-            pending: { bg: '#FEF3C7', text: '#92400E', icon: '⏳' },
+            pending: { bg: '#FEF3C7', text: '#92400E', icon: '' },
             sent_to_ngo: { bg: '#f9f5ff', text: '#1E40AF', icon: '' },
             planting_in_process: { bg: '#ebe3ff', text: '#14248a', icon: '' },
             completed: { bg: '#ebe3ff', text: '#14248a', icon: '' }

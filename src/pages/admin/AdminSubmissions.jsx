@@ -7,7 +7,25 @@ const AdminSubmissions = () => {
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterLocation, setFilterLocation] = useState('All');
+    const [filterCorporation, setFilterCorporation] = useState('All');
     const [locations, setLocations] = useState([]);
+
+    const CORPORATIONS = [
+        { value: 'pmc', label: 'PMC (Pune)', keywords: ['pmc', 'pune municipal', 'pune'] },
+        { value: 'pcmc', label: 'PCMC (Pimpri-Chinchwad)', keywords: ['pcmc', 'pimpri', 'chinchwad'] },
+        { value: 'mumbai', label: 'Mumbai (BMC)', keywords: ['mumbai', 'bmc', 'bombay'] },
+        { value: 'alandi', label: 'Alandi', keywords: ['alandi'] },
+    ];
+
+    const matchesCorporation = (sub) => {
+        if (filterCorporation === 'All') return true;
+        const corp = CORPORATIONS.find(c => c.value === filterCorporation);
+        if (!corp) return true;
+        const haystack = `${sub.location?.name || ''} ${sub.location?.address || ''} ${sub.location?.city || ''} ${sub.location?.corporation || ''}`.toLowerCase();
+        return corp.keywords.some(k => haystack.includes(k));
+    };
+
+    const filteredSubmissions = submissions.filter(matchesCorporation);
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [points, setPoints] = useState(50);
     const [notes, setNotes] = useState('');
@@ -96,6 +114,19 @@ const AdminSubmissions = () => {
                 <h2 className="text-2xl font-bold text-gray-800">Submissions Verification</h2>
                 <div className="flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-500">Corporation:</span>
+                        <select
+                            value={filterCorporation}
+                            onChange={(e) => setFilterCorporation(e.target.value)}
+                            className="p-2 border rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-sm min-w-[180px]"
+                        >
+                            <option value="All">All Corporations</option>
+                            {CORPORATIONS.map(c => (
+                                <option key={c.value} value={c.value}>{c.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-500">Area:</span>
                         <select
                             value={filterLocation}
@@ -141,7 +172,7 @@ const AdminSubmissions = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {submissions.map(sub => (
+                            {filteredSubmissions.map(sub => (
                                 <tr key={sub._id} className={`border-b hover:bg-gray-50 transition-colors ${sub.isPrioritySLA ? 'bg-red-50 border-l-4 border-red-500' : ''}`}>
                                     <td className="p-4">
                                         <div className="font-bold flex items-center gap-2">
@@ -188,7 +219,7 @@ const AdminSubmissions = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {submissions.length === 0 && (
+                            {filteredSubmissions.length === 0 && (
                                 <tr>
                                     <td colSpan="6" className="p-8 text-center text-gray-500">No submissions found.</td>
                                 </tr>
